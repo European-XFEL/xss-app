@@ -11,7 +11,7 @@
   import * as Tooltip from '$shadcn/ui/tooltip/index.js';
 
   import { listMolecules, uploadMolecule } from '$lib/data/api';
-  import type { Capability } from '$lib/types';
+  import type { Capability } from '$lib/shared/health';
 
   type Molecules = Awaited<ReturnType<typeof listMolecules>>;
 

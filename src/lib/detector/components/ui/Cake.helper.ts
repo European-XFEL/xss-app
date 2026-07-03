@@ -6,7 +6,7 @@
  * - Polar (r, φ) coordinates where r is distance from beam center and φ is azimuthal angle
  * - "Caked" (r, χ) coordinates for the transformed view
  */
-import type { CartesianPoint, DetectorModule, Shape } from '$lib/types';
+import type { CartesianPoint, DetectorModule, Shape } from '../../types';
 
 const DEG_PER_RAD = 180 / Math.PI;
 const TAU = Math.PI * 2;

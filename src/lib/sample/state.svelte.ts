@@ -1,4 +1,6 @@
-import type { Molecule, Sample, Solvent } from '$lib/types';
+import type { Molecule } from '$lib/molecule';
+
+import type { Sample, Solvent } from './types';
 
 export class SampleState implements Sample {
   concentrationSoluteMolar: number | null = $state(null);

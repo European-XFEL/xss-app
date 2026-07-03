@@ -1,5 +1,5 @@
 import type { listSolvents } from '$lib/data/api';
-import type { Molecule } from '$lib/types';
+import type { Molecule } from '$lib/molecule';
 
 export type Solvents = Awaited<ReturnType<typeof listSolvents>>;
 

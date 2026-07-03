@@ -1,9 +1,10 @@
 <script lang="ts">
+  import type { CartesianPoint } from '../../types';
+
   import * as Field from '$shadcn/ui/field/index.js';
   import { Input } from '$shadcn/ui/input/index.js';
 
   import NumSlider from '$lib/shared/ui/NumSlider.svelte';
-  import type { CartesianPoint } from '$lib/types';
 
   type Props = {
     distance: number;

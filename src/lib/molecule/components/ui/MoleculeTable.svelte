@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Molecule, Molecules } from '../../types';
   import {
     type GroupRow,
     type MoleculeRow,
@@ -22,8 +23,6 @@
   import { FlexRender, createSvelteTable } from '$shadcn/ui/data-table';
   import { Spinner } from '$shadcn/ui/spinner';
   import * as Table from '$shadcn/ui/table';
-
-  import type { Molecule, Molecules } from '$lib/types';
 
   import TableFooter from './TableFooter.svelte';
   import TableToolbar from './TableToolbar.svelte';

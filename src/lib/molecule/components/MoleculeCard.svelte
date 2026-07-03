@@ -5,7 +5,7 @@
   import { Spinner } from '$shadcn/ui/spinner';
 
   import type { listMolecules } from '$lib/data/api';
-  import type { Sample } from '$lib/types';
+  import type { Sample } from '$lib/sample';
 
   type Molecules = Awaited<ReturnType<typeof listMolecules>>;
 

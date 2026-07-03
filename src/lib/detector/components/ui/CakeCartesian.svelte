@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { draw } from 'svelte/transition';
+  import type { CartesianPoint, DetectorModule, Shape } from '../../types';
 
-  import type { CartesianPoint, DetectorModule, Shape } from '$lib/types';
+  import { draw } from 'svelte/transition';
 
   import Crosshair from './CakeCrosshair.svelte';
   import DraggableModule from './CakeModule.svelte';

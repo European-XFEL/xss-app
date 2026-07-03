@@ -1,8 +1,10 @@
 <script lang="ts">
+  import type { Shape } from '../../types';
+
   import * as Field from '$shadcn/ui/field/index.js';
   import { Input } from '$shadcn/ui/input/index.js';
 
-  import type { QRange, Shape } from '$lib/types';
+  import type { QRange } from '$lib/shared/contracts';
 
   type Props = {
     imageShape: Shape;

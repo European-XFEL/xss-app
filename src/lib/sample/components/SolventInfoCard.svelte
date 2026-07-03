@@ -1,8 +1,8 @@
 <script lang="ts">
+  import type { Sample } from '../types';
+
   import * as Card from '$shadcn/ui/card/index.js';
   import * as Table from '$shadcn/ui/table/index.js';
-
-  import type { Sample } from '$lib/types';
 
   interface Props {
     solvent: Sample['solvent'];

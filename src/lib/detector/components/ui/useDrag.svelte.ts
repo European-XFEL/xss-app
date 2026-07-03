@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
-import { onDestroy } from 'svelte';
+import type { CartesianPoint } from '../../types';
 
-import type { CartesianPoint } from '$lib/types';
+import { onDestroy } from 'svelte';
 
 export interface DragOptions {
   /** Function that returns the SVG element for coordinate calculation */

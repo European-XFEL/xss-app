@@ -17,7 +17,7 @@
   import * as Tooltip from '$shadcn/ui/tooltip/index.js';
 
   import { submitFeedback } from '$lib/data/api';
-  import type { Capability } from '$lib/types';
+  import type { Capability } from '$lib/shared/health';
 
   interface Props {
     capability?: Capability;

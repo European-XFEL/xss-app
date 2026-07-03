@@ -1,4 +1,4 @@
-import type { QRange } from '$lib/types';
+import type { QRange } from '$lib/shared/contracts';
 
 import { EV_TO_JOULES, N_AVOGADRO } from './constants';
 

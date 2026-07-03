@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { DetectorModule } from '$lib/types';
+  import type { DetectorModule } from '../../types';
 
   interface Props {
     modules: DetectorModule[];

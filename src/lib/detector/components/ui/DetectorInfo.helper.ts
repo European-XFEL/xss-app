@@ -1,4 +1,6 @@
-import type { CartesianPoint, DetectorModule, QRange } from '$lib/types';
+import type { CartesianPoint, DetectorModule } from '../../types';
+
+import type { QRange } from '$lib/shared/contracts';
 
 /**
  * Compute q-range and a reasonable q-step from detector geometry by using

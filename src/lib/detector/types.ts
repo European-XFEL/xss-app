@@ -1,4 +1,5 @@
-import type { QRange, Range } from '$lib/types';
+import type { QRange } from '$lib/shared/contracts';
+import type { Range } from '$lib/shared/types';
 
 export interface Shape {
   readonly width: number;

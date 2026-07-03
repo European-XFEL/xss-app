@@ -4,8 +4,8 @@
   import * as Field from '$shadcn/ui/field/index.js';
 
   import { getMoleculeFileContent } from '$lib/data/api';
+  import type { Sample } from '$lib/sample';
   import { Placeholder } from '$lib/shared/ui';
-  import type { Sample } from '$lib/types';
 
   import { useMatterviz } from './useMatterviz.svelte';
 

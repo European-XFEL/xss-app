@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { draw } from 'svelte/transition';
+  import type { CartesianPoint } from '../../types';
 
-  import type { CartesianPoint } from '$lib/types';
+  import { draw } from 'svelte/transition';
 
   import { useDrag } from './useDrag.svelte';
 

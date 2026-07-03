@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { fade } from 'svelte/transition';
+  import type { CartesianPoint, DetectorModule } from '../../types';
 
-  import type { CartesianPoint, DetectorModule } from '$lib/types';
+  import { fade } from 'svelte/transition';
 
   import { useDrag } from './useDrag.svelte';
 

@@ -1,11 +1,12 @@
 <script lang="ts">
+  import type { Sample, Solvents } from '../types';
+
   import { fade } from 'svelte/transition';
 
   import * as Card from '$shadcn/ui/card/index.js';
   import { Spinner } from '$shadcn/ui/spinner/index.js';
 
   import NumSlider from '$lib/shared/ui/NumSlider.svelte';
-  import type { Sample, Solvents } from '$lib/types';
 
   import SolventSelect from './ui/SolventSelect.svelte';
 

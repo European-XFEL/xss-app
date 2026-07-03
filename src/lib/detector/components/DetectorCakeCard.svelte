@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { CartesianPoint, DetectorModule, Shape } from '../types';
   import { BadgeInfo } from '@lucide/svelte';
 
   import { fade } from 'svelte/transition';
@@ -6,8 +7,6 @@
   import * as Card from '$shadcn/ui/card/index.js';
   import { Skeleton } from '$shadcn/ui/skeleton/index.js';
   import * as Tooltip from '$shadcn/ui/tooltip/index.js';
-
-  import type { CartesianPoint, DetectorModule, Shape } from '$lib/types';
 
   import CakeModuleLegend from './ui/CakeModuleLegend.svelte';
 
