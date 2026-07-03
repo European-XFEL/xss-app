@@ -5,7 +5,7 @@
  * JSON files with references to the original data files instead of inline
  * contents. The static source can then resolve contents from these references.
  *
- * Usage: pnpm tsx utils/generate-demo-data.ts
+ * Usage: pnpm tsx scripts/generate-demo-data.ts
  */
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
