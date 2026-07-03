@@ -30,15 +30,20 @@
   <h1 class="text-2xl font-bold">Simulation Results</h1>
 
   <div class="flex flex-wrap justify-center gap-3">
-    {#snippet metric(label: string, unit: string, display: string, full: string)}
+    {#snippet metric(
+      label: string,
+      unit: string,
+      display: string,
+      full: string,
+    )}
       <div
         title={full}
         class="flex flex-col items-center rounded-lg border px-4 py-2 text-center"
       >
-        <span class="text-muted-foreground text-xs">{label}</span>
+        <span class="text-xs text-muted-foreground">{label}</span>
         <span class="font-mono text-sm font-medium">
           {display}
-          <span class="text-muted-foreground text-xs font-normal">{unit}</span>
+          <span class="text-xs font-normal text-muted-foreground">{unit}</span>
         </span>
       </div>
     {/snippet}
@@ -56,7 +61,12 @@
     {/if}
 
     {#if qMin != null && qMax != null}
-      {@render metric('Q range', 'Å⁻¹', fmt(qMin) + ' – ' + fmt(qMax), qMin + ' – ' + qMax + ' Å⁻¹')}
+      {@render metric(
+        'Q range',
+        'Å⁻¹',
+        fmt(qMin) + ' – ' + fmt(qMax),
+        qMin + ' – ' + qMax + ' Å⁻¹',
+      )}
     {:else}
       {@render metric('Q range', 'Å⁻¹', 'N/A', '')}
     {/if}

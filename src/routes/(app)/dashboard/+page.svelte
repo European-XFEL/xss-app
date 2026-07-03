@@ -5,10 +5,6 @@
   import * as Resizable from '$shadcn/ui/resizable/index.js';
   import { ScrollArea } from '$shadcn/ui/scroll-area/index.js';
 
-  import { SetupChecklist } from '$lib/dashboard';
-  import ConfigPane from '$lib/dashboard/components/ConfigPane.svelte';
-  import MoleculePane from '$lib/dashboard/components/MoleculePane.svelte';
-  import ResultsPane from '$lib/dashboard/components/ResultsPane.svelte';
   import { listMolecules, listSolvents } from '$lib/data/api';
   import { isValidQRange } from '$lib/simulation/math';
   import {
@@ -22,6 +18,10 @@
     scaleSoluteByExcitedFraction,
   } from '$lib/simulation/scattering.svelte';
   import { useSimulationState } from '$lib/state.svelte';
+  import { SetupChecklist } from '$lib/widgets/dashboard';
+  import ConfigPane from '$lib/widgets/dashboard/components/ConfigPane.svelte';
+  import MoleculePane from '$lib/widgets/dashboard/components/MoleculePane.svelte';
+  import ResultsPane from '$lib/widgets/dashboard/components/ResultsPane.svelte';
 
   const simulation = useSimulationState();
 

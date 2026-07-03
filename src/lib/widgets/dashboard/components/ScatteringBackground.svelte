@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+
   import { ScatteringRenderer } from './scattering-engine';
 
   let canvas: HTMLCanvasElement;
