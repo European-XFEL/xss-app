@@ -5,7 +5,7 @@
   import * as Alert from '$shadcn/ui/alert';
   import * as Card from '$shadcn/ui/card';
 
-  import { Latex } from '$lib/ui';
+  import { Latex } from '$lib/shared/ui';
 
   const eqDebye = String.raw`I(Q) = \sum_{i=1}^{N} \sum_{j=1}^{N} f_i(Q) f_j(Q) \frac{\sin(Q r_{ij})}{Q r_{ij}}`;
 

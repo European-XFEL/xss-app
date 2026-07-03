@@ -5,5 +5,9 @@ export function useMatterviz<T>(loader: () => Promise<T>) {
   onMount(async () => {
     component = await loader();
   });
-  return { get component() { return component; } };
+  return {
+    get component() {
+      return component;
+    },
+  };
 }

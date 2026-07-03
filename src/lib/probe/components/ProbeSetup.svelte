@@ -3,7 +3,7 @@
 
   import * as Field from '$shadcn/ui/field';
 
-  import NumSlider from '$lib/ui/NumSlider.svelte';
+  import NumSlider from '$lib/shared/ui/NumSlider.svelte';
 
   type Props = {
     probe: XRayProbe;

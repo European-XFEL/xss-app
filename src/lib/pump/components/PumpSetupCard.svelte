@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { ComponentProps } from 'svelte';
 
-  import CardWrapper from '$lib/ui/CardWrapper.svelte';
+  import CardWrapper from '$lib/shared/ui/CardWrapper.svelte';
 
   import PumpSetup from './PumpSetup.svelte';
 
