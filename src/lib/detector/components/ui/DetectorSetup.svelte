@@ -4,7 +4,7 @@
   import * as Field from '$shadcn/ui/field/index.js';
   import { Input } from '$shadcn/ui/input/index.js';
 
-  import NumSlider from '$lib/shared/ui/NumSlider.svelte';
+  import { NumSlider } from '$lib/shared/ui';
 
   type Props = {
     distance: number;

@@ -6,22 +6,22 @@
   import { ScrollArea } from '$shadcn/ui/scroll-area/index.js';
 
   import { useSimulationState } from '$lib/app/simulation-context.svelte';
-  import { listMolecules, listSolvents } from '$lib/data/api';
-  import { isValidQRange } from '$lib/simulation/math';
-  import {
-    createScatteringResource,
-    fetchDeltaSSolute,
-    fetchDeltaSSolvent,
-  } from '$lib/simulation/scattering-fetcher.svelte';
+  import { listMolecules, listSolvents } from '$lib/shared/api/api';
   import {
     computeDeltaS,
     createScatteringCalculations,
+    createScatteringResource,
+    fetchDeltaSSolute,
+    fetchDeltaSSolvent,
+    isValidQRange,
     scaleSoluteByExcitedFraction,
-  } from '$lib/simulation/scattering.svelte';
-  import { SetupChecklist } from '$lib/widgets/dashboard';
-  import ConfigPane from '$lib/widgets/dashboard/components/ConfigPane.svelte';
-  import MoleculePane from '$lib/widgets/dashboard/components/MoleculePane.svelte';
-  import ResultsPane from '$lib/widgets/dashboard/components/ResultsPane.svelte';
+  } from '$lib/simulation';
+  import {
+    ConfigPane,
+    MoleculePane,
+    ResultsPane,
+    SetupChecklist,
+  } from '$lib/widgets/dashboard';
 
   const simulation = useSimulationState();
 

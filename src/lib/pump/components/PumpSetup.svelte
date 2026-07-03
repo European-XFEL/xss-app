@@ -6,7 +6,7 @@
   import * as Field from '$shadcn/ui/field';
   import { Input } from '$shadcn/ui/input';
 
-  import NumSlider from '$lib/shared/ui/NumSlider.svelte';
+  import { NumSlider } from '$lib/shared/ui';
 
   type Props = {
     pump: Pump;

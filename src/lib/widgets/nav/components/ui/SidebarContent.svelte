@@ -111,9 +111,11 @@
 
   import * as Sidebar from '$shadcn/ui/sidebar/index.js';
 
-  import AlphaAlert from '$lib/widgets/feedback/AlphaAlert.svelte';
-  import BugsFeatures from '$lib/widgets/feedback/BugsFeatures.svelte';
-  import FeedbackDialog from '$lib/widgets/feedback/FeedbackDialog.svelte';
+  import {
+    AlphaAlert,
+    BugsFeatures,
+    FeedbackDialog,
+  } from '$lib/widgets/feedback';
 </script>
 
 {#each data as group (group.title)}

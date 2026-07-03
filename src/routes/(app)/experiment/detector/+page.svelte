@@ -4,7 +4,7 @@
     DetectorCakeCard,
     DetectorInfoCard,
     DetectorSetupCard,
-  } from '$lib/detector/';
+  } from '$lib/detector';
 
   const simulation = useSimulationState();
 </script>

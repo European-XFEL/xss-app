@@ -1,2 +1,4 @@
-export { default as Placeholder } from './Placeholder.svelte';
+export { default as CardWrapper } from './CardWrapper.svelte';
 export { default as Latex } from './Latex.svelte';
+export { default as NumSlider } from './NumSlider.svelte';
+export { default as Placeholder } from './Placeholder.svelte';

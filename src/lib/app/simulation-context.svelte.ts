@@ -1,7 +1,7 @@
 import { getContext, hasContext, setContext } from 'svelte';
 
-import { DetectorState } from '$lib/detector/state.svelte';
-import { SampleState } from '$lib/sample/state.svelte';
+import { DetectorState } from '$lib/detector';
+import { SampleState } from '$lib/sample';
 
 const DEFAULT = {
   qRange: {

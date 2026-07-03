@@ -6,7 +6,7 @@
   import * as Card from '$shadcn/ui/card/index.js';
   import { Spinner } from '$shadcn/ui/spinner/index.js';
 
-  import NumSlider from '$lib/shared/ui/NumSlider.svelte';
+  import { NumSlider } from '$lib/shared/ui';
 
   import SolventSelect from './ui/SolventSelect.svelte';
 
