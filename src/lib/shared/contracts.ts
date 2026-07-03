@@ -1,0 +1,98 @@
+/**
+ * Shared client/server contracts.
+ *
+ * The single sanctioned crossing point for types that flow between the
+ * browser and the server: request/response DTOs used by `$lib/data/api`
+ * and `$lib/server/data`, plus the type-only surface derived from the
+ * generated gRPC protos. Nothing outside `$lib/server` should import from
+ * `$lib/server` directly, even for types — import from here instead.
+ */
+import type * as protoFiles from '$lib/server/grpc/gen/files_pb';
+import type * as protoSim from '$lib/server/grpc/gen/simulation_pb';
+
+// ─── Molecule ───────────────────────────────────────────────────────────────
+
+export interface MoleculeInfo {
+  id: string;
+  filename: string;
+  sha: string;
+  moleculeName: string;
+  description: string;
+  state: number;
+  reference: string | null;
+  atomCount: number;
+  createdAt: Date;
+  updatedAt: Date | undefined;
+}
+
+export interface MoleculeFileContent {
+  contents: string;
+}
+
+export type UploadMoleculeResult =
+  | { success: true; result: MoleculeInfo; error?: undefined }
+  | { success: false; result: null; error: string };
+
+// ─── Solvent ────────────────────────────────────────────────────────────────
+
+export interface SolventInfo {
+  id: string;
+  name: string;
+  rhom: number;
+  cpm: number;
+  filename: string;
+  sha: string;
+  createdAt: Date;
+  updatedAt: Date | undefined;
+  qMin: number;
+  qMax: number;
+  qStep: number;
+}
+
+export interface SolventIQ {
+  q: number[];
+  dSdT: number[];
+}
+
+// ─── Simulation ─────────────────────────────────────────────────────────────
+
+export interface SimRequest {
+  fileId: string;
+  qRange: {
+    min: number;
+    max: number;
+    step: number;
+  };
+}
+
+export interface DebyeResult {
+  q: number[];
+  i: number[];
+}
+
+// ─── Feedback ───────────────────────────────────────────────────────────────
+
+export interface FeedbackInput {
+  url: string;
+  comment?: string;
+  categories: string[];
+  region?: string;
+  regionImage?: string;
+}
+
+export interface FeedbackResult {
+  success: boolean;
+  id: string | null;
+}
+
+// ─── Proto-derived types ────────────────────────────────────────────────────
+
+export type FileNoContent = Omit<protoFiles.File, 'contents' | '$typeName'>;
+
+export type StructureFile = Omit<FileNoContent, 'type'>;
+
+export type SolventFile = Omit<FileNoContent, 'type'>;
+
+export type QRange = Omit<protoSim.QRange, '$typeName'>;
+
+export type Pump = Omit<protoSim.Pump, '$typeName'>;

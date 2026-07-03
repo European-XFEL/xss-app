@@ -10,7 +10,7 @@ import type {
   SolventIQ,
   SolventInfo,
   UploadMoleculeResult,
-} from '$lib/server/data/types';
+} from '$lib/shared/contracts';
 
 const STATIC = PUBLIC_TARGET === 'static';
 

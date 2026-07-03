@@ -1,5 +1,11 @@
-import type * as protoFiles from './server/grpc/gen/files_pb.ts';
-import type * as protoSim from './server/grpc/gen/simulation_pb.ts';
+import type {
+  FileNoContent,
+  QRange,
+  SolventFile,
+  StructureFile,
+} from './shared/contracts.ts';
+
+export type { FileNoContent, QRange, SolventFile, StructureFile };
 
 export * from './detector/types.ts';
 export * from './molecule/types.ts';
@@ -17,14 +23,6 @@ export type RealismFlags = {
   detectorEfficiencyCorrection: boolean;
   backgroundSubtraction: boolean;
 };
-
-export type FileNoContent = Omit<protoFiles.File, 'contents' | '$typeName'>;
-
-export type StructureFile = Omit<FileNoContent, 'type'>;
-
-export type SolventFile = Omit<FileNoContent, 'type'>;
-
-export type QRange = Omit<protoSim.QRange, '$typeName'>;
 
 /** A numeric interval with the invariant `min <= max`. */
 export interface Range {
