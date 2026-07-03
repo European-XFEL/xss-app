@@ -17,6 +17,8 @@
     "check:watch": "svelte-kit sync && svelte-check --incremental --tsconfig ./tsconfig.json --watch",
     "lint": "prettier --check ./src; eslint ./src",
     "format": "prettier --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "db:start": "docker compose up",
     "db:push": "drizzle-kit push",
     "db:seed": "dotenv -e .env -- tsx ./scripts/seed.ts",
@@ -85,6 +87,7 @@
     "typescript-eslint": "^8.57.2",
     "vite": "^7.3.1",
     "vite-plugin-devtools-json": "^1.0.0",
-    "vite-plugin-lucide-preprocess": "^1.4.8"
+    "vite-plugin-lucide-preprocess": "^1.4.8",
+    "vitest": "^4.1.9"
   }
 }
