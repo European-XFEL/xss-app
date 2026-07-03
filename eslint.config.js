@@ -2,6 +2,7 @@ import { URL, fileURLToPath } from 'node:url';
 
 import { includeIgnoreFile } from '@eslint/compat';
 import js from '@eslint/js';
+import boundaries from 'eslint-plugin-boundaries';
 import prettier from 'eslint-config-prettier';
 import svelte from 'eslint-plugin-svelte';
 import { defineConfig } from 'eslint/config';
@@ -54,6 +55,104 @@ export default defineConfig(
         parser: ts.parser,
         svelteConfig,
       },
+    },
+  },
+  {
+    files: ['src/**/*.{ts,js,svelte}'],
+    plugins: { boundaries },
+    settings: {
+      'import/resolver': {
+        typescript: {
+          alwaysTryTypes: true,
+          project: './tsconfig.json',
+        },
+      },
+      'boundaries/elements': [
+        // Order matters: first match wins, so list more specific patterns first.
+        // contracts = the sanctioned client/server type-crossing surface.
+        {
+          type: 'contracts',
+          pattern: 'src/lib/shared/(contracts|health).ts',
+          mode: 'full',
+        },
+        { type: 'shared', pattern: 'src/lib/shared', mode: 'folder' },
+        { type: 'shared', pattern: 'src/lib/shadcn', mode: 'folder' },
+        {
+          type: 'feature',
+          pattern: 'src/lib/(detector|molecule|probe|pump|sample|simulation)',
+          mode: 'folder',
+          capture: ['feature'],
+        },
+        { type: 'widget', pattern: 'src/lib/widgets/*', mode: 'folder', capture: ['widget'] },
+        { type: 'app', pattern: 'src/lib/app', mode: 'folder' },
+        // SvelteKit server-side route/hook files may reach into lib/server.
+        { type: 'server-route', pattern: 'src/routes/**/+server.ts', mode: 'full' },
+        { type: 'server-route', pattern: 'src/routes/**/*.server.ts', mode: 'full' },
+        { type: 'server-route', pattern: 'src/hooks.server.ts', mode: 'full' },
+        { type: 'app', pattern: 'src/routes', mode: 'folder' },
+        { type: 'server', pattern: 'src/lib/server', mode: 'folder' },
+      ],
+    },
+    rules: {
+      'boundaries/dependencies': [
+        'warn',
+        {
+          default: 'disallow',
+          rules: [
+            // contracts is the single sanctioned crossing point for
+            // proto-derived types: it may type-import from the server tree.
+            {
+              from: { type: 'contracts' },
+              allow: { to: { type: ['server'] }, dependency: { kind: 'type' } },
+            },
+            { from: { type: 'shared' }, allow: { to: { type: ['shared', 'contracts'] } } },
+            {
+              from: { type: 'feature' },
+              allow: {
+                to: [
+                  { type: 'shared' },
+                  { type: 'contracts' },
+                  { type: 'feature', captured: { feature: '{{ feature }}' } },
+                ],
+              },
+            },
+            // Cross-feature *type* imports are tolerated for now (erased at
+            // compile time). Value imports between features stay banned.
+            {
+              from: { type: 'feature' },
+              allow: { to: { type: 'feature' }, dependency: { kind: 'type' } },
+            },
+            {
+              from: { type: 'widget' },
+              allow: { to: { type: ['shared', 'contracts', 'feature', 'widget'] } },
+            },
+            {
+              from: { type: 'app' },
+              allow: { to: { type: ['shared', 'contracts', 'feature', 'widget', 'app'] } },
+            },
+            {
+              from: { type: 'server-route' },
+              allow: {
+                to: {
+                  type: ['server', 'shared', 'contracts', 'feature', 'widget', 'app'],
+                },
+              },
+            },
+            { from: { type: 'server' }, allow: { to: { type: ['server', 'contracts'] } } },
+            // Entry-point enforcement: features and widgets are consumed only
+            // via their public index.ts; deep imports are banned regardless of
+            // the allow rules above (last matching rule wins).
+            {
+              from: { type: '*' },
+              disallow: {
+                to: { type: ['feature', 'widget'], internalPath: '!index.ts' },
+              },
+              message:
+                'Import features and widgets through their public index.ts, not internal files',
+            },
+          ],
+        },
+      ],
     },
   },
 );
