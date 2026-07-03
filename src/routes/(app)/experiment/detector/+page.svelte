@@ -1,10 +1,10 @@
 <script lang="ts">
+  import { useSimulationState } from '$lib/app/simulation-context.svelte';
   import {
     DetectorCakeCard,
     DetectorInfoCard,
     DetectorSetupCard,
   } from '$lib/detector/';
-  import { useSimulationState } from '$lib/state.svelte';
 
   const simulation = useSimulationState();
 </script>

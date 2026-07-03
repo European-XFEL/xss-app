@@ -1,8 +1,8 @@
 <script lang="ts">
   import * as Collapsible from '$shadcn/ui/collapsible/index.js';
 
+  import type { SimulationState } from '$lib/app/simulation-context.svelte';
   import { MoleculeTrajectoryViz, MoleculeViz } from '$lib/molecule';
-  import type { SimulationState } from '$lib/state.svelte';
 
   type VizMode = 'trajectory' | 'individual';
 

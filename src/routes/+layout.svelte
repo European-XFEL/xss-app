@@ -5,7 +5,10 @@
 
   import * as Sidebar from '$shadcn/ui/sidebar/index.js';
 
-  import { createSimulationState, setSimulationState } from '$lib/state.svelte';
+  import {
+    createSimulationState,
+    setSimulationState,
+  } from '$lib/app/simulation-context.svelte';
 
   let { children } = $props();
 

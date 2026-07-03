@@ -3,7 +3,7 @@
 
   import { Button } from '$shadcn/ui/button';
 
-  import { useSimulationState } from '$lib/state.svelte';
+  import { useSimulationState } from '$lib/app/simulation-context.svelte';
 
   const simulation = useSimulationState();
 

@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as Sidebar from '$shadcn/ui/sidebar/index.js';
 
-  import { useSimulationState } from '$lib/state.svelte';
+  import { useSimulationState } from '$lib/app/simulation-context.svelte';
   import { Sidebar as AppSidebar } from '$lib/widgets/nav';
 
   let { children } = $props();

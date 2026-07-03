@@ -1,7 +1,7 @@
 <script lang="ts">
+  import { useSimulationState } from '$lib/app/simulation-context.svelte';
   import { ProbeSetupCard } from '$lib/probe';
   import { PumpSetupCard } from '$lib/pump';
-  import { useSimulationState } from '$lib/state.svelte';
 
   const simulation = useSimulationState();
 </script>

@@ -1,4 +1,4 @@
-import type { SimulationState } from '$lib/state.svelte';
+import type { SimulationState } from '$lib/app/simulation-context.svelte';
 import { throttled } from '$lib/utils/throttled.svelte';
 
 import { THROTTLE_INTERVAL_MS } from './constants';

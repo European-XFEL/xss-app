@@ -1,7 +1,7 @@
 <script lang="ts">
+  import { useSimulationState } from '$lib/app/simulation-context.svelte';
   import { MoleculeCardSelection, MoleculeTableCard } from '$lib/molecule';
   import { SolventCard, SolventInfoCard } from '$lib/sample';
-  import { useSimulationState } from '$lib/state.svelte';
 
   import type { PageData } from './$types';
 

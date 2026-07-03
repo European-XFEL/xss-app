@@ -5,6 +5,7 @@
   import * as Resizable from '$shadcn/ui/resizable/index.js';
   import { ScrollArea } from '$shadcn/ui/scroll-area/index.js';
 
+  import { useSimulationState } from '$lib/app/simulation-context.svelte';
   import { listMolecules, listSolvents } from '$lib/data/api';
   import { isValidQRange } from '$lib/simulation/math';
   import {
@@ -17,7 +18,6 @@
     createScatteringCalculations,
     scaleSoluteByExcitedFraction,
   } from '$lib/simulation/scattering.svelte';
-  import { useSimulationState } from '$lib/state.svelte';
   import { SetupChecklist } from '$lib/widgets/dashboard';
   import ConfigPane from '$lib/widgets/dashboard/components/ConfigPane.svelte';
   import MoleculePane from '$lib/widgets/dashboard/components/MoleculePane.svelte';
