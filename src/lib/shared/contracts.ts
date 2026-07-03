@@ -2,7 +2,7 @@
  * Shared client/server contracts.
  *
  * The single sanctioned crossing point for types that flow between the
- * browser and the server: request/response DTOs used by `$lib/data/api`
+ * browser and the server: request/response DTOs used by `$lib/shared/api/api`
  * and `$lib/server/data`, plus the type-only surface derived from the
  * generated gRPC protos. Nothing outside `$lib/server` should import from
  * `$lib/server` directly, even for types — import from here instead.

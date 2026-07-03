@@ -10,7 +10,7 @@
   import * as Textarea from '$shadcn/ui/textarea/index.js';
   import * as Tooltip from '$shadcn/ui/tooltip/index.js';
 
-  import { listMolecules, uploadMolecule } from '$lib/data/api';
+  import { listMolecules, uploadMolecule } from '$lib/shared/api/api';
   import type { Capability } from '$lib/shared/health';
 
   type Molecules = Awaited<ReturnType<typeof listMolecules>>;

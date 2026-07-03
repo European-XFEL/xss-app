@@ -16,7 +16,7 @@
   import * as Textarea from '$shadcn/ui/textarea/index.js';
   import * as Tooltip from '$shadcn/ui/tooltip/index.js';
 
-  import { submitFeedback } from '$lib/data/api';
+  import { submitFeedback } from '$lib/shared/api/api';
   import type { Capability } from '$lib/shared/health';
 
   interface Props {

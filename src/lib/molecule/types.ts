@@ -1,4 +1,4 @@
-import type { listMolecules } from '$lib/data/api';
+import type { listMolecules } from '$lib/shared/api/api';
 
 export type Molecules = Awaited<ReturnType<typeof listMolecules>>;
 

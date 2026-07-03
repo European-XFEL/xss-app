@@ -1,4 +1,4 @@
-import { getDebyeResult, getSolventIQ } from '$lib/data/api';
+import { getDebyeResult, getSolventIQ } from '$lib/shared/api/api';
 import type { QRange } from '$lib/shared/contracts';
 
 import { type ScatteringSeries, createQGrid, interpolateLinear } from './math';
