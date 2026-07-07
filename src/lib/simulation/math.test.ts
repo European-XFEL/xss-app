@@ -10,6 +10,7 @@ import {
   computeRatioSolventSolute,
   createQGrid,
   interpolateLinear,
+  isPumpEnergyPhysical,
   isValidQRange,
   normalizeExcitedStateFraction,
   scaleSoluteByExcitedFraction,
@@ -63,8 +64,28 @@ describe('computeDeltaEeV / computeDeltaEJ', () => {
     expect(computeDeltaEeV(3, null)).toBe(0);
   });
 
+  it('clamps an unphysical negative gap to 0', () => {
+    expect(computeDeltaEeV(1, 2)).toBe(0);
+  });
+
   it('converts eV to Joules', () => {
     expect(computeDeltaEJ(1)).toBeCloseTo(1.602176634e-19);
+  });
+});
+
+describe('isPumpEnergyPhysical', () => {
+  it('accepts photon energy at or above the excited-state energy', () => {
+    expect(isPumpEnergyPhysical(3, 1)).toBe(true);
+    expect(isPumpEnergyPhysical(2, 2)).toBe(true);
+  });
+
+  it('rejects photon energy below the excited-state energy', () => {
+    expect(isPumpEnergyPhysical(1, 2)).toBe(false);
+  });
+
+  it('treats missing energies as physical', () => {
+    expect(isPumpEnergyPhysical(null, 2)).toBe(true);
+    expect(isPumpEnergyPhysical(3, undefined)).toBe(true);
   });
 });
 

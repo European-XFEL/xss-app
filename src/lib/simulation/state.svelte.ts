@@ -5,6 +5,7 @@ import {
   computeDeltaEeV,
   computeDeltaT,
   computeRatioSolventSolute,
+  isPumpEnergyPhysical,
   normalizeExcitedStateFraction,
 } from './math';
 
@@ -22,10 +23,22 @@ export class ScatteringMathState {
     computeConcentrationSolvent(this.sources.solventRhom()),
   );
 
+  /**
+   * When the photon energy is below the excited-state energy no excited
+   * state can form, so the effective excited fraction (and everything
+   * derived from it) is forced to zero.
+   */
+  readonly pumpEnergyPhysical = $derived.by(() =>
+    isPumpEnergyPhysical(
+      this.sources.photonEnergyEv(),
+      this.sources.excitedStateEnergyEv(),
+    ),
+  );
+
   readonly concentrationExcited = $derived.by(() =>
     computeConcentrationExcited(
       this.sources.concentrationSoluteMolar(),
-      this.sources.excitedStateFraction(),
+      this.pumpEnergyPhysical ? this.sources.excitedStateFraction() : 0,
     ),
   );
 
@@ -55,7 +68,9 @@ export class ScatteringMathState {
   );
 
   readonly excitedStateFraction = $derived.by(() =>
-    normalizeExcitedStateFraction(this.sources.excitedStateFraction()),
+    this.pumpEnergyPhysical
+      ? normalizeExcitedStateFraction(this.sources.excitedStateFraction())
+      : 0,
   );
 
   constructor(private readonly sources: ScatteringMathSources) {}

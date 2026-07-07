@@ -45,12 +45,30 @@ export function computeRatioSolventSolute(
   return concentrationSolvent / concentrationSoluteMolar;
 }
 
+/**
+ * A photon below the excited-state energy cannot form the excited state, so
+ * that configuration deposits no energy. Missing values are treated as
+ * physical so an incomplete form does not trigger warnings.
+ */
+export function isPumpEnergyPhysical(
+  photonEnergyEv?: number | null,
+  excitedStateEnergyEv?: number | null,
+): boolean {
+  if (photonEnergyEv == null || excitedStateEnergyEv == null) return true;
+  return photonEnergyEv >= excitedStateEnergyEv;
+}
+
+/**
+ * Energy deposited per absorbed photon. Clamped at zero: a negative gap is
+ * unphysical (see `isPumpEnergyPhysical`) and would otherwise invert the
+ * solvent heating term downstream.
+ */
 export function computeDeltaEeV(
   photonEnergyEv?: number | null,
   excitedStateEnergyEv?: number | null,
 ): number {
   if (photonEnergyEv == null || excitedStateEnergyEv == null) return 0;
-  return photonEnergyEv - excitedStateEnergyEv;
+  return Math.max(0, photonEnergyEv - excitedStateEnergyEv);
 }
 
 export function computeDeltaEJ(deltaEeV: number): number {
