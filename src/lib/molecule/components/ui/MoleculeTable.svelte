@@ -32,11 +32,22 @@
     ground?: Molecule | null;
     excited?: Molecule | null;
     loading?: boolean;
+    onToggleGround: (molecule: Molecule) => void;
+    onToggleExcited: (molecule: Molecule) => void;
+    onSelectGroup: (molecules: Molecule[]) => void;
   }
 
-  let { molecules, ground, excited, loading }: Props = $props();
-  // NOTE: ground and excited are not bindable here, their state is instead
-  // loaded and modified directly in cell components
+  let {
+    molecules,
+    ground,
+    excited,
+    loading,
+    onToggleGround,
+    onToggleExcited,
+    onSelectGroup,
+  }: Props = $props();
+  // Ground/excited are read-only props for display; selection mutations are
+  // injected via the on* callbacks and threaded into the cells (see columns.ts).
 
   // Table state
   let sorting = $state<SortingState>([{ id: 'moleculeName', desc: false }]);
@@ -112,6 +123,13 @@
       onSaveEdit: saveEdit,
       onCancelEdit: cancelEdit,
       onEditValueChange: (v) => (editValue = v),
+      selection: {
+        groundId: ground?.id ?? null,
+        excitedId: excited?.id ?? null,
+        toggleGround: onToggleGround,
+        toggleExcited: onToggleExcited,
+        selectGroup: onSelectGroup,
+      },
     }),
   );
 

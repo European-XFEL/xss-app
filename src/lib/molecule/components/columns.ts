@@ -22,6 +22,16 @@ export type MoleculeRow = Molecule & {
   molecules?: never; // Molecule rows don't have subrows
 };
 
+// Molecule ground/excited selection, injected from the composing page so the
+// cells never reach into the app-level simulation context.
+export type MoleculeSelection = {
+  groundId: string | null;
+  excitedId: string | null;
+  toggleGround: (molecule: Molecule) => void;
+  toggleExcited: (molecule: Molecule) => void;
+  selectGroup: (molecules: Molecule[]) => void;
+};
+
 // Type for external state handlers
 export type MoleculeTableHandlers = {
   editingCell: { id: string; field: string } | null;
@@ -34,6 +44,7 @@ export type MoleculeTableHandlers = {
   onSaveEdit: (value: string) => void;
   onCancelEdit: () => void;
   onEditValueChange: (value: string) => void;
+  selection: MoleculeSelection;
 };
 
 const columnHelper = createColumnHelper<TableRow>();
@@ -55,12 +66,14 @@ export function createMoleculeColumns(handlers: MoleculeTableHandlers) {
           // Group header - show molecule name and count
           return renderComponent(Cells.MoleculeTitle, {
             group: row.original as GroupRow,
+            selection: handlers.selection,
           });
         }
 
         if (row.depth > 0) {
           return renderComponent(Cells.Selection, {
             molecule: row.original as MoleculeRow,
+            selection: handlers.selection,
           });
         }
         // Hide in child rows since shown in group header

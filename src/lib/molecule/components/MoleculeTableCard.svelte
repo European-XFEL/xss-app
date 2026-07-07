@@ -13,9 +13,20 @@
     ground?: Molecule | null;
     excited?: Molecule | null;
     loading?: boolean;
+    onToggleGround: (molecule: Molecule) => void;
+    onToggleExcited: (molecule: Molecule) => void;
+    onSelectGroup: (molecules: Molecule[]) => void;
   }
 
-  let { ground, excited, molecules, loading = false }: Props = $props();
+  let {
+    ground,
+    excited,
+    molecules,
+    loading = false,
+    onToggleGround,
+    onToggleExcited,
+    onSelectGroup,
+  }: Props = $props();
 </script>
 
 <Card.Root>
@@ -34,6 +45,13 @@
     </Card.Description>
   </Card.Header>
   <Card.Content>
-    <MoleculeDataTable {ground} {excited} {molecules} />
+    <MoleculeDataTable
+      {ground}
+      {excited}
+      {molecules}
+      {onToggleGround}
+      {onToggleExcited}
+      {onSelectGroup}
+    />
   </Card.Content>
 </Card.Root>

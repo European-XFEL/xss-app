@@ -1,59 +1,31 @@
 <script lang="ts">
   import type { Molecule } from '../../../types';
+  import type { MoleculeSelection } from '../../columns';
 
   import { Button } from '$shadcn/ui/button';
 
-  import { useSimulationState } from '$lib/app/simulation-context.svelte';
-
-  const simulation = useSimulationState();
-
   type Props = {
     molecule: Molecule;
+    selection: MoleculeSelection;
   };
 
-  let { molecule }: Props = $props();
+  let { molecule, selection }: Props = $props();
 </script>
 
 <div class="flex items-center gap-1">
   <Button
-    variant={simulation.sample.ground?.id === molecule.id
-      ? 'default'
-      : 'outline'}
+    variant={selection.groundId === molecule.id ? 'default' : 'outline'}
     size="sm"
-    class={`h-7 px-2 text-xs ${simulation.sample.ground?.id === molecule.id ? 'border-blue-400 bg-blue-500 text-white hover:bg-blue-300' : 'hover:bg-gray-100'}`}
-    onclick={() => {
-      if (simulation.sample.ground?.id === molecule?.id) {
-        simulation.sample.ground = null;
-        return;
-      }
-
-      simulation.sample.ground = molecule;
-
-      if (simulation.sample.excited?.id === molecule.id) {
-        simulation.sample.excited = null;
-      }
-    }}
+    class={`h-7 px-2 text-xs ${selection.groundId === molecule.id ? 'border-blue-400 bg-blue-500 text-white hover:bg-blue-300' : 'hover:bg-gray-100'}`}
+    onclick={() => selection.toggleGround(molecule)}
   >
     Ground
   </Button>
   <Button
-    variant={simulation.sample.excited?.id === molecule.id
-      ? 'default'
-      : 'outline'}
+    variant={selection.excitedId === molecule.id ? 'default' : 'outline'}
     size="sm"
-    class={`h-7 px-2 text-xs ${simulation.sample.excited?.id === molecule.id ? 'border-orange-400 bg-orange-500 text-white hover:bg-orange-300' : 'hover:bg-gray-100'}`}
-    onclick={() => {
-      if (simulation.sample.excited?.id === molecule?.id) {
-        simulation.sample.excited = null;
-        return;
-      }
-
-      simulation.sample.excited = molecule;
-
-      if (simulation.sample.ground?.id === molecule.id) {
-        simulation.sample.ground = null;
-      }
-    }}
+    class={`h-7 px-2 text-xs ${selection.excitedId === molecule.id ? 'border-orange-400 bg-orange-500 text-white hover:bg-orange-300' : 'hover:bg-gray-100'}`}
+    onclick={() => selection.toggleExcited(molecule)}
   >
     Excited
   </Button>

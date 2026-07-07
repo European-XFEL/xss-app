@@ -28,5 +28,8 @@
     molecules={data.molecules}
     ground={simulation.sample.ground}
     excited={simulation.sample.excited}
+    onToggleGround={(molecule) => simulation.sample.toggleGround(molecule)}
+    onToggleExcited={(molecule) => simulation.sample.toggleExcited(molecule)}
+    onSelectGroup={(molecules) => simulation.sample.selectGroup(molecules)}
   />
 </div>
