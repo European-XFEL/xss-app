@@ -95,7 +95,7 @@ export default defineConfig(
     },
     rules: {
       'boundaries/dependencies': [
-        'warn',
+        'error',
         {
           default: 'disallow',
           rules: [
