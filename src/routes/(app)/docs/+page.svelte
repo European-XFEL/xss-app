@@ -78,39 +78,82 @@
     },
     {
       title: 'Map radial coordinate → pixel geometry',
-      body: `...`,
+      body: `
+        <p>Each pixel is assigned a scattering vector from the detector geometry: with sample-detector
+        distance ${katex.renderToString(String.raw`D`)}, beam center, and pixel pitch, the scattering angle
+        follows from ${katex.renderToString(String.raw`r = D \tan 2\theta`)} and
+        ${katex.renderToString(String.raw`Q = 4\pi \sin\theta / \lambda`)}.</p>
+        <br>
+        <p>Module layouts (positions, gaps, and rotations of the detector quadrants) are applied here, so
+        masked regions and inter-module gaps appear in the image exactly as they would in a measurement.</p>
+      `,
     },
     {
       title: 'Apply absorption',
-      body: `...`,
+      body: `
+        <p>Scattered X-rays are attenuated along their path through the sample and any downstream media.
+        The transmission depends on the path length, which grows with scattering angle, so absorption
+        imprints a smooth radial envelope on the image.</p>
+      `,
     },
     {
       title: 'Apply solid-angle correction',
-      body: `...`,
+      body: `
+        <p>A flat detector does not sample the scattering sphere uniformly: pixels far from the beam
+        center are further away and viewed obliquely, subtending a smaller solid angle
+        (${katex.renderToString(String.raw`\propto \cos^3 2\theta`)} for a perpendicular detector).</p>
+        <br>
+        <p>The per-pixel solid angle scales the expected intensity accordingly.</p>
+      `,
     },
     {
       title: 'Apply polarization correction',
-      body: `...`,
+      body: `
+        <p>The XFEL beam is (predominantly) horizontally polarized, so Thomson scattering is suppressed
+        in the polarization plane. The resulting factor depends on both scattering angle and azimuth,
+        breaking the azimuthal symmetry of the rings.</p>
+      `,
     },
     {
       title: 'Apply flat-field',
-      body: `...`,
+      body: `
+        <p>Real detectors have per-pixel gain variations (sensor thickness, ASIC differences, calibration
+        residuals). A flat-field map multiplies the image to emulate this fixed-pattern response.</p>
+      `,
     },
     {
       title: 'Add dark/background',
-      body: `...`,
+      body: `
+        <p>An additive term models everything present without the scattered signal: dark current and
+        electronic offsets of the detector, plus parasitic background scattering (air, windows, solvent
+        sheet) that survives the difference signal.</p>
+      `,
     },
     {
       title: 'Add noise',
-      body: `...`,
+      body: `
+        <p>Photon counting follows Poisson statistics, so shot noise is drawn per pixel from the expected
+        photon count; Gaussian readout noise is added on top. Together they set the realistic
+        signal-to-noise floor of a single (or averaged) shot.</p>
+      `,
     },
     {
       title: 'Add geometry uncertainty',
-      body: `...`,
+      body: `
+        <p>Calibration is never perfect: small perturbations of the beam center, sample-detector distance,
+        and detector tilt are applied to emulate geometry refinement errors and their effect on the
+        recovered 1D curve.</p>
+      `,
     },
     {
       title: 'Azimuthally integrate to validate closure',
-      body: `...`,
+      body: `
+        <p>Finally the synthetic 2D image is azimuthally re-integrated back to a 1D
+        ${katex.renderToString(String.raw`\Delta I(Q)`)} curve.</p>
+        <br>
+        <p>Comparing it against the input signal from step 1 closes the loop: differences reveal how the
+        detector effects above distort the measurement and how well the reduction pipeline undoes them.</p>
+      `,
     },
   ] as const;
 
