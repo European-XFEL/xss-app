@@ -3,7 +3,9 @@ import type { Molecule } from '$lib/molecule';
 import type { Sample, Solvent } from './types';
 
 export class SampleState implements Sample {
-  concentrationSoluteMolar: number | null = $state(null);
+  // Non-null default so ΔT/deposited energy read out immediately instead of
+  // N/A; 1 mmol/L is a typical TR-XSS solute concentration.
+  concentrationSoluteMolar: number | null = $state(0.001);
   solvent: Solvent | null = $state(null);
   ground: Molecule | null = $state(null);
   excited: Molecule | null = $state(null);
