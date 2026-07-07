@@ -11,6 +11,10 @@
   import * as Tooltip from '$shadcn/ui/tooltip/index.js';
 
   import { listMolecules, uploadMolecule } from '$lib/shared/api/api';
+  import {
+    MAX_UPLOAD_ATOM_COUNT,
+    MAX_UPLOAD_FILE_BYTES,
+  } from '$lib/shared/contracts';
   import type { Capability } from '$lib/shared/health';
 
   type Molecules = Awaited<ReturnType<typeof listMolecules>>;
@@ -104,9 +108,15 @@
     if (!atomCountValue || atomCountValue <= 0) {
       atomCountError = 'Atom count must be a positive integer';
       valid = false;
+    } else if (atomCountValue > MAX_UPLOAD_ATOM_COUNT) {
+      atomCountError = `Structure has too many atoms; the maximum is ${MAX_UPLOAD_ATOM_COUNT}`;
+      valid = false;
     }
     if (!file) {
       fileError = 'Please select a file';
+      valid = false;
+    } else if (file.size > MAX_UPLOAD_FILE_BYTES) {
+      fileError = `File is too large; the maximum is ${Math.floor(MAX_UPLOAD_FILE_BYTES / 1024)} kB`;
       valid = false;
     }
 
@@ -171,6 +181,11 @@
 
     if (!selected) return;
 
+    if (selected.size > MAX_UPLOAD_FILE_BYTES) {
+      fileError = `File is too large; the maximum is ${Math.floor(MAX_UPLOAD_FILE_BYTES / 1024)} kB.`;
+      return;
+    }
+
     if (!moleculeNameValue) {
       moleculeNameValue = filenameStem;
     }
@@ -183,6 +198,10 @@
         const count = parseAtomCount(contents);
         if (count === null) {
           fileError = 'Unable to read the atom count from this file.';
+          return;
+        }
+        if (count > MAX_UPLOAD_ATOM_COUNT) {
+          fileError = `Structure has too many atoms (${count}); the maximum is ${MAX_UPLOAD_ATOM_COUNT}.`;
           return;
         }
         atomCountValue = count;

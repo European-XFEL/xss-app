@@ -19,6 +19,7 @@ import {
   createClient,
   createConnectTransport,
 } from '$lib/server/grpc';
+import { MAX_UPLOAD_ATOM_COUNT } from '$lib/shared/contracts';
 
 import type {
   DebyeResult,
@@ -90,6 +91,17 @@ export const dbMoleculeSource: MoleculeDataSource = {
     const contents = await input.file.text();
     const derivedAtomCount = extractAtomCount(contents);
     const resolvedAtomCount = derivedAtomCount ?? input.atomCount;
+
+    // Authoritative cap on the count derived from the file itself — the
+    // route-level check only sees the client-declared value.
+    if (resolvedAtomCount > MAX_UPLOAD_ATOM_COUNT) {
+      return {
+        success: false,
+        result: null,
+        error: `Structure has too many atoms (${resolvedAtomCount}); the maximum is ${MAX_UPLOAD_ATOM_COUNT}.`,
+      };
+    }
+
     const sha = await sha256HexFromText(contents);
 
     try {

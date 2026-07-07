@@ -33,6 +33,14 @@ export type UploadMoleculeResult =
   | { success: true; result: MoleculeInfo; error?: undefined }
   | { success: false; result: null; error: string };
 
+/**
+ * Upload limits enforced on both sides: client-side for a friendly error,
+ * server-side as the authoritative check. The Debye computation is
+ * O(N² × |Q|), so an unbounded atom count can pin the backend.
+ */
+export const MAX_UPLOAD_ATOM_COUNT = 1000;
+export const MAX_UPLOAD_FILE_BYTES = 1024 * 1024; // 1 MiB
+
 // ─── Solvent ────────────────────────────────────────────────────────────────
 
 export interface SolventInfo {

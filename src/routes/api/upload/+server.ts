@@ -3,6 +3,10 @@ import { error, json } from '@sveltejs/kit';
 import { PUBLIC_TARGET } from '$env/static/public';
 
 import { moleculeSource } from '$lib/server/data';
+import {
+  MAX_UPLOAD_ATOM_COUNT,
+  MAX_UPLOAD_FILE_BYTES,
+} from '$lib/shared/contracts';
 
 import type { RequestHandler } from './$types';
 
@@ -52,6 +56,18 @@ export const POST: RequestHandler = async ({ request }) => {
   }
   if (!Number.isFinite(parsedAtomCount) || parsedAtomCount <= 0) {
     throw error(400, 'Invalid atom count value');
+  }
+  if (parsedAtomCount > MAX_UPLOAD_ATOM_COUNT) {
+    throw error(
+      400,
+      `Structure has too many atoms (${parsedAtomCount}); the maximum is ${MAX_UPLOAD_ATOM_COUNT}`,
+    );
+  }
+  if (file.size > MAX_UPLOAD_FILE_BYTES) {
+    throw error(
+      413,
+      `File is too large (${file.size} bytes); the maximum is ${MAX_UPLOAD_FILE_BYTES} bytes`,
+    );
   }
 
   const result = await moleculeSource.uploadMolecule({
