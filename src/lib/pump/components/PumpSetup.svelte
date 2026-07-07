@@ -18,7 +18,11 @@
     pump?.photonEnergyEv < pump?.excitedStateEnergyEv,
   );
 
-  const fields = $derived([
+  const fields: Array<{
+    label: string;
+    key: keyof Pump;
+    input: ComponentProps<typeof Input>;
+  }> = $derived([
     {
       label: 'Excited State Energy (eV)',
       key: 'excitedStateEnergyEv',
@@ -39,11 +43,7 @@
       key: 'excitedStateFraction',
       input: { min: 0.0, max: 1.0, step: 0.01 },
     },
-  ]) satisfies Array<{
-    label: string;
-    key: keyof Pump;
-    input: ComponentProps<typeof Input>;
-  }>;
+  ]);
 </script>
 
 <Field.Set>
@@ -63,8 +63,17 @@
           min={input.min}
           max={input.max}
           step={input.step}
+          aria-invalid={input['aria-invalid']}
         />
       </Field.Field>
     {/each}
   </Field.Group>
+
+  {#if photonEnergyInvalid}
+    <p role="alert" class="text-sm font-medium text-destructive">
+      Please make sure the Photon Energy exceeds the Excited State Energy. No
+      excited state can form below it, so the excited fraction and ΔT are
+      treated as zero.
+    </p>
+  {/if}
 </Field.Set>

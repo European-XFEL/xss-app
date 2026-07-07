@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { ComponentProps } from 'svelte';
+  import type { HTMLInputAttributes } from 'svelte/elements';
 
   import { Input } from '$shadcn/ui/input/index.js';
   import { Label } from '$shadcn/ui/label/index.js';
@@ -12,6 +13,7 @@
     min?: string | number;
     max?: string | number;
     step?: string | number;
+    'aria-invalid'?: HTMLInputAttributes['aria-invalid'];
   };
 
   let {
