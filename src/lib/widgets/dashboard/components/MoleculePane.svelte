@@ -1,24 +1,24 @@
 <script lang="ts">
   import * as Collapsible from '$shadcn/ui/collapsible/index.js';
 
-  import type { SimulationState } from '$lib/app/simulation-context.svelte';
   import { MoleculeTrajectoryViz, MoleculeViz } from '$lib/molecule';
+  import type { SampleState } from '$lib/sample';
 
   type VizMode = 'trajectory' | 'individual';
 
   interface Props {
-    simulation: SimulationState;
+    sample: SampleState;
     hasAll?: boolean;
     vizCollapseShow?: boolean;
   }
 
-  let { simulation, hasAll = true, vizCollapseShow = true }: Props = $props();
+  let { sample, hasAll = true, vizCollapseShow = true }: Props = $props();
 
   let vizOpen = $state(false);
   let vizMode = $state<VizMode>('trajectory');
 
-  const hasGround = $derived(!!simulation.sample.ground?.id);
-  const hasExcited = $derived(!!simulation.sample.excited?.id);
+  const hasGround = $derived(!!sample.ground?.id);
+  const hasExcited = $derived(!!sample.excited?.id);
 
   const canVisualize = $derived(hasAll && hasGround && hasExcited);
 </script>
@@ -45,23 +45,20 @@
       </button>
     </div>
     {#if vizMode === 'trajectory'}
-      <MoleculeTrajectoryViz
-        ground={simulation.sample.ground}
-        excited={simulation.sample.excited}
-      />
+      <MoleculeTrajectoryViz ground={sample.ground} excited={sample.excited} />
     {:else}
       <div class="grid gap-3 md:grid-cols-2">
         <div class="flex flex-col gap-2">
           <h3 class="text-xs font-semibold text-muted-foreground">
             Ground State
           </h3>
-          <MoleculeViz molecule={simulation.sample.ground} />
+          <MoleculeViz molecule={sample.ground} />
         </div>
         <div class="flex flex-col gap-2">
           <h3 class="text-xs font-semibold text-muted-foreground">
             Excited State
           </h3>
-          <MoleculeViz molecule={simulation.sample.excited} />
+          <MoleculeViz molecule={sample.excited} />
         </div>
       </div>
     {/if}

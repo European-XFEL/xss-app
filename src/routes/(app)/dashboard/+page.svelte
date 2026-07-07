@@ -200,7 +200,7 @@
               </p>
             {/if}
             <ResultsPane {...results} />
-            <MoleculePane {simulation} {hasAll} />
+            <MoleculePane sample={simulation.sample} {hasAll} />
           </div>
         </ScrollArea>
       {:else}
