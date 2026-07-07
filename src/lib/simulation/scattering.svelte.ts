@@ -1,4 +1,3 @@
-import type { SimulationState } from '$lib/app/simulation-context.svelte';
 import { throttled } from '$lib/shared/utils/throttled.svelte';
 
 import { THROTTLE_INTERVAL_MS } from './constants';
@@ -7,8 +6,25 @@ import {
   ScatteringMathState,
 } from './state.svelte';
 
+/**
+ * The slice of simulation state the scattering calculations read. Declared
+ * structurally here so this feature does not depend on the app-level
+ * composition root (`SimulationState` satisfies this shape).
+ */
+export interface ScatteringInputs {
+  pump: {
+    excitedStateFraction: number;
+    photonEnergyEv: number;
+    excitedStateEnergyEv: number;
+  };
+  sample: {
+    concentrationSoluteMolar: number | null;
+    solvent: { rhom: number; cpm: number } | null;
+  };
+}
+
 export function createScatteringCalculations(
-  simulation: SimulationState,
+  simulation: ScatteringInputs,
 ): ScatteringMathState {
   const throttledExcitedStateFraction = throttled(
     () => simulation.pump.excitedStateFraction,
