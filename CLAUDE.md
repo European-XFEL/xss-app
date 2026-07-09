@@ -19,6 +19,27 @@ This repo is indexed by CodeGraph (`.codegraph/` exists). Prefer `codegraph_expl
 `codegraph_node` (MCP), or the `codegraph` CLI, over ad-hoc grep/read to locate and
 understand code.
 
+## shadcn-svelte customizations
+
+`shadcn-svelte add <component> --overwrite` fully replaces the local file with upstream's
+current registry code — it does not merge, and it will silently delete any local edits.
+Before running it on any component below, re-apply the customization afterward (check
+`git diff` against the list, don't just skim for obviously-broken output):
+
+- `sidebar.svelte` — the "sidebar" variant's `sidebar-container` must stay in normal document
+  flow (not `fixed`); upstream now hardcodes `fixed` for every variant. The `relative h-full`
+  override lives at the call site (`src/lib/widgets/nav/components/Sidebar.svelte`, documented
+  inline there), but the outer wrapper's `md:flex md:h-full md:flex-col` for non-floating/inset
+  variants has no prop hook and must be hand-patched back into this file directly.
+- `card.svelte` — keep `ring-inset` on the root (upstream mira ships `ring-1` without it).
+- `input.svelte`, `select-trigger.svelte` — keep `border-line` (this app's border token, set in
+  `src/app.css`); upstream uses stock `border-input`.
+
+When a component's `class` prop is forwarded to the element you need to change (check by
+reading the file), prefer overriding at the call site over editing the vendored file — that
+survives `--overwrite` for free. Only hand-patch the vendored file when no prop reaches the
+element in question, as with the sidebar's outer wrapper above.
+
 ## Dev workflow (git worktrees)
 
 Worktree setup is automated by `.claude/settings.json` (`worktree`) + `.worktreeinclude`:
