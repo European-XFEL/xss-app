@@ -18,7 +18,7 @@
 
   let {
     value = $bindable(),
-    classNum = 'nodrag h-7 w-14 shrink-0 rounded-[7px] border-line px-1.5 text-center font-mono text-[11.5px] font-semibold',
+    classNum = 'nodrag h-7 w-16 shrink-0 rounded-[7px] border-line px-1.5 text-center font-mono text-[11.5px] font-semibold [appearance:textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none',
     classRange,
     label,
     min,
