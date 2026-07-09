@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
 
+  import * as Card from '$lib/shadcn/components/ui/card/index.js';
   import { cn } from '$lib/shadcn/utils.js';
 
   interface Props {
@@ -20,32 +21,27 @@
   }: Props = $props();
 </script>
 
-<section
-  class={cn(
-    'rounded-[11px] border border-line bg-card px-[18px] py-4',
-    className,
-  )}
->
-  <header class="flex items-start justify-between gap-4">
+<Card.Root class={cn('rounded-[11px] border border-line ring-0', className)}>
+  <Card.Header>
     <div class="flex items-start gap-2">
       <span
         aria-hidden="true"
         class="mt-0.5 h-3 w-[3px] shrink-0 rounded-sm bg-primary"
       ></span>
       <div>
-        <h3 class="eyebrow">{label}</h3>
+        <Card.Title>{label}</Card.Title>
         {#if description}
-          <p class="mt-1 text-xs text-muted-foreground">{description}</p>
+          <Card.Description class="mt-1">{description}</Card.Description>
         {/if}
       </div>
     </div>
     {#if actions}
-      <div class="shrink-0">
+      <Card.Action>
         {@render actions()}
-      </div>
+      </Card.Action>
     {/if}
-  </header>
-  <div class="mt-4 divide-y divide-line">
+  </Card.Header>
+  <Card.Content class="divide-y divide-line">
     {@render children()}
-  </div>
-</section>
+  </Card.Content>
+</Card.Root>
