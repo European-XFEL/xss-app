@@ -1,25 +1,14 @@
 <script lang="ts">
+  import { type NavSample, isSetupComplete } from '../lib/run-context';
+
   interface Props {
-    sample: {
-      moleculeName: string | undefined | null;
-      groundName: string | undefined | null;
-      excitedName: string | undefined | null;
-      solventName: string | undefined | null;
-      concentrationSoluteMolar: number | undefined | null;
-    };
+    sample: NavSample;
   }
 
   let { sample }: Props = $props();
 
-  // A true "recomputing…" signal requires wiring the dashboard's fetch
-  // resources (see scattering-fetcher.svelte.ts) through the shared
-  // simulation state — out of scope for the app shell. Until then this
-  // reflects whether the sample is fully configured.
-  const setupComplete = $derived(
-    !!sample.groundName && !!sample.excitedName && !!sample.solventName,
-  );
   const simStateText = $derived(
-    setupComplete ? 'simulation up to date' : 'setup incomplete',
+    isSetupComplete(sample) ? 'simulation up to date' : 'setup incomplete',
   );
 </script>
 
