@@ -131,7 +131,7 @@
             <Sidebar.MenuButton
               isActive={!!isActive}
               class={cn(
-                'gap-[9px] rounded-[6px] border-l-2 border-transparent px-[9px] py-[6px] text-[12.5px]',
+                'gap-[9px] rounded-[6px] border-l-2 border-transparent px-[9px] py-[6px] text-sm',
                 '[&_svg]:size-[14px] [&_svg]:text-muted-foreground',
                 isActive &&
                   'border-l-primary bg-accent-tint font-semibold text-foreground [&_svg]:text-primary',

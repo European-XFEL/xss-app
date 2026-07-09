@@ -17,7 +17,7 @@
 </script>
 
 <footer
-  class="flex h-[34px] shrink-0 items-center gap-4 bg-chrome px-[18px] font-mono text-[11px]"
+  class="flex h-[34px] shrink-0 items-center gap-4 bg-chrome px-[18px] font-mono text-xs"
 >
   <span>
     <span class="text-status-label">MOL</span>

@@ -32,7 +32,7 @@
     >
       <FlaskRoundIcon class="size-3.5" />
     </div>
-    <span class="text-[12.5px] font-semibold text-chrome-fg">
+    <span class="text-sm font-semibold text-chrome-fg">
       Scattering Simulator
     </span>
 
@@ -41,25 +41,25 @@
 
       <div class="flex items-center gap-2.5">
         <div class="flex flex-col leading-tight">
-          <span class="text-[14px] font-bold text-chrome-fg">{runTitle}</span>
-          <span class="font-mono text-[10.5px] text-chrome-meta">unsaved</span>
+          <span class="text-sm font-bold text-chrome-fg">{runTitle}</span>
+          <span class="font-mono text-xs text-chrome-meta">unsaved</span>
         </div>
 
         {#if !setupComplete}
           <span
-            class="rounded-full bg-[rgba(255,255,255,.08)] px-2 py-0.5 font-mono text-[10px] font-semibold tracking-wide text-chrome-meta"
+            class="rounded-full bg-[rgba(255,255,255,.08)] px-2 py-0.5 font-mono text-xs font-semibold tracking-wide text-chrome-meta"
           >
             SETUP INCOMPLETE
           </span>
         {:else if sample.computing}
           <span
-            class="rounded-full bg-[rgba(255,255,255,.08)] px-2 py-0.5 font-mono text-[10px] font-semibold tracking-wide text-chrome-meta"
+            class="rounded-full bg-[rgba(255,255,255,.08)] px-2 py-0.5 font-mono text-xs font-semibold tracking-wide text-chrome-meta"
           >
             COMPUTING
           </span>
         {:else}
           <span
-            class="rounded-full bg-[rgba(47,163,122,.16)] px-2 py-0.5 font-mono text-[10px] font-semibold tracking-wide text-status-ok-dot"
+            class="rounded-full bg-[rgba(47,163,122,.16)] px-2 py-0.5 font-mono text-xs font-semibold tracking-wide text-status-ok-dot"
           >
             READY
           </span>
@@ -78,7 +78,7 @@
             <button
               type="button"
               disabled
-              class="rounded-[7px] border border-[rgba(255,255,255,.18)] px-2.5 py-1.5 text-[12px] font-medium text-chrome-btn disabled:pointer-events-none disabled:opacity-50"
+              class="rounded-[7px] border border-[rgba(255,255,255,.18)] px-2.5 py-1.5 text-sm font-medium text-chrome-btn disabled:pointer-events-none disabled:opacity-50"
             >
               Save run
             </button>
@@ -93,7 +93,7 @@
             <button
               type="button"
               disabled
-              class="rounded-[7px] border border-[rgba(255,255,255,.18)] px-2.5 py-1.5 text-[12px] font-medium text-chrome-btn disabled:pointer-events-none disabled:opacity-50"
+              class="rounded-[7px] border border-[rgba(255,255,255,.18)] px-2.5 py-1.5 text-sm font-medium text-chrome-btn disabled:pointer-events-none disabled:opacity-50"
             >
               Export
             </button>
@@ -108,7 +108,7 @@
             <button
               type="button"
               disabled
-              class="rounded-[7px] bg-primary px-2.5 py-1.5 text-[12px] font-medium text-primary-foreground disabled:pointer-events-none disabled:opacity-50"
+              class="rounded-[7px] bg-primary px-2.5 py-1.5 text-sm font-medium text-primary-foreground disabled:pointer-events-none disabled:opacity-50"
             >
               Add to compare
             </button>

@@ -24,14 +24,14 @@
     {#snippet actions()}
       <a
         href={resolve('/docs')}
-        class="inline-flex items-center gap-1.5 rounded-[7px] border border-[rgba(255,255,255,.18)] px-2.5 py-1.5 text-[12px] font-medium text-chrome-btn"
+        class="inline-flex items-center gap-1.5 rounded-[7px] border border-[rgba(255,255,255,.18)] px-2.5 py-1.5 text-sm font-medium text-chrome-btn"
       >
         <BookOpen class="h-3.5 w-3.5" />
         Documentation
       </a>
       <a
         href={resolve('/dashboard')}
-        class="inline-flex items-center gap-1.5 rounded-[7px] bg-primary px-2.5 py-1.5 text-[12px] font-medium text-primary-foreground"
+        class="inline-flex items-center gap-1.5 rounded-[7px] bg-primary px-2.5 py-1.5 text-sm font-medium text-primary-foreground"
       >
         Open Dashboard
         <ArrowRight class="h-3.5 w-3.5" />

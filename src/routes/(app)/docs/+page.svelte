@@ -235,7 +235,7 @@
   >
     <TriangleAlert class="mt-0.5 size-4 shrink-0" />
     <div>
-      <p class="text-[13px] font-bold tracking-tight">
+      <p class="text-sm font-bold tracking-tight">
         Physics Simplifications
       </p>
       <ul
@@ -253,9 +253,9 @@
     </div>
   </div>
 
-  <h2 class="text-[19px] font-bold tracking-tight">Simulation Details</h2>
+  <h2 class="text-xl font-bold tracking-tight">Simulation Details</h2>
 
-  <h3 class="text-[17px] font-bold tracking-tight">
+  <h3 class="text-lg font-bold tracking-tight">
     The Debye Scattering Equation
   </h3>
   <p>
@@ -282,7 +282,7 @@
 </section>
 
 <section>
-  <h3 class="text-[17px] font-bold tracking-tight">Atomic Form Factors</h3>
+  <h3 class="text-lg font-bold tracking-tight">Atomic Form Factors</h3>
 
   <div class="not-prose grid gap-6 md:grid-cols-2">
     <ChannelPanel label="Cromer-Mann (1968)">
@@ -311,7 +311,7 @@
 </section>
 
 <section>
-  <h3 class="text-[17px] font-bold tracking-tight">
+  <h3 class="text-lg font-bold tracking-tight">
     Difference Scattering Pipeline
   </h3>
 
@@ -338,7 +338,7 @@
 </section>
 
 <section>
-  <h3 class="text-[17px] font-bold tracking-tight">
+  <h3 class="text-lg font-bold tracking-tight">
     Image Reconstruction Pipeline
   </h3>
 
@@ -362,7 +362,7 @@
 </section>
 
 <section>
-  <h2 class="text-[19px] font-bold tracking-tight">Usage</h2>
+  <h2 class="text-xl font-bold tracking-tight">Usage</h2>
 
   <div class="not-prose grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
     {#each workflow as item, i (item.title)}
