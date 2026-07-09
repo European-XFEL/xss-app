@@ -111,11 +111,7 @@
 
   import * as Sidebar from '$shadcn/ui/sidebar/index.js';
 
-  import {
-    AlphaAlert,
-    BugsFeatures,
-    FeedbackDialog,
-  } from '$lib/widgets/feedback';
+  import { BugsFeatures, FeedbackDialog } from '$lib/widgets/feedback';
 </script>
 
 {#each data as group (group.title)}
@@ -155,8 +151,6 @@
     </Sidebar.GroupContent>
   </Sidebar.Group>
 {/each}
-
-<AlphaAlert />
 
 <Sidebar.Group>
   <Sidebar.GroupContent>
