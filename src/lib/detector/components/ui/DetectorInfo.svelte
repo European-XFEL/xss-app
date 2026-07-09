@@ -14,10 +14,12 @@
 
   let { imageShape, pixelSize, qRange }: Props = $props();
 
+  // Match the significant-figure formatting used for the solvent Q range on
+  // the Sample page rather than dumping raw floats like 0.11224946440748564.
   let qFields = $derived([
-    ['Q Min', qRange.min],
-    ['Q Max', qRange.max],
-    ['Q Step', qRange.step],
+    ['Q Min', qRange.min.toPrecision(3)],
+    ['Q Max', qRange.max.toPrecision(3)],
+    ['Q Step', qRange.step.toPrecision(3)],
   ]);
 </script>
 
