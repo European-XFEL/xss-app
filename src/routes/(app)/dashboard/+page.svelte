@@ -148,7 +148,7 @@
   );
 </script>
 
-<div class="-mt-4 -mr-4 flex h-lvh flex-col" bind:clientWidth={w}>
+<div class="flex h-full flex-col" bind:clientWidth={w}>
   <header
     class="flex min-h-20 shrink-0 flex-wrap items-center justify-between gap-4 border-b bg-background px-7 py-4"
   >
