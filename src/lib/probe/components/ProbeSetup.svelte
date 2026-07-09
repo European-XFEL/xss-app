@@ -10,6 +10,10 @@
   };
 
   let { probe = $bindable() }: Props = $props();
+
+  // Display-only readout: E[keV] = 12.398 / wavelength[Å]. Not an editable
+  // field — a two-way keV<->Å control is a separate product decision.
+  let photonEnergyKev = $derived(12.398 / probe.wavelength);
 </script>
 
 <Field.Set>
@@ -22,6 +26,9 @@
         max="2.0"
         step="0.01"
       />
+      <p class="text-xs text-muted-foreground">
+        ≈ {photonEnergyKev.toPrecision(3)} keV
+      </p>
     </Field.Field>
   </Field.Group>
 </Field.Set>
