@@ -19,6 +19,7 @@
   {...restProps}
   variant="sidebar"
   class="border-line px-[9px] py-[12px]"
+  style="--sidebar: transparent"
 >
   <Sidebar.Content class="gap-0">
     <SidebarContent />
