@@ -154,10 +154,10 @@
     {direction}
     class="min-h-0 max-w-full flex-1 gap-4 rounded-lg"
   >
-    <Resizable.Pane defaultSize={70} class="mt-4 flex overflow-hidden">
+    <Resizable.Pane defaultSize={70} class="flex overflow-hidden">
       {#if hasAll}
         <ScrollArea class="w-full flex-1">
-          <div class="mr-2 pb-4">
+          <div class="mr-2">
             {#if fetchError}
               <div
                 role="alert"
@@ -181,7 +181,7 @@
           </div>
         </ScrollArea>
       {:else}
-        <div class="flex w-full flex-1 items-center justify-center px-4 pb-4">
+        <div class="flex w-full flex-1 items-center justify-center">
           <SetupChecklist
             {hasGroundMolecule}
             {hasExcitedMolecule}
@@ -195,7 +195,7 @@
 
     <Resizable.Pane defaultSize={20} class="flex max-w-2xl min-w-110">
       <ScrollArea class="flex-1">
-        <div class="m-4">
+        <div class="mr-2">
           <ConfigPane {simulation} {molecules} {solvents} {short} />
         </div>
       </ScrollArea>

@@ -26,7 +26,7 @@
   <div class="flex min-h-0 flex-1">
     <AppSidebar />
 
-    <main class="min-h-0 flex-1 overflow-y-auto bg-canvas">
+    <main class="min-h-0 flex-1 overflow-y-auto bg-canvas p-6">
       {@render children()}
     </main>
   </div>
