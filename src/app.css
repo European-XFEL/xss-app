@@ -75,6 +75,9 @@
   --caution-bg: #fdf6ec;
   --caution-border: #f4dcae;
 
+  /* inset panels (e.g. equation blocks) */
+  --inset: #f6f7fa;
+
   /* status bar */
   --status-label: #5a6070;
   --status-value: #c9cdd6;
@@ -141,6 +144,7 @@
   --color-plot-zero-line: var(--plot-zero-line);
   --color-caution-bg: var(--caution-bg);
   --color-caution-border: var(--caution-border);
+  --color-inset: var(--inset);
   --color-status-label: var(--status-label);
   --color-status-value: var(--status-value);
   --color-status-gnd: var(--status-gnd);
