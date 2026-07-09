@@ -196,7 +196,7 @@
     <Resizable.Pane defaultSize={20} class="flex max-w-2xl min-w-110">
       <ScrollArea class="flex-1">
         <div class="mr-2">
-          <ConfigPane {simulation} {molecules} {solvents} {short} />
+          <ConfigPane {molecules} {solvents} {short} />
         </div>
       </ScrollArea>
     </Resizable.Pane>
