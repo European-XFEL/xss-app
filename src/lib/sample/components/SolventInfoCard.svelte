@@ -23,8 +23,6 @@
   });
 </script>
 
-<!-- TODO: Add reference link to where solvent files downloaded from  -->
-
 <ChannelPanel
   label="Solvent Properties"
   description="Summary of solvent information."
@@ -43,4 +41,13 @@
       {/each}
     </Table.Body>
   </Table.Root>
+  <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+  <a
+    href="https://sites.google.com/site/trwaxs/home/TRWAXS-data"
+    target="_blank"
+    rel="noopener noreferrer"
+    class="mt-2 block text-xs text-muted-foreground hover:underline"
+  >
+    Source: TR-WAXS data
+  </a>
 </ChannelPanel>
