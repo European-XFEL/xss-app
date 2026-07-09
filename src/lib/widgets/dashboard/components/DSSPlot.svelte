@@ -42,24 +42,28 @@
         y: deltaSi ?? [],
         label: 'ΔS (Total)',
         markers: 'line',
+        line_style: { stroke: `var(--data-total)` },
       },
       {
         x: q,
         y: deltaSSoluteScaled ?? [],
         label: 'ΔS Solute (α·ΔS)',
         markers: 'line',
+        line_style: { stroke: `var(--data-solute)` },
       },
       {
         x: q,
         y: deltaSSolvent ?? [],
         label: 'ΔS Solvent (normalized)',
         markers: 'line',
+        line_style: { stroke: `var(--data-solvent)` },
       },
       {
         x: q,
         y: deltaSSolventPerMolecule ?? [],
         label: 'ΔS Solvent (per molecule)',
         markers: 'line',
+        line_style: { stroke: `var(--data-permol)` },
       },
     ];
   }) as DataSeries[];
