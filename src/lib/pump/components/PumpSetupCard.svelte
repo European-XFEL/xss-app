@@ -13,6 +13,7 @@
 
 <ChannelPanel
   label="Optical Pump"
+  variant={short ? 'flat' : 'card'}
   description={short
     ? undefined
     : 'Configure the optical pump settings for the simulation.'}

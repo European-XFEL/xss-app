@@ -19,10 +19,15 @@
   const simulation = useSimulationState();
 </script>
 
-<div class="flex flex-col gap-4 *:flex-1">
+<div
+  class={short
+    ? 'flex flex-col divide-y divide-line *:flex-1'
+    : 'flex flex-col gap-4 *:flex-1'}
+>
   <SampleCard
     {solvents}
     {molecules}
+    {short}
     bind:concentrationSoluteMolar={simulation.sample.concentrationSoluteMolar}
     bind:solvent={simulation.sample.solvent}
     bind:ground={simulation.sample.ground}

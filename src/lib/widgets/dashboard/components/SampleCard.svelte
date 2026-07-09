@@ -17,6 +17,7 @@
     ground?: Sample['ground'];
     excited?: Sample['excited'];
     loading?: boolean;
+    short?: boolean;
   }
 
   let {
@@ -27,12 +28,16 @@
     ground = $bindable(),
     excited = $bindable(),
     loading = false,
+    short = false,
   }: Props = $props();
 </script>
 
 <ChannelPanel
   label="Sample"
-  description="Solvent, solute concentration, and ground/excited molecule states."
+  variant={short ? 'flat' : 'card'}
+  description={short
+    ? undefined
+    : 'Solvent, solute concentration, and ground/excited molecule states.'}
 >
   {#snippet actions()}
     {#if loading}

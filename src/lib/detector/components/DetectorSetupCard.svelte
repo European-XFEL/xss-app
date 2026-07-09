@@ -14,6 +14,7 @@
 
 <ChannelPanel
   label="Detector Configuration"
+  variant={short ? 'flat' : 'card'}
   description={short
     ? undefined
     : 'Select detector type and configure module positions.'}
