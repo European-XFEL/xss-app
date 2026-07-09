@@ -10,9 +10,9 @@
   // eslint-disable-next-line boundaries/dependencies
   import { useSimulationState } from '$lib/app/simulation-context.svelte';
   import { DetectorSetupCard } from '$lib/detector';
-  import { MoleculeCard } from '$lib/molecule';
   import { PumpSetupCard } from '$lib/pump';
-  import { SolventCard } from '$lib/sample';
+
+  import SampleCard from './SampleCard.svelte';
 
   const { molecules, solvents, short } = $props();
 
@@ -20,14 +20,11 @@
 </script>
 
 <div class="flex flex-col gap-4 *:flex-1">
-  <SolventCard
+  <SampleCard
     {solvents}
+    {molecules}
     bind:concentrationSoluteMolar={simulation.sample.concentrationSoluteMolar}
     bind:solvent={simulation.sample.solvent}
-    {short}
-  />
-  <MoleculeCard
-    {molecules}
     bind:ground={simulation.sample.ground}
     bind:excited={simulation.sample.excited}
   />

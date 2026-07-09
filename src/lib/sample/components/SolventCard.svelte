@@ -5,9 +5,9 @@
 
   import { Spinner } from '$shadcn/ui/spinner/index.js';
 
-  import { ChannelPanel, NumSlider } from '$lib/shared/ui';
+  import { ChannelPanel } from '$lib/shared/ui';
 
-  import SolventSelect from './ui/SolventSelect.svelte';
+  import SolventFields from './SolventFields.svelte';
 
   interface Props {
     solvent: Sample['solvent'];
@@ -39,16 +39,10 @@
       </div>
     {/if}
   {/snippet}
-  <div class="py-3 first:pt-0 last:pb-0">
-    <SolventSelect bind:solvent {solvents} {loading} />
-  </div>
-  <div class="py-3 first:pt-0 last:pb-0">
-    <NumSlider
-      label="Solute Concentration (mol/L)"
-      min="0.001"
-      max="100"
-      step="0.001"
-      bind:value={concentrationSoluteMolar}
-    />
-  </div>
+  <SolventFields
+    bind:solvent
+    bind:concentrationSoluteMolar
+    {solvents}
+    {loading}
+  />
 </ChannelPanel>
