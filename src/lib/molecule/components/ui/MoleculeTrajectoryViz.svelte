@@ -26,9 +26,14 @@
     return `${groundXyz.trimEnd()}\n${excitedXyz.trimEnd()}\n`;
   };
 
-  const { component: Trajectory } = useMatterviz(() =>
+  // Read `.component` through a $derived rather than destructuring it: the
+  // helper exposes a getter over $state that starts null and is populated when
+  // the dynamic import resolves. Destructuring snapshots the initial null and
+  // never updates, leaving the viewer stuck on "Loading MatterViz...".
+  const matterviz = useMatterviz(() =>
     import('matterviz/trajectory').then((m) => m.Trajectory),
   );
+  const Trajectory = $derived(matterviz.component);
 
   let dataUrl = $state<string | null>(null);
   let loading = $state(false);

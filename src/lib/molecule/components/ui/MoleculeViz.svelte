@@ -53,9 +53,14 @@
     };
   });
 
-  const { component: Structure } = useMatterviz(() =>
+  // Read `.component` through a $derived rather than destructuring it: the
+  // helper exposes a getter over $state that starts null and is populated when
+  // the dynamic import resolves. Destructuring snapshots the initial null and
+  // never updates, leaving the viewer stuck on "Loading MatterViz...".
+  const matterviz = useMatterviz(() =>
     import('matterviz/structure').then((m) => m.Structure),
   );
+  const Structure = $derived(matterviz.component);
 
   const placeholder = $derived.by(() => {
     if (!Structure) return { title: 'Loading MatterViz...', description: '' };
