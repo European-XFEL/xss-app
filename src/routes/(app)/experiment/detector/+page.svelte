@@ -10,7 +10,7 @@
 </script>
 
 <div class="flex flex-col gap-6">
-  <div class="flex flex-wrap gap-6 [&>div]:min-w-sm [&>div]:flex-1">
+  <div class="flex flex-wrap gap-6 *:min-w-sm *:flex-1">
     <DetectorSetupCard
       bind:distance={simulation.detector.distance}
       bind:beamCenter={simulation.detector.beamCenter}

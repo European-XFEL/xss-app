@@ -22,11 +22,6 @@
 </script>
 
 <Field.Set>
-  <Field.Legend>Detector Information</Field.Legend>
-  <Field.Description>
-    Information about the selected detector and current configuration.
-  </Field.Description>
-
   <Field.Group class="flex flex-row">
     <Field.Field>
       <Field.Label>Pixel size (mm)</Field.Label>

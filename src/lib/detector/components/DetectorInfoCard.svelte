@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { ComponentProps } from 'svelte';
 
-  import * as Card from '$shadcn/ui/card/index.js';
+  import { ChannelPanel } from '$lib/shared/ui';
 
   import DetectorInfo from './ui/DetectorInfo.svelte';
 
@@ -10,8 +10,9 @@
   let { ...restProps }: Props = $props();
 </script>
 
-<Card.Root>
-  <Card.Content>
-    <DetectorInfo {...restProps} />
-  </Card.Content>
-</Card.Root>
+<ChannelPanel
+  label="Detector Information"
+  description="Information about the selected detector and current configuration."
+>
+  <DetectorInfo {...restProps} />
+</ChannelPanel>

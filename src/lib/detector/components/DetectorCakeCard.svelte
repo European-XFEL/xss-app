@@ -4,9 +4,10 @@
 
   import { fade } from 'svelte/transition';
 
-  import * as Card from '$shadcn/ui/card/index.js';
   import { Skeleton } from '$shadcn/ui/skeleton/index.js';
   import * as Tooltip from '$shadcn/ui/tooltip/index.js';
+
+  import { ChannelPanel } from '$lib/shared/ui';
 
   import CakeModuleLegend from './ui/CakeModuleLegend.svelte';
 
@@ -29,33 +30,27 @@
 
 <!-- TODO: Realistic constraints for module movement -->
 
-<Card.Root class="w-full min-w-fit">
-  <Card.Header>
-    <Card.Title>Detector Caking Visualization</Card.Title>
+<ChannelPanel label="Detector Caking Visualization" class="w-full min-w-fit">
+  {#snippet actions()}
+    <Tooltip.Provider>
+      <Tooltip.Root>
+        <Tooltip.Trigger><BadgeInfo size={16} /></Tooltip.Trigger>
+        <Tooltip.Content class="w-fit max-w-xs">
+          Drag the <span class="font-medium text-destructive">
+            red crosshair</span
+          >
+          to move the beam center or drag the
+          <span class="font-medium text-primary">colored modules</span>
+          to reposition them. The caked projection updates in real time.
+        </Tooltip.Content>
+      </Tooltip.Root>
+    </Tooltip.Provider>
+  {/snippet}
 
-    <Card.Action>
-      <Tooltip.Provider>
-        <Tooltip.Root>
-          <Tooltip.Trigger><BadgeInfo size={16} /></Tooltip.Trigger>
-          <Tooltip.Content class="w-fit max-w-xs">
-            Drag the <span class="font-medium text-destructive">
-              red crosshair</span
-            >
-            to move the beam center or drag the
-            <span class="font-medium text-blue-600">colored modules</span>
-            to reposition them. The caked projection updates in real time.
-          </Tooltip.Content>
-        </Tooltip.Root>
-      </Tooltip.Provider>
-    </Card.Action>
-  </Card.Header>
-
-  <Card.Content class="flex min-w-fit flex-col gap-6">
+  <div class="flex min-w-fit flex-col gap-6">
     <div class="flex grow flex-wrap justify-center-safe gap-6">
       <div class="min-w-fit">
-        <div
-          class="flow rounded-2xl border border-border/80 bg-muted/30 p-3 shadow-inner"
-        >
+        <div class="flow rounded-[12px] bg-canvas p-3 shadow-inner">
           {#await import('./ui/CakeCartesian.svelte')}
             <!-- prettier-ignore -->
             <Skeleton
@@ -70,9 +65,7 @@
         </div>
       </div>
       <div class="min-w-fit">
-        <div
-          class="flow rounded-2xl border border-border/80 bg-muted/30 p-3 shadow-inner"
-        >
+        <div class="flow rounded-[12px] bg-canvas p-3 shadow-inner">
           {#await import('./ui/CakePolar.svelte')}
             <!-- prettier-ignore -->
             <Skeleton
@@ -95,5 +88,5 @@
       </div>
     </div>
     <CakeModuleLegend {modules} />
-  </Card.Content>
-</Card.Root>
+  </div>
+</ChannelPanel>
