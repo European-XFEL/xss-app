@@ -1,0 +1,44 @@
+{
+  "attribution": {
+    "commit": ""
+  },
+  "worktree": {
+    "baseRef": "head",
+    "symlinkDirectories": ["node_modules"]
+  },
+  "permissions": {
+    "deny": [
+      "Bash(git push:*)",
+      "Bash(git stash:*)"
+    ],
+    "allow": [
+      "Bash(pnpm install)",
+      "Bash(pnpm lint)",
+      "Bash(pnpm check:*)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm exec prettier:*)",
+      "Bash(pnpm exec eslint:*)",
+      "Bash(pnpm exec dotenv:*)",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(git notes:*)",
+      "Bash(curl -sf http://localhost:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git commit:*)",
+            "command": "jq -r '.tool_input.command // \"\"' | grep -Eq '(^| )(--no-verify|-n)( |$)' && { echo 'blocked: --no-verify/-n would bypass the commit-msg hook; commit normally' >&2; exit 2; }; exit 0"
+          }
+        ]
+      }
+    ]
+  }
+}

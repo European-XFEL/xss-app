@@ -1,0 +1,5 @@
+# Files copied into every new worktree (--worktree, subagent isolation, desktop).
+# Uses .gitignore syntax; only gitignored files that match are copied, so
+# tracked files are never duplicated. Keeps agent worktrees runnable without
+# hand-copying local config.
+.env

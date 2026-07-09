@@ -31,3 +31,9 @@ vite.config.ts.timestamp-*
 
 *storybook.log
 storybook-static
+
+# Claude Code: track shared project config; keep personal/local overrides out.
+# (The user global gitignore excludes all of .claude, so re-include selectively.)
+!.claude/
+.claude/*
+!.claude/settings.json
