@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { ChannelPanel } from '$lib/shared/ui';
-
   import DSSPlot from './DSSPlot.svelte';
 
   interface Props {
@@ -57,7 +55,7 @@
   ]);
 </script>
 
-<ChannelPanel label="ΔS(Q)" description="Time-resolved scattering signal">
+<div class="divide-y divide-line">
   <div class="flex divide-x divide-line-soft py-3 first:pt-0 last:pb-0">
     {#each metrics as metric (metric.label)}
       <div class="flex-1 px-4 first:pl-0 last:pr-0" title={metric.full}>
@@ -75,4 +73,4 @@
   <div class="py-3 first:pt-0 last:pb-0">
     <DSSPlot {...results} />
   </div>
-</ChannelPanel>
+</div>
