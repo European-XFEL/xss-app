@@ -2,6 +2,8 @@
   let { children } = $props();
 </script>
 
-<article class="prose mt-8 max-w-none dark:prose-invert">
+<article
+  class="mx-auto prose max-w-[820px] px-6 py-10 dark:prose-invert [&>section+section]:mt-12"
+>
   {@render children?.()}
 </article>
