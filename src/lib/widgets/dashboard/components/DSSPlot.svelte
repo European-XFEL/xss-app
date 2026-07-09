@@ -96,4 +96,8 @@
       <Label>Clip to Detector Q Range</Label>
     </div>
   </div>
+
+  <p class="text-xs text-muted-foreground">
+    Drag to zoom &middot; Shift+drag to pan &middot; Double-click to reset
+  </p>
 </div>
