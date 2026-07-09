@@ -11,11 +11,11 @@
 </script>
 
 {#if state === 0}
-  <Badge variant={state === 0 ? 'outline' : 'default'}>
+  <Badge variant="outline" class="border-data-total text-data-total">
     {formatState(state)}
   </Badge>
 {:else}
-  <Badge variant={state === 0 ? 'outline' : 'default'}>
+  <Badge class="bg-data-solute text-white">
     {formatState(state)}
   </Badge>
 {/if}

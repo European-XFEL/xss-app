@@ -16,7 +16,7 @@
   <Button
     variant={selection.groundId === molecule.id ? 'default' : 'outline'}
     size="sm"
-    class={`h-7 px-2 text-xs ${selection.groundId === molecule.id ? 'border-blue-400 bg-blue-500 text-white hover:bg-blue-300' : 'hover:bg-gray-100'}`}
+    class={`h-7 px-2 text-xs ${selection.groundId === molecule.id ? 'border-data-total bg-data-total text-white hover:bg-data-total/85' : 'hover:bg-muted'}`}
     onclick={() => selection.toggleGround(molecule)}
   >
     Ground
@@ -24,7 +24,7 @@
   <Button
     variant={selection.excitedId === molecule.id ? 'default' : 'outline'}
     size="sm"
-    class={`h-7 px-2 text-xs ${selection.excitedId === molecule.id ? 'border-orange-400 bg-orange-500 text-white hover:bg-orange-300' : 'hover:bg-gray-100'}`}
+    class={`h-7 px-2 text-xs ${selection.excitedId === molecule.id ? 'border-data-solute bg-data-solute text-white hover:bg-data-solute/85' : 'hover:bg-muted'}`}
     onclick={() => selection.toggleExcited(molecule)}
   >
     Excited
