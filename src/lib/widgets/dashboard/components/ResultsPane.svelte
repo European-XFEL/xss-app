@@ -61,7 +61,7 @@
   <div class="flex divide-x divide-line-soft py-3 first:pt-0 last:pb-0">
     {#each metrics as metric (metric.label)}
       <div class="flex-1 px-4 first:pl-0 last:pr-0" title={metric.full}>
-        <div class="eyebrow">{metric.label}</div>
+        <div>{metric.label}</div>
         <div class="mt-1 font-mono text-[15px] font-semibold">
           {metric.display}
           <span class="text-xs font-normal text-muted-foreground">

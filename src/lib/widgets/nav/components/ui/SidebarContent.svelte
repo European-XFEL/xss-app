@@ -118,7 +118,7 @@
 {#each data as group (group.title)}
   <Sidebar.Group class="px-0 py-1.5">
     {#if group.title}
-      <Sidebar.GroupLabel class="h-auto px-0 pt-3 pb-1.5 eyebrow"
+      <Sidebar.GroupLabel class="h-auto px-0 pt-3 pb-1.5"
         >{group.title}</Sidebar.GroupLabel
       >
     {/if}

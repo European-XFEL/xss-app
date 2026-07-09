@@ -69,7 +69,7 @@
           <item.icon class="h-3 w-3" />
         {/if}
       </div>
-      <span class="eyebrow">{item.label}</span>
+      <span>{item.label}</span>
       {#if item.completed}
         <span class="ml-auto text-xs text-muted-foreground">Done</span>
       {/if}
