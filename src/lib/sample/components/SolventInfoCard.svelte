@@ -1,8 +1,9 @@
 <script lang="ts">
   import type { Sample } from '../types';
 
-  import * as Card from '$shadcn/ui/card/index.js';
   import * as Table from '$shadcn/ui/table/index.js';
+
+  import { ChannelPanel } from '$lib/shared/ui';
 
   interface Props {
     solvent: Sample['solvent'];
@@ -22,27 +23,24 @@
   });
 </script>
 
-<Card.Root>
-  <Card.Header>
-    <Card.Title>Solvent Information</Card.Title>
-    <Card.Description>Summary of solvent information.</Card.Description>
-  </Card.Header>
+<!-- TODO: Add reference link to where solvent files downloaded from  -->
 
-  <!-- TODO: Add reference link to where solvent files downloaded from  -->
-
-  <Card.Content class="max-w-md">
-    <Table.Root>
-      <Table.Body>
-        {#each rows as [key, unit, value] (key)}
-          <Table.Row>
-            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-            <Table.Cell class="font-medium">{@html key}</Table.Cell>
-            <Table.Cell>{value}</Table.Cell>
-            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-            <Table.Cell class="text-end">{@html unit}</Table.Cell>
-          </Table.Row>
-        {/each}
-      </Table.Body>
-    </Table.Root>
-  </Card.Content>
-</Card.Root>
+<ChannelPanel
+  label="Solvent Properties"
+  description="Summary of solvent information."
+  class="max-w-md"
+>
+  <Table.Root>
+    <Table.Body>
+      {#each rows as [key, unit, value] (key)}
+        <Table.Row>
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+          <Table.Cell class="font-medium">{@html key}</Table.Cell>
+          <Table.Cell>{value}</Table.Cell>
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+          <Table.Cell class="text-end">{@html unit}</Table.Cell>
+        </Table.Row>
+      {/each}
+    </Table.Body>
+  </Table.Root>
+</ChannelPanel>
