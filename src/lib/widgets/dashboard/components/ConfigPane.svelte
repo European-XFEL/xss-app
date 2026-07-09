@@ -4,7 +4,7 @@
   import { PumpSetupCard } from '$lib/pump';
   import { SolventCard } from '$lib/sample';
 
-  const { simulation = $bindable(), molecules, solvents, short } = $props();
+  const { simulation, molecules, solvents, short } = $props();
 </script>
 
 <div class="flex flex-col gap-4 *:flex-1">
@@ -22,6 +22,7 @@
   <DetectorSetupCard
     bind:distance={simulation.detector.distance}
     bind:beamCenter={simulation.detector.beamCenter}
+    {short}
   />
-  <PumpSetupCard bind:pump={simulation.pump} />
+  <PumpSetupCard bind:pump={simulation.pump} {short} />
 </div>

@@ -47,11 +47,6 @@
 </script>
 
 <Field.Set>
-  <Field.Legend>Optical Pump Configuration</Field.Legend>
-  <Field.Description
-    >Configure the optical pump settings for the simulation.</Field.Description
-  >
-
   <!-- TODO: Allow setting dE/dT directly instead of via energies -->
 
   <Field.Group>
