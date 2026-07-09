@@ -1,6 +1,9 @@
 <script lang="ts">
+  import { Atom, LineChart } from '@lucide/svelte';
+
   import * as Resizable from '$shadcn/ui/resizable/index.js';
   import { ScrollArea } from '$shadcn/ui/scroll-area/index.js';
+  import * as Tabs from '$shadcn/ui/tabs/index.js';
 
   import { useSimulationState } from '$lib/app/simulation-context.svelte';
   import { listMolecules, listSolvents } from '$lib/shared/api/api';
@@ -13,11 +16,13 @@
     isValidQRange,
     scaleSoluteByExcitedFraction,
   } from '$lib/simulation';
+  import type { VizMode } from '$lib/widgets/dashboard';
   import {
     ConfigPane,
     MoleculePane,
     ResultsPane,
     SetupChecklist,
+    VizModeToggle,
   } from '$lib/widgets/dashboard';
 
   const simulation = useSimulationState();
@@ -42,6 +47,9 @@
   const molecules = $derived(listResource.value?.molecules ?? []);
 
   let short = $state(true);
+
+  let centerTab = $state<'scattering' | 'molecule'>('scattering');
+  let vizMode = $state<VizMode>('trajectory');
 
   const calculations = createScatteringCalculations(simulation);
 
@@ -176,10 +184,41 @@
                 Computing scattering signals…
               </p>
             {/if}
-            <div class="flex flex-col gap-4">
-              <ResultsPane {...results} />
-              <MoleculePane sample={simulation.sample} {hasAll} />
-            </div>
+            <Tabs.Root bind:value={centerTab} class="w-full gap-0">
+              <div
+                class="mb-4 flex items-center justify-between gap-4 border-b border-line pb-2"
+              >
+                <Tabs.List variant="line" class="gap-4">
+                  <Tabs.Trigger
+                    value="scattering"
+                    class="gap-1.5 text-sm after:bg-primary data-active:font-semibold"
+                  >
+                    <LineChart />
+                    Difference Scattering ΔS(Q)
+                  </Tabs.Trigger>
+                  <Tabs.Trigger
+                    value="molecule"
+                    class="gap-1.5 text-sm after:bg-primary data-active:font-semibold"
+                  >
+                    <Atom />
+                    Molecule Visualization
+                  </Tabs.Trigger>
+                </Tabs.List>
+                {#if centerTab === 'molecule'}
+                  <VizModeToggle bind:value={vizMode} />
+                {/if}
+              </div>
+              <Tabs.Content value="scattering">
+                <div class="rounded-lg border border-line p-4">
+                  <ResultsPane {...results} />
+                </div>
+              </Tabs.Content>
+              <Tabs.Content value="molecule">
+                <div class="rounded-lg border border-line p-4">
+                  <MoleculePane sample={simulation.sample} {hasAll} {vizMode} />
+                </div>
+              </Tabs.Content>
+            </Tabs.Root>
           </div>
         </ScrollArea>
       {:else}
