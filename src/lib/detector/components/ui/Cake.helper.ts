@@ -115,7 +115,7 @@ export function transformModuleTessellated(
   return {
     id: module.id,
     quads: tessellateModule(module, center, detectorDistance, gridSize),
-    color: module.color ?? 'var(--color-slate-500)',
+    color: module.color ?? 'var(--color-muted-foreground)',
   };
 }
 
@@ -245,20 +245,15 @@ export function generateCakedGridLines(
   return { twoThetaLines, chiLines };
 }
 
-const tailwind_gradient_tokens = [
-  '--color-red-500',
-  '--color-amber-500',
-  '--color-lime-500',
-  '--color-emerald-500',
-  '--color-sky-500',
-  '--color-indigo-500',
-  '--color-fuchsia-500',
-  '--color-rose-600',
+const module_palette_tokens = [
+  '--color-module-1',
+  '--color-module-2',
+  '--color-module-3',
+  '--color-module-4',
 ] as const;
 
 export function resolveModuleColour(index: number, explicit?: string): string {
   if (explicit) return explicit;
-  const token =
-    tailwind_gradient_tokens[index % tailwind_gradient_tokens.length];
+  const token = module_palette_tokens[index % module_palette_tokens.length];
   return `var(${token})`;
 }
