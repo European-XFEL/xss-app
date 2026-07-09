@@ -1,8 +1,10 @@
 <script lang="ts">
-  import * as Sidebar from '$shadcn/ui/sidebar/index.js';
-
   import { useSimulationState } from '$lib/app/simulation-context.svelte';
-  import { Sidebar as AppSidebar } from '$lib/widgets/nav';
+  import {
+    Sidebar as AppSidebar,
+    CommandBar,
+    StatusBar,
+  } from '$lib/widgets/nav';
 
   let { children } = $props();
 
@@ -17,10 +19,16 @@
   });
 </script>
 
-<AppSidebar {sample} />
+<div class="flex h-svh min-h-0 w-full flex-col">
+  <CommandBar />
 
-<Sidebar.Inset class="m-4 flex justify-center-safe overflow-y-auto">
-  <div class="max-w-480 grow">
-    {@render children()}
+  <div class="flex min-h-0 flex-1">
+    <AppSidebar />
+
+    <main class="min-h-0 flex-1 overflow-y-auto bg-canvas">
+      {@render children()}
+    </main>
   </div>
-</Sidebar.Inset>
+
+  <StatusBar {sample} />
+</div>

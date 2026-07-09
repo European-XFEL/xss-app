@@ -3,35 +3,28 @@
 
   import * as Sidebar from '$shadcn/ui/sidebar/index.js';
 
-  import AppPicker from './ui/AppPicker.svelte';
   import SidebarContent from './ui/SidebarContent.svelte';
   import SidebarFooter from './ui/SidebarFooter.svelte';
 
   let {
-    sample,
     ref = $bindable(null),
     collapsible = 'icon',
     ...restProps
-  }: ComponentProps<typeof Sidebar.Root> &
-    ComponentProps<typeof SidebarFooter> = $props();
+  }: ComponentProps<typeof Sidebar.Root> = $props();
 </script>
 
-<Sidebar.Root bind:ref {collapsible} {...restProps} variant="floating">
-  <Sidebar.Header>
-    <AppPicker
-      apps={[
-        { title: 'Scattering Simulator' },
-        { title: 'Diffraction Analyzer', disabled: true },
-        { title: 'Molecular Viewer', disabled: true },
-      ]}
-    />
-  </Sidebar.Header>
-
-  <Sidebar.Content>
+<Sidebar.Root
+  bind:ref
+  {collapsible}
+  {...restProps}
+  variant="sidebar"
+  class="border-line px-[9px] py-[12px]"
+>
+  <Sidebar.Content class="gap-0">
     <SidebarContent />
   </Sidebar.Content>
 
-  <SidebarFooter {sample} />
+  <SidebarFooter />
 
   <Sidebar.Rail />
 </Sidebar.Root>

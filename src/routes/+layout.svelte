@@ -23,6 +23,6 @@
   {/await}
 </svelte:head>
 
-<Sidebar.Provider style="--sidebar-width: 19rem">
+<Sidebar.Provider style="--sidebar-width: 190px">
   {@render children()}
 </Sidebar.Provider>

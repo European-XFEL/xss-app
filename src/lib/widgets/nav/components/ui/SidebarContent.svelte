@@ -108,22 +108,34 @@
 
 <script lang="ts">
   import { resolve } from '$app/paths';
+  import { page } from '$app/state';
 
   import * as Sidebar from '$shadcn/ui/sidebar/index.js';
 
-  import { BugsFeatures, FeedbackDialog } from '$lib/widgets/feedback';
+  import { cn } from '$lib/shadcn/utils';
 </script>
 
 {#each data as group (group.title)}
-  <Sidebar.Group>
+  <Sidebar.Group class="px-0 py-1.5">
     {#if group.title}
-      <Sidebar.GroupLabel>{group.title}</Sidebar.GroupLabel>
+      <Sidebar.GroupLabel class="h-auto px-0 pt-3 pb-1.5 eyebrow"
+        >{group.title}</Sidebar.GroupLabel
+      >
     {/if}
     <Sidebar.GroupContent>
-      <Sidebar.Menu>
+      <Sidebar.Menu class="gap-[3px]">
         {#each group.items as item (item.title)}
+          {@const isActive =
+            item?.url && page.url.pathname === resolve(item.url)}
           <Sidebar.MenuItem>
             <Sidebar.MenuButton
+              isActive={!!isActive}
+              class={cn(
+                'gap-[9px] rounded-[6px] border-l-2 border-transparent px-[9px] py-[6px] text-[12.5px]',
+                '[&_svg]:size-[14px] [&_svg]:text-muted-foreground',
+                isActive &&
+                  'border-l-primary bg-accent-tint font-semibold text-foreground [&_svg]:text-primary',
+              )}
               {...item?.disabled
                 ? { 'aria-disabled': 'true', tabindex: -1 }
                 : {}}
@@ -151,12 +163,3 @@
     </Sidebar.GroupContent>
   </Sidebar.Group>
 {/each}
-
-<Sidebar.Group>
-  <Sidebar.GroupContent>
-    <Sidebar.Menu>
-      <FeedbackDialog />
-      <BugsFeatures />
-    </Sidebar.Menu>
-  </Sidebar.GroupContent>
-</Sidebar.Group>
