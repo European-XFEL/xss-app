@@ -85,7 +85,7 @@
       ref_lines={refLines}
       x_axis={{ label: 'q (Å⁻¹)', range: xRange }}
       y_axis={{ label: 'ΔS (a.u.)' }}
-      style="height: 320px"
+      style="height: 320px; --scatter-grid-stroke: var(--plot-grid); --plot-zero-line-color: var(--plot-zero-line); --text-color: var(--muted-foreground); --plot-legend-item-color: var(--muted-foreground); font-family: var(--font-mono);"
       legend={{ layout: 'horizontal' }}
     />
   {/await}
