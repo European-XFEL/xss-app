@@ -20,7 +20,7 @@
 </script>
 
 <div class="flex h-svh min-h-0 w-full flex-col">
-  <CommandBar />
+  <CommandBar {sample} />
 
   <div class="flex min-h-0 flex-1">
     <AppSidebar />
