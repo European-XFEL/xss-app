@@ -14,7 +14,10 @@
   let { module, onDrag, svgElement }: Props = $props();
 
   const moduleLabel = $derived(module.id.replace('module-', 'Module '));
-  const moduleColor = $derived(module.color ?? 'var(--color-slate-500)');
+  const moduleColor = $derived(module.color ?? 'var(--color-muted-foreground)');
+  const moduleLabelColor = $derived(
+    `color-mix(in oklab, ${moduleColor}, black 25%)`,
+  );
 
   const drag = useDrag({
     getSvgElement: () => svgElement,
@@ -39,17 +42,17 @@
     width={module.shape.width}
     height={module.shape.height}
     fill={moduleColor}
-    fill-opacity="0.25"
+    fill-opacity="0.3"
     stroke={moduleColor}
-    stroke-width="2"
-    class="hover:fill-opacity-40 pointer-events-auto transition-[fill-opacity]"
+    stroke-width="1.5"
+    class="hover:fill-opacity-45 pointer-events-auto transition-[fill-opacity]"
   />
   <text
     x={module.position.x + module.shape.width / 2}
     y={module.position.y + module.shape.height / 2}
     text-anchor="middle"
     dominant-baseline="middle"
-    fill={moduleColor}
+    fill={moduleLabelColor}
     font-size="11"
     font-weight="600"
     class="pointer-events-none tracking-tight select-none"

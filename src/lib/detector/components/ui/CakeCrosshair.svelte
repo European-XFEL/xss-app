@@ -21,8 +21,8 @@
 </script>
 
 <g
-  class="cursor-move text-destructive"
-  style="touch-action: none"
+  class="cursor-move"
+  style="touch-action: none; color: var(--color-module-1);"
   role="button"
   tabindex="0"
   aria-label="Beam center crosshair"
