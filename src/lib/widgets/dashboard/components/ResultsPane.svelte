@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { ChannelPanel } from '$lib/shared/ui';
+
   import DSSPlot from './DSSPlot.svelte';
 
   interface Props {
@@ -24,56 +26,53 @@
   const deltaT = $derived(results.deltaTemperatureK);
   const energy = $derived(results.depositedEnergyJoule);
   const [qMin, qMax] = $derived(results.detectorQRange);
+
+  interface Metric {
+    label: string;
+    display: string;
+    unit: string;
+    full: string;
+  }
+
+  const metrics = $derived<Metric[]>([
+    deltaT != null
+      ? { label: 'ΔT', display: fmt(deltaT), unit: 'K', full: `${deltaT} K` }
+      : { label: 'ΔT', display: '—', unit: 'K', full: '' },
+    energy != null
+      ? {
+          label: 'Deposited Energy',
+          display: fmt(energy),
+          unit: 'J',
+          full: `${energy} J`,
+        }
+      : { label: 'Deposited Energy', display: '—', unit: 'J', full: '' },
+    qMin != null && qMax != null
+      ? {
+          label: 'Q range',
+          display: `${fmt(qMin)} – ${fmt(qMax)}`,
+          unit: 'Å⁻¹',
+          full: `${qMin} – ${qMax} Å⁻¹`,
+        }
+      : { label: 'Q range', display: '—', unit: 'Å⁻¹', full: '' },
+  ]);
 </script>
 
-<div class="flex w-full flex-col items-center gap-6 p-4">
-  <h1 class="text-2xl font-bold">Simulation Results</h1>
-
-  <div class="flex flex-wrap justify-center gap-3">
-    {#snippet metric(
-      label: string,
-      unit: string,
-      display: string,
-      full: string,
-    )}
-      <div
-        title={full}
-        class="flex flex-col items-center rounded-lg border px-4 py-2 text-center"
-      >
-        <span class="text-xs text-muted-foreground">{label}</span>
-        <span class="font-mono text-sm font-medium">
-          {display}
-          <span class="text-xs font-normal text-muted-foreground">{unit}</span>
-        </span>
+<ChannelPanel label="ΔS(Q)" description="Time-resolved scattering signal">
+  <div class="flex divide-x divide-line-soft py-3 first:pt-0 last:pb-0">
+    {#each metrics as metric (metric.label)}
+      <div class="flex-1 px-4 first:pl-0 last:pr-0" title={metric.full}>
+        <div class="eyebrow">{metric.label}</div>
+        <div class="mt-1 font-mono text-[15px] font-semibold">
+          {metric.display}
+          <span class="text-xs font-normal text-muted-foreground">
+            {metric.unit}
+          </span>
+        </div>
       </div>
-    {/snippet}
-
-    {#if deltaT != null}
-      {@render metric('ΔT', 'K', fmt(deltaT), deltaT + ' K')}
-    {:else}
-      {@render metric('ΔT', 'K', 'N/A', '')}
-    {/if}
-
-    {#if energy != null}
-      {@render metric('Deposited Energy', 'J', fmt(energy), energy + ' J')}
-    {:else}
-      {@render metric('Deposited Energy', 'J', 'N/A', '')}
-    {/if}
-
-    {#if qMin != null && qMax != null}
-      {@render metric(
-        'Q range',
-        'Å⁻¹',
-        fmt(qMin) + ' – ' + fmt(qMax),
-        qMin + ' – ' + qMax + ' Å⁻¹',
-      )}
-    {:else}
-      {@render metric('Q range', 'Å⁻¹', 'N/A', '')}
-    {/if}
+    {/each}
   </div>
-  <!-- TODO: Add warning based on the expected temperature range that the dSdT data can apply to? -->
 
-  <div class="w-full rounded-lg bg-secondary/10 p-4">
+  <div class="py-3 first:pt-0 last:pb-0">
     <DSSPlot {...results} />
   </div>
-</div>
+</ChannelPanel>
