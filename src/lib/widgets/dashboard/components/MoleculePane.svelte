@@ -67,7 +67,7 @@
 
 {#if canVisualize}
   <section
-    class="mt-3 w-full rounded-lg border border-border/50 bg-secondary/5 p-3"
+    class="w-full rounded-lg border border-border/50 bg-secondary/5 p-3"
   >
     {#if vizCollapseShow}
       <Collapsible.Root bind:open={vizOpen} class="w-full">

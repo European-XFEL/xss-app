@@ -176,8 +176,10 @@
                 Computing scattering signals…
               </p>
             {/if}
-            <ResultsPane {...results} />
-            <MoleculePane sample={simulation.sample} {hasAll} />
+            <div class="flex flex-col gap-4">
+              <ResultsPane {...results} />
+              <MoleculePane sample={simulation.sample} {hasAll} />
+            </div>
           </div>
         </ScrollArea>
       {:else}
