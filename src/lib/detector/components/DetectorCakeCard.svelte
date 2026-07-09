@@ -30,10 +30,10 @@
 <!-- TODO: Realistic constraints for module movement -->
 
 <Card.Root class="w-full min-w-fit">
-  <Card.Header class="relative gap-0">
+  <Card.Header>
     <Card.Title>Detector Caking Visualization</Card.Title>
 
-    <Card.Action class="absolute -top-4 right-3">
+    <Card.Action>
       <Tooltip.Provider>
         <Tooltip.Root>
           <Tooltip.Trigger><BadgeInfo size={16} /></Tooltip.Trigger>
