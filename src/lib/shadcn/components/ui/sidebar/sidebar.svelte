@@ -72,31 +72,25 @@
 		data-side={side}
 		data-slot="sidebar"
 	>
-		{#if variant === "floating" || variant === "inset"}
-			<!-- This is what handles the sidebar gap on desktop -->
-			<div
-				data-slot="sidebar-gap"
-				class={cn(
-					"transition-[width] duration-200 ease-linear relative w-(--sidebar-width) bg-transparent",
-					"group-data-[collapsible=offcanvas]:w-0",
-					"group-data-[side=right]:rotate-180",
-					"group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
-				)}
-			></div>
-		{/if}
+		<!-- This is what handles the sidebar gap on desktop -->
+		<div
+			data-slot="sidebar-gap"
+			class={cn(
+				"transition-[width] duration-200 ease-linear relative w-(--sidebar-width) bg-transparent",
+				"group-data-[collapsible=offcanvas]:w-0",
+				"group-data-[side=right]:rotate-180",
+				variant === "floating" || variant === "inset"
+					? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
+					: "group-data-[collapsible=icon]:w-(--sidebar-width-icon)"
+			)}
+		></div>
 		<div
 			data-slot="sidebar-container"
 			class={cn(
-				// Floating/inset overlay the workspace and are pinned to the viewport;
-				// the plain "sidebar" variant renders in normal flow so it sits flush
-				// between the app's command bar and status bar.
-				variant === "floating" || variant === "inset"
-					? "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex"
-					: "relative z-10 hidden h-full w-(--sidebar-width) transition-[width] duration-200 ease-linear md:flex",
-				(variant === "floating" || variant === "inset") &&
-					(side === "left"
-						? "start-0 group-data-[collapsible=offcanvas]:start-[calc(var(--sidebar-width)*-1)]"
-						: "end-0 group-data-[collapsible=offcanvas]:end-[calc(var(--sidebar-width)*-1)]"),
+				"fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex",
+				side === "left"
+					? "start-0 group-data-[collapsible=offcanvas]:start-[calc(var(--sidebar-width)*-1)]"
+					: "end-0 group-data-[collapsible=offcanvas]:end-[calc(var(--sidebar-width)*-1)]",
 				// Adjust the padding for floating and inset variants.
 				variant === "floating" || variant === "inset"
 					? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
