@@ -6,12 +6,18 @@
   } from '../lib/run-context';
   import FlaskRoundIcon from '@lucide/svelte/icons/flask-round';
 
+  import type { Snippet } from 'svelte';
+
+  import * as Tooltip from '$shadcn/ui/tooltip/index.js';
+
   interface Props {
     /** Omit to render the brand-only bar (e.g. a future landing page). */
     sample?: NavSample;
+    /** Replaces the default Save run / Export / Add to compare actions. */
+    actions?: Snippet;
   }
 
-  let { sample }: Props = $props();
+  let { sample, actions }: Props = $props();
 
   const setupComplete = $derived(sample ? isSetupComplete(sample) : false);
   const runTitle = $derived(sample ? getRunTitle(sample) : '');
@@ -59,6 +65,53 @@
   </div>
 
   <div class="flex items-center gap-2">
-    <!-- Save run / Export / Add to compare actions land here. -->
+    {#if actions}
+      {@render actions()}
+    {:else}
+      <Tooltip.Root>
+        <Tooltip.Trigger>
+          <span class="inline-flex">
+            <button
+              type="button"
+              disabled
+              class="rounded-[7px] border border-[rgba(255,255,255,.18)] px-2.5 py-1.5 text-[12px] font-medium text-chrome-btn disabled:pointer-events-none disabled:opacity-50"
+            >
+              Save run
+            </button>
+          </span>
+        </Tooltip.Trigger>
+        <Tooltip.Content>Coming soon</Tooltip.Content>
+      </Tooltip.Root>
+
+      <Tooltip.Root>
+        <Tooltip.Trigger>
+          <span class="inline-flex">
+            <button
+              type="button"
+              disabled
+              class="rounded-[7px] border border-[rgba(255,255,255,.18)] px-2.5 py-1.5 text-[12px] font-medium text-chrome-btn disabled:pointer-events-none disabled:opacity-50"
+            >
+              Export
+            </button>
+          </span>
+        </Tooltip.Trigger>
+        <Tooltip.Content>Coming soon</Tooltip.Content>
+      </Tooltip.Root>
+
+      <Tooltip.Root>
+        <Tooltip.Trigger>
+          <span class="inline-flex">
+            <button
+              type="button"
+              disabled
+              class="rounded-[7px] bg-primary px-2.5 py-1.5 text-[12px] font-medium text-primary-foreground disabled:pointer-events-none disabled:opacity-50"
+            >
+              Add to compare
+            </button>
+          </span>
+        </Tooltip.Trigger>
+        <Tooltip.Content>Coming soon</Tooltip.Content>
+      </Tooltip.Root>
+    {/if}
   </div>
 </header>
