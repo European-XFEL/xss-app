@@ -46,7 +46,7 @@
     <NumSlider
       label="Solute Concentration (mol/L)"
       min="0.001"
-      max="5"
+      max="100"
       step="0.001"
       bind:value={concentrationSoluteMolar}
     />
