@@ -2,10 +2,7 @@
   import { TriangleAlert } from '@lucide/svelte';
   import katex from 'katex';
 
-  import * as Alert from '$shadcn/ui/alert';
-  import * as Card from '$shadcn/ui/card';
-
-  import { Latex } from '$lib/shared/ui';
+  import { ChannelPanel, Latex } from '$lib/shared/ui';
 
   const eqDebye = String.raw`I(Q) = \sum_{i=1}^{N} \sum_{j=1}^{N} f_i(Q) f_j(Q) \frac{\sin(Q r_{ij})}{Q r_{ij}}`;
 
@@ -213,7 +210,7 @@
 </script>
 
 <section>
-  <h1 class="font-semibold">Technical Documentation</h1>
+  <h1 class="tracking-tight">Technical Documentation</h1>
 
   <p>
     Documentation of the physics, algorithms, and implementation details behind
@@ -233,15 +230,17 @@
 </section>
 
 <section>
-  <Alert.Root
-    class="float-right mb-4 ml-4 max-w-md border-amber-500/50 bg-amber-500/5"
+  <div
+    class="not-prose flex items-start gap-3 rounded-md border border-caution-border bg-caution-bg px-4 py-3"
   >
-    <TriangleAlert class="text-amber-600" />
-    <Alert.Title class="text-amber-600">Physics Simplifications</Alert.Title>
-    <Alert.Description
-      class="text-sm [&_li]:my-0 [&_li]:leading-snug [&_ul]:pl-4"
-    >
-      <ul class="list-disc">
+    <TriangleAlert class="mt-0.5 size-4 shrink-0" />
+    <div>
+      <p class="text-[13px] font-bold tracking-tight">
+        Physics Simplifications
+      </p>
+      <ul
+        class="mt-1.5 list-disc space-y-0.5 pl-4 text-sm leading-snug text-muted-foreground"
+      >
         <li>
           Gas-phase / isolated-solute scattering (no cage or intermolecular
           interference)
@@ -251,12 +250,14 @@
         <li>Tabulated solvent thermal response</li>
         <li>No explicit solute-solvent structural correlation</li>
       </ul>
-    </Alert.Description>
-  </Alert.Root>
+    </div>
+  </div>
 
-  <h2 class="font-semibold">Simulation Details</h2>
+  <h2 class="text-[19px] font-bold tracking-tight">Simulation Details</h2>
 
-  <h3>The Debye Scattering Equation</h3>
+  <h3 class="text-[17px] font-bold tracking-tight">
+    The Debye Scattering Equation
+  </h3>
   <p>
     The simulator computes scattering intensity via the Debye scattering
     equation, which provides the orientational average for isotropic samples. We
@@ -281,43 +282,38 @@
 </section>
 
 <section>
-  <h3>Atomic Form Factors</h3>
+  <h3 class="text-[17px] font-bold tracking-tight">Atomic Form Factors</h3>
 
-  <div class="not-prose flex flex-wrap gap-6">
-    <Card.Root class="flex-2 gap-2">
-      <Card.Header>
-        <Card.Title>Cromer-Mann (1968)</Card.Title>
-      </Card.Header>
-      <Card.Content>
-        <p>
-          4-Gaussian + constant parameterization (coefficients stored locally
-          for 98 elements).
-        </p>
-        <div class="mt-3 rounded-md bg-muted px-3 py-2">
-          <Latex math={eqCromerMann} displayMode />
-        </div>
-      </Card.Content>
-    </Card.Root>
+  <div class="not-prose grid gap-6 md:grid-cols-2">
+    <ChannelPanel label="Cromer-Mann (1968)">
+      <p class="text-sm text-muted-foreground">
+        4-Gaussian + constant parameterization (coefficients stored locally for
+        98 elements).
+      </p>
+      <div class="pt-3">
+        <Latex math={eqCromerMann} displayMode />
+      </div>
+    </ChannelPanel>
 
-    <Card.Root class="flex-2 gap-2">
-      <Card.Header>
-        <Card.Title>Waasmaier–Kirfel (1995)</Card.Title>
-      </Card.Header>
-      <Card.Content>
+    <ChannelPanel label="Waasmaier–Kirfel (1995)">
+      <p class="text-sm text-muted-foreground">
         Alternative parameterization via <code>periodictable</code> using
         <code>cromermann.fxrayatq()</code>.
-        <br /><br />
+      </p>
+      <p class="mt-2 text-sm text-muted-foreground">
         Computes <Latex math={String.raw`f_0(Q)`} /> only (no anomalous
         <Latex math={String.raw`f'(E), f''(E)`} /> corrections). This ignores dispersion
         corrections and may be inaccurate near absorption edges or when resonant scattering
         effects are significant.
-      </Card.Content>
-    </Card.Root>
+      </p>
+    </ChannelPanel>
   </div>
 </section>
 
 <section>
-  <h3>Difference Scattering Pipeline</h3>
+  <h3 class="text-[17px] font-bold tracking-tight">
+    Difference Scattering Pipeline
+  </h3>
 
   <p>
     For pump–probe time-resolved XSS experiments, the difference signal
@@ -329,22 +325,22 @@
 
   <div class="not-prose grid gap-6 md:grid-cols-3">
     {#each pipeline as { title, body } (title)}
-      <Card.Root class="gap-0">
-        <Card.Header>
-          <Card.Title>{title}</Card.Title>
-        </Card.Header>
-        <Card.Content>
+      <div class="rounded-md border border-line bg-card p-4">
+        <p class="text-sm font-bold tracking-tight">{title}</p>
+        <div class="mt-2 text-sm text-muted-foreground [&_p]:my-0">
           <!-- Body is trusted static markdown content authored in this file. -->
           <!-- eslint-disable-next-line svelte/no-at-html-tags -->
           {@html body}
-        </Card.Content>
-      </Card.Root>
+        </div>
+      </div>
     {/each}
   </div>
 </section>
 
 <section>
-  <h3>Image Reconstruction Pipeline</h3>
+  <h3 class="text-[17px] font-bold tracking-tight">
+    Image Reconstruction Pipeline
+  </h3>
 
   <p>
     We forward-simulate a 2D detector image by applying the same effects that
@@ -353,35 +349,31 @@
 
   <div class="not-prose grid gap-6 md:grid-cols-3">
     {#each imagePipeline as { title, body }, i (title)}
-      <Card.Root class="gap-0">
-        <Card.Header>
-          <Card.Title>{i + 1}. {title}</Card.Title>
-        </Card.Header>
-        <Card.Content>
+      <div class="rounded-md border border-line bg-card p-4">
+        <p class="text-sm font-bold tracking-tight">{i + 1}. {title}</p>
+        <div class="mt-2 text-sm text-muted-foreground [&_p]:my-0">
           <!-- Body is trusted static markdown content authored in this file. -->
           <!-- eslint-disable-next-line svelte/no-at-html-tags -->
           {@html body}
-        </Card.Content>
-      </Card.Root>
+        </div>
+      </div>
     {/each}
   </div>
 </section>
 
 <section>
-  <h2 class="font-semibold">Usage</h2>
+  <h2 class="text-[19px] font-bold tracking-tight">Usage</h2>
 
   <div class="not-prose grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
     {#each workflow as item, i (item.title)}
-      <Card.Root class="h-full gap-0">
-        <Card.Header class="relative flex-row items-center gap-3">
-          <Card.Title>{i + 1}. {item.title}</Card.Title>
-        </Card.Header>
-        <Card.Content>
+      <div class="rounded-md border border-line bg-card p-4">
+        <p class="text-sm font-bold tracking-tight">{i + 1}. {item.title}</p>
+        <div class="mt-2 text-sm text-muted-foreground [&_p]:my-0">
           <!-- Body is trusted static markdown content authored in this file. -->
           <!-- eslint-disable-next-line svelte/no-at-html-tags -->
           {@html item.body}
-        </Card.Content>
-      </Card.Root>
+        </div>
+      </div>
     {/each}
   </div>
 </section>
