@@ -16,6 +16,7 @@
     excitedName: simulation.sample.excited?.filename,
     solventName: simulation.sample.solvent?.name,
     concentrationSoluteMolar: simulation.sample.concentrationSoluteMolar,
+    computing: simulation.computing,
   });
 </script>
 

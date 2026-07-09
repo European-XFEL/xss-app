@@ -8,7 +8,11 @@
   let { sample }: Props = $props();
 
   const simStateText = $derived(
-    isSetupComplete(sample) ? 'simulation up to date' : 'setup incomplete',
+    !isSetupComplete(sample)
+      ? 'setup incomplete'
+      : sample.computing
+        ? 'recomputing…'
+        : 'simulation up to date',
   );
 </script>
 

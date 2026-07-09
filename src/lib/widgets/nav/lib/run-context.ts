@@ -10,6 +10,8 @@ export interface NavSample {
   excitedName: string | undefined | null;
   solventName: string | undefined | null;
   concentrationSoluteMolar: number | undefined | null;
+  /** True while the simulation is being recomputed. */
+  computing?: boolean;
 }
 
 /** Strips a file extension, e.g. "LS.xyz" -> "LS". */
@@ -18,12 +20,6 @@ function stripExtension(filename: string): string {
   return dot > 0 ? filename.slice(0, dot) : filename;
 }
 
-/**
- * A true "recomputing…" state requires wiring the dashboard's fetch
- * resources (see scattering-fetcher.svelte.ts) through the shared
- * simulation state — out of scope for the app shell. Until then this
- * reflects whether the sample is fully configured.
- */
 export function isSetupComplete(sample: NavSample): boolean {
   return !!sample.groundName && !!sample.excitedName && !!sample.solventName;
 }

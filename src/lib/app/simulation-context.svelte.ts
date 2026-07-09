@@ -29,6 +29,12 @@ export class SimulationState {
   detector = new DetectorState('LPD', DEFAULT.probe.wavelength);
   sample = new SampleState();
 
+  // Set by whichever view owns the scattering fetch resources (currently
+  // the dashboard page) so the shared app shell can reflect a real
+  // "recomputing…" state instead of only inferring it from sample
+  // completeness.
+  computing = $state(false);
+
   constructor() {
     $effect(() => {
       this.detector.wavelength = this.probe.wavelength;

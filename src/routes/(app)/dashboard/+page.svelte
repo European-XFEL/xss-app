@@ -136,6 +136,10 @@
     listResource.loading || soluteResource.loading || solventResource.loading,
   );
 
+  $effect(() => {
+    simulation.computing = isFetching;
+  });
+
   function retryFetches() {
     void listResource.refetch();
     void soluteResource.refetch();
