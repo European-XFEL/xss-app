@@ -70,13 +70,13 @@
         </div>
         <div class="cards-grid grid gap-6 md:grid-cols-2">
           <Card.Root
-            class="rounded-none border-0 bg-white/25 shadow-none backdrop-blur-sm dark:bg-slate-900/40"
+            class="rounded-[12px] border border-line bg-card shadow-none ring-0"
           >
             <Card.Header>
               <Card.Action
-                class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/10"
+                class="flex h-12 w-12 items-center justify-center rounded-lg bg-data-total/10"
               >
-                <Atom class="h-6 w-6 text-blue-500" />
+                <Atom class="h-6 w-6 text-data-total" />
               </Card.Action>
               <Card.Title>Solute Difference</Card.Title>
               <Card.Description>
@@ -85,7 +85,7 @@
               </Card.Description>
             </Card.Header>
             <Card.Content>
-              <div class="rounded px-3 py-2 text-center">
+              <div class="rounded bg-inset px-3 py-2 text-center">
                 <Latex
                   math={String.raw`\Delta I = I_{\text{exc}} - I_{\text{gnd}}`}
                   displayMode={true}
@@ -95,13 +95,13 @@
           </Card.Root>
 
           <Card.Root
-            class="rounded-none border-0 bg-white/25 shadow-none backdrop-blur-sm dark:bg-slate-900/40"
+            class="rounded-[12px] border border-line bg-card shadow-none ring-0"
           >
             <Card.Header>
               <Card.Action
-                class="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-500/10"
+                class="flex h-12 w-12 items-center justify-center rounded-lg bg-data-solute/10"
               >
-                <FlaskConical class="h-6 w-6 text-amber-500" />
+                <FlaskConical class="h-6 w-6 text-data-solute" />
               </Card.Action>
               <Card.Title>Solvent Response</Card.Title>
               <Card.Description>
@@ -109,7 +109,7 @@
               </Card.Description>
             </Card.Header>
             <Card.Content>
-              <div class="rounded px-3 py-2 text-center">
+              <div class="rounded bg-inset px-3 py-2 text-center">
                 <Latex
                   math={String.raw`\frac{\partial S}{\partial T} \cdot \Delta T`}
                   displayMode={true}
@@ -119,13 +119,13 @@
           </Card.Root>
 
           <Card.Root
-            class="rounded-none border-0 bg-white/25 shadow-none backdrop-blur-sm dark:bg-slate-900/40"
+            class="rounded-[12px] border border-line bg-card shadow-none ring-0"
           >
             <Card.Header>
               <Card.Action
-                class="flex h-12 w-12 items-center justify-center rounded-lg bg-green-500/10"
+                class="flex h-12 w-12 items-center justify-center rounded-lg bg-data-permol/10"
               >
-                <BarChart3 class="h-6 w-6 text-green-500" />
+                <BarChart3 class="h-6 w-6 text-data-permol" />
               </Card.Action>
               <Card.Title>Combined Signal</Card.Title>
               <Card.Description>
@@ -134,7 +134,7 @@
               </Card.Description>
             </Card.Header>
             <Card.Content>
-              <div class="rounded px-3 py-2 text-center">
+              <div class="rounded bg-inset px-3 py-2 text-center">
                 <Latex
                   math={String.raw`\Delta S \approx \alpha \Delta S_{\text{sol}} + \Delta S_{\text{slv}}`}
                   displayMode={true}
@@ -144,13 +144,13 @@
           </Card.Root>
 
           <Card.Root
-            class="rounded-none border-0 bg-white/25 shadow-none backdrop-blur-sm dark:bg-slate-900/40"
+            class="rounded-[12px] border border-line bg-card shadow-none ring-0"
           >
             <Card.Header>
               <Card.Action
-                class="flex h-12 w-12 items-center justify-center rounded-lg bg-red-500/10"
+                class="flex h-12 w-12 items-center justify-center rounded-lg bg-data-solvent/10"
               >
-                <Fullscreen class="h-6 w-6 text-red-500" />
+                <Fullscreen class="h-6 w-6 text-data-solvent" />
               </Card.Action>
               <Card.Title>Image Recreation</Card.Title>
               <Card.Description>
@@ -159,7 +159,7 @@
               </Card.Description>
             </Card.Header>
             <Card.Content>
-              <div class="rounded px-3 py-2 text-center">...</div>
+              <div class="rounded bg-inset px-3 py-2 text-center">...</div>
             </Card.Content>
           </Card.Root>
         </div>
@@ -175,7 +175,7 @@
         </div>
         <div class="features-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card.Root
-            class="rounded-none border-0 bg-white/25 shadow-none backdrop-blur-sm dark:bg-slate-900/40"
+            class="rounded-[12px] border border-line bg-card shadow-none ring-0"
           >
             <Card.Header>
               <Card.Title class="text-base">Molecular Structures</Card.Title>
@@ -191,7 +191,7 @@
           </Card.Root>
 
           <Card.Root
-            class="rounded-none border-0 bg-white/25 shadow-none backdrop-blur-sm dark:bg-slate-900/40"
+            class="rounded-[12px] border border-line bg-card shadow-none ring-0"
           >
             <Card.Header>
               <Card.Title class="text-base">Solvent Library</Card.Title>
@@ -206,7 +206,7 @@
           </Card.Root>
 
           <Card.Root
-            class="rounded-none border-0 bg-white/25 shadow-none backdrop-blur-sm dark:bg-slate-900/40"
+            class="rounded-[12px] border border-line bg-card shadow-none ring-0"
           >
             <Card.Header>
               <Card.Title class="text-base">Pump Parameters</Card.Title>
@@ -222,7 +222,7 @@
           </Card.Root>
 
           <Card.Root
-            class="rounded-none border-0 bg-white/25 shadow-none backdrop-blur-sm dark:bg-slate-900/40"
+            class="rounded-[12px] border border-line bg-card shadow-none ring-0"
           >
             <Card.Header>
               <Card.Title class="text-base">Detector Geometry</Card.Title>
