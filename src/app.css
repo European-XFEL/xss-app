@@ -184,6 +184,7 @@
   --color-status-exc: var(--status-exc);
   --color-status-ok-dot: var(--status-ok-dot);
   --font-sans: 'Inter Variable', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
@@ -270,6 +271,7 @@
 }
 
 @utility eyebrow {
+  font-family: var(--font-mono);
   font-weight: 600;
   font-size: 10px;
   text-transform: uppercase;
