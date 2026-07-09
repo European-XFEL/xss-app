@@ -15,31 +15,72 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.53 0.24 288);
+  --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
+  --accent-hover: oklch(0.47 0.24 288);
+  --accent-tint: oklch(0.95 0.03 288);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: oklch(0.53 0.24 288);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.985 0 0);
+  --sidebar: #fbfbfc;
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-primary: oklch(0.53 0.24 288);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: #f1ecfd;
   --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-border: #e6e8ee;
+  --sidebar-ring: oklch(0.53 0.24 288);
+
+  /* chrome (dark bars) */
+  --chrome: #141620;
+  --chrome-fg: #ffffff;
+  --chrome-meta: #7d8496;
+  --chrome-btn: #d5d8e0;
+
+  /* structure neutrals */
+  --line: #e6e8ee;
+  --line-soft: #eceef4;
+  --rail: #fbfbfc;
+  --canvas: #fafbfc;
+
+  /* data & semantics — reserved */
+  --data-total: #2b56d4;
+  --data-solute: #e0912a;
+  --data-solvent: #d64550;
+  --data-permol: #2fa37a;
+
+  /* detector modules M1-M4 */
+  --module-1: #e5484d;
+  --module-2: #e0912a;
+  --module-3: #4fa85e;
+  --module-4: #2fa37a;
+
+  /* plot */
+  --plot-grid: #f0f1f5;
+  --plot-zero-line: #d3d7e0;
+
+  /* caution callout */
+  --caution-bg: #fdf6ec;
+  --caution-border: #f4dcae;
+
+  /* status bar */
+  --status-label: #5a6070;
+  --status-value: #c9cdd6;
+  --status-gnd: #7ba0f0;
+  --status-exc: #e8b06a;
+  --status-ok-dot: #4fc79b;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -98,6 +139,8 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-tint: var(--accent-tint);
   --color-destructive: var(--destructive);
   --color-border: var(--border);
   --color-input: var(--input);
@@ -115,6 +158,31 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-chrome: var(--chrome);
+  --color-chrome-fg: var(--chrome-fg);
+  --color-chrome-meta: var(--chrome-meta);
+  --color-chrome-btn: var(--chrome-btn);
+  --color-line: var(--line);
+  --color-line-soft: var(--line-soft);
+  --color-rail: var(--rail);
+  --color-canvas: var(--canvas);
+  --color-data-total: var(--data-total);
+  --color-data-solute: var(--data-solute);
+  --color-data-solvent: var(--data-solvent);
+  --color-data-permol: var(--data-permol);
+  --color-module-1: var(--module-1);
+  --color-module-2: var(--module-2);
+  --color-module-3: var(--module-3);
+  --color-module-4: var(--module-4);
+  --color-plot-grid: var(--plot-grid);
+  --color-plot-zero-line: var(--plot-zero-line);
+  --color-caution-bg: var(--caution-bg);
+  --color-caution-border: var(--caution-border);
+  --color-status-label: var(--status-label);
+  --color-status-value: var(--status-value);
+  --color-status-gnd: var(--status-gnd);
+  --color-status-exc: var(--status-exc);
+  --color-status-ok-dot: var(--status-ok-dot);
   --font-sans: 'Inter Variable', sans-serif;
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
@@ -199,6 +267,14 @@
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+@utility eyebrow {
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--muted-foreground);
 }
 
 .dark {
