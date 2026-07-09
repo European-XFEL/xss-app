@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { ComponentProps } from 'svelte';
 
-  import * as Card from '$shadcn/ui/card/index.js';
+  import { ChannelPanel } from '$lib/shared/ui';
 
   import PumpSetup from './PumpSetup.svelte';
 
@@ -11,14 +11,11 @@
   }: ComponentProps<typeof PumpSetup> & { short?: boolean } = $props();
 </script>
 
-<Card.Root>
-  <Card.Header>
-    <Card.Title>Optical Pump Configuration</Card.Title>
-    <Card.Description hidden={short}>
-      Configure the optical pump settings for the simulation.
-    </Card.Description>
-  </Card.Header>
-  <Card.Content>
-    <PumpSetup bind:pump />
-  </Card.Content>
-</Card.Root>
+<ChannelPanel
+  label="Optical Pump"
+  description={short
+    ? undefined
+    : 'Configure the optical pump settings for the simulation.'}
+>
+  <PumpSetup bind:pump />
+</ChannelPanel>
