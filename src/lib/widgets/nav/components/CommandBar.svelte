@@ -45,19 +45,23 @@
           <span class="font-mono text-[10.5px] text-chrome-meta">unsaved</span>
         </div>
 
-        <!-- Third state (e.g. "COMPUTING") can be added by extending this
-             condition once a recomputing signal exists. -->
-        {#if setupComplete}
-          <span
-            class="rounded-full bg-[rgba(47,163,122,.16)] px-2 py-0.5 font-mono text-[10px] font-semibold tracking-wide text-status-ok-dot"
-          >
-            READY
-          </span>
-        {:else}
+        {#if !setupComplete}
           <span
             class="rounded-full bg-[rgba(255,255,255,.08)] px-2 py-0.5 font-mono text-[10px] font-semibold tracking-wide text-chrome-meta"
           >
             SETUP INCOMPLETE
+          </span>
+        {:else if sample.computing}
+          <span
+            class="rounded-full bg-[rgba(255,255,255,.08)] px-2 py-0.5 font-mono text-[10px] font-semibold tracking-wide text-chrome-meta"
+          >
+            COMPUTING
+          </span>
+        {:else}
+          <span
+            class="rounded-full bg-[rgba(47,163,122,.16)] px-2 py-0.5 font-mono text-[10px] font-semibold tracking-wide text-status-ok-dot"
+          >
+            READY
           </span>
         {/if}
       </div>
