@@ -21,13 +21,13 @@
       {
         type: 'vertical',
         x: detectorQRange[0],
-        style: { color: `#9b59b6`, width: 1.5, dash: `4 2` },
+        style: { color: `var(--primary)`, width: 1.5, dash: `4 2` },
         annotation: { text: `q min`, position: `start`, side: `below` },
       },
       {
         type: 'vertical',
         x: detectorQRange[1],
-        style: { color: `#9b59b6`, width: 1.5, dash: `4 2` },
+        style: { color: `var(--primary)`, width: 1.5, dash: `4 2` },
         annotation: { text: `q max`, position: `start`, side: `below` },
       },
     ];
