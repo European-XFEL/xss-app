@@ -148,7 +148,7 @@
   });
 </script>
 
-<div class="flow-col">
+<div class="flex flex-col gap-3">
   {#await import('matterviz/plot') then { ScatterPlot }}
     <ScatterPlot
       {series}
@@ -161,7 +161,7 @@
     />
   {/await}
 
-  <div class="flow-row items-center justify-between gap-3">
+  <div class="flex items-center justify-between gap-3">
     <div class="flex items-center gap-3">
       <Checkbox bind:checked={clipToDetector} />
       <Label>Clip to Detector Q Range</Label>
