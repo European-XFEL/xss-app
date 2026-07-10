@@ -74,7 +74,11 @@ export class DetectorState implements Detector {
 
   wavelength: number;
 
-  constructor(name: keyof typeof DEFAULT_DETECTORS, wavelength: number) {
+  constructor(
+    name: keyof typeof DEFAULT_DETECTORS,
+    wavelength: number,
+    init?: { distance?: number; beamCenter?: CartesianPoint },
+  ) {
     const detector = DEFAULT_DETECTORS[name];
     if (!detector) {
       throw new Error(`Detector configuration for ${name} not found.`);
@@ -83,7 +87,7 @@ export class DetectorState implements Detector {
     this.pixelSize = detector.pixelSize;
     this.wavelength = $state(wavelength);
 
-    this.distance = $state(100);
+    this.distance = $state(init?.distance ?? 100);
 
     const maxX = Math.max(
       ...detector.modules.map((m) => m.position[0] + m.shape[0]),
@@ -92,7 +96,9 @@ export class DetectorState implements Detector {
       ...detector.modules.map((m) => m.position[1] + m.shape[1]),
     );
 
-    this.beamCenter = $state({ x: 16 + maxX / 2, y: 16 + maxY / 2 });
+    this.beamCenter = $state(
+      init?.beamCenter ?? { x: 16 + maxX / 2, y: 16 + maxY / 2 },
+    );
 
     this.modules = $state(
       detector.modules.map((mod, index) => ({
