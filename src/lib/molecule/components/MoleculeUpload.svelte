@@ -24,11 +24,17 @@
   interface Props {
     molecules?: Molecules;
     capability?: Capability;
+    // Called after a successful upload so the caller can refresh its molecule
+    // list (this component has no way to refetch or mutate the caller's data
+    // itself: `molecules` below is read-only, used only for the name-conflict
+    // preflight check).
+    onUploadSuccess?: () => void;
   }
 
   let {
-    molecules = $bindable(),
+    molecules,
     capability = page.data.capabilities.upload,
+    onUploadSuccess,
   }: Props = $props();
 
   let disabled = $derived(!capability.available);
@@ -48,10 +54,7 @@
         if (!(await f.submit())) return; // validation issues render inline
         const result = uploadMolecule.result;
         if (result?.success && result.result) {
-          if (result.result.id !== lastUploadedId && molecules) {
-            molecules.push(result.result);
-          }
-          lastUploadedId = result.result.id;
+          onUploadSuccess?.();
           open = false;
           resetForm();
         } else {
@@ -63,7 +66,6 @@
     });
 
   let open = $state(false);
-  let lastUploadedId = $state<string | null>(null);
   // Errors from reading/parsing the selected file (schema covers the rest).
   let fileError = $state<string | null>(null);
   let submitError = $state<string | null>(null);

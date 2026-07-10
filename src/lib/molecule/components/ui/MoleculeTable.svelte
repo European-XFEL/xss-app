@@ -35,6 +35,7 @@
     onToggleGround: (molecule: Molecule) => void;
     onToggleExcited: (molecule: Molecule) => void;
     onSelectGroup: (molecules: Molecule[]) => void;
+    onUploadSuccess?: () => void;
   }
 
   let {
@@ -45,6 +46,7 @@
     onToggleGround,
     onToggleExcited,
     onSelectGroup,
+    onUploadSuccess,
   }: Props = $props();
   // Ground/excited are read-only props for display; selection mutations are
   // injected via the on* callbacks and threaded into the cells (see columns.ts).
@@ -176,6 +178,8 @@
     {table}
     {globalFilter}
     onGlobalFilterChange={(value) => (globalFilter = value)}
+    {molecules}
+    {onUploadSuccess}
   />
 
   <div class="rounded-md border">

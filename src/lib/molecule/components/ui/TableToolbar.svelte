@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Molecules } from '../../types';
   import MoleculeUpload from '../MoleculeUpload.svelte';
   import ChevronDown from '@lucide/svelte/icons/chevron-down';
   import Settings2 from '@lucide/svelte/icons/settings-2';
@@ -13,9 +14,17 @@
     table: Table<any>;
     globalFilter: string;
     onGlobalFilterChange: (value: string) => void;
+    molecules?: Molecules;
+    onUploadSuccess?: () => void;
   };
 
-  let { table, globalFilter, onGlobalFilterChange }: Props = $props();
+  let {
+    table,
+    globalFilter,
+    onGlobalFilterChange,
+    molecules,
+    onUploadSuccess,
+  }: Props = $props();
 
   function handleInputChange(e: Event) {
     const target = e.target as HTMLInputElement;
@@ -31,7 +40,7 @@
       oninput={handleInputChange}
       class="h-9 w-64"
     />
-    <MoleculeUpload />
+    <MoleculeUpload {molecules} {onUploadSuccess} />
   </div>
   <div class="flex items-center gap-2">
     <DropdownMenu.Root>

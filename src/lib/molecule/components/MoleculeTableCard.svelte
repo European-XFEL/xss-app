@@ -16,6 +16,7 @@
     onToggleGround: (molecule: Molecule) => void;
     onToggleExcited: (molecule: Molecule) => void;
     onSelectGroup: (molecules: Molecule[]) => void;
+    onUploadSuccess?: () => void;
   }
 
   let {
@@ -26,6 +27,7 @@
     onToggleGround,
     onToggleExcited,
     onSelectGroup,
+    onUploadSuccess,
   }: Props = $props();
 </script>
 
@@ -52,6 +54,7 @@
       {onToggleGround}
       {onToggleExcited}
       {onSelectGroup}
+      {onUploadSuccess}
     />
   </Card.Content>
 </Card.Root>
