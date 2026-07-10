@@ -22,7 +22,6 @@
     'Unrealistic detector module movement',
     'Animations replaying on navigation',
     'Inconsistent molecule name display/state',
-    'Delta T/deposited energy broken',
     'Inconsistent use of X-ray energy state',
   ];
 </script>
