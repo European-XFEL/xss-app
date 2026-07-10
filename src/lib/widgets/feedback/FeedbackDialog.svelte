@@ -5,7 +5,7 @@
   import { tick } from 'svelte';
   import { SvelteSet } from 'svelte/reactivity';
 
-  import { browser } from '$app/environment';
+  import { browser } from '$app/env';
   import { page } from '$app/state';
 
   import * as Button from '$shadcn/ui/button/index.js';

@@ -1,4 +1,4 @@
-import { PUBLIC_TARGET } from '$env/static/public';
+import { PUBLIC_TARGET } from '$app/env/public';
 
 import type {
   DebyeResult,

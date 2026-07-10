@@ -43,6 +43,11 @@ const config = {
       ],
     },
     version: { name: VERSION },
+    experimental: {
+      // Explicit env var declarations (src/env.ts) — default in SvelteKit 3,
+      // replaces the implicit $env/* modules with $app/env/{private,public}.
+      explicitEnvironmentVariables: true,
+    },
     outDir: STATIC ? '.svelte-kit-static' : '.svelte-kit',
   },
   extensions: ['.svelte', '.svx'],

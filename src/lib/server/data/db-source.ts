@@ -9,7 +9,7 @@ import Papa from 'papaparse';
 
 import { error } from '@sveltejs/kit';
 
-import { env } from '$env/dynamic/private';
+import { BACKEND_URL as BACKEND_URL_ENV } from '$app/env/private';
 
 import { db } from '$lib/server/db';
 import * as schema from '$lib/server/db/schema';
@@ -38,7 +38,7 @@ import type {
   UploadMoleculeResult,
 } from './types';
 
-const BACKEND_URL = env.BACKEND_URL ?? 'http://localhost:50051';
+const BACKEND_URL = BACKEND_URL_ENV ?? 'http://localhost:50051';
 
 const transport = createConnectTransport({
   baseUrl: `${BACKEND_URL}`,

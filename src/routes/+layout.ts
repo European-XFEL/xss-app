@@ -1,3 +1,3 @@
-import { env } from '$env/dynamic/public';
+import { PUBLIC_PRERENDER_ALL } from '$app/env/public';
 
-export const prerender = env?.PUBLIC_PRERENDER_ALL === 'true';
+export const prerender = PUBLIC_PRERENDER_ALL === 'true';

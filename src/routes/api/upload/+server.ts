@@ -1,6 +1,6 @@
 import { error, json } from '@sveltejs/kit';
 
-import { PUBLIC_TARGET } from '$env/static/public';
+import { PUBLIC_TARGET } from '$app/env/public';
 
 import { moleculeSource } from '$lib/server/data';
 import {

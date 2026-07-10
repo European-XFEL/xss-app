@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 
-import { env } from '$env/dynamic/private';
-import { PUBLIC_TARGET } from '$env/static/public';
+import { BACKEND_URL, DB_HOST, DB_PASSWORD, DB_USER } from '$app/env/private';
+import { PUBLIC_TARGET } from '$app/env/public';
 
 import { db } from './db';
 import type {
@@ -17,8 +17,8 @@ const BACKEND_TIMEOUT_MS = 300;
 let healthCache: { value: Health; expiresAt: number } | null = null;
 let healthInFlight: Promise<Health> | null = null;
 
-const DB_CONFIGURED = Boolean(env?.DB_HOST && env?.DB_USER && env?.DB_PASSWORD);
-const BACKEND_CONFIGURED = Boolean(env?.BACKEND_URL);
+const DB_CONFIGURED = Boolean(DB_HOST && DB_USER && DB_PASSWORD);
+const BACKEND_CONFIGURED = Boolean(BACKEND_URL);
 
 function normalizeErrorDetail(err: unknown): string {
   if (err instanceof Error) {
@@ -65,7 +65,7 @@ async function checkBackendHealth(
   const timeout = setTimeout(() => controller.abort(), BACKEND_TIMEOUT_MS);
 
   try {
-    const res = await fetcher(`${env.BACKEND_URL}/healthz`, {
+    const res = await fetcher(`${BACKEND_URL}/healthz`, {
       signal: controller.signal,
     });
     if (res.ok) {

@@ -5,7 +5,7 @@
  * - `node` (production): uses Postgres/Drizzle via db-source.ts
  * - `static` (demo): uses committed JSON files via static-source.ts
  */
-import { PUBLIC_TARGET } from '$env/static/public';
+import { PUBLIC_TARGET } from '$app/env/public';
 
 import {
   dbFeedbackSource,
