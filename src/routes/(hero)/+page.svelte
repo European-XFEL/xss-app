@@ -13,6 +13,7 @@
 
   import { resolve } from '$app/paths';
 
+  import { Badge } from '$shadcn/ui/badge';
   import * as Card from '$shadcn/ui/card';
 
   import { Latex } from '$lib/shared/ui';
@@ -152,14 +153,27 @@
               >
                 <Fullscreen class="h-6 w-6 text-data-solvent" />
               </Card.Action>
-              <Card.Title>Image Recreation</Card.Title>
+              <Card.Title class="flex items-center gap-2">
+                Image Recreation
+                <Badge variant="outline" class="text-muted-foreground">
+                  Planned
+                </Badge>
+              </Card.Title>
               <Card.Description>
                 Simulate detector images based on detector information
                 (geometry, masks, etc...) and combined scattering signal
               </Card.Description>
             </Card.Header>
             <Card.Content>
-              <div class="rounded bg-inset px-3 py-2 text-center">...</div>
+              <div class="rounded bg-inset px-3 py-2 text-center">
+                <Latex
+                  math={String.raw`I(x, y) = I_0(x, y) \cdot \big(1 + \Delta S(q(x, y))\big) \odot M(x, y)`}
+                  displayMode={true}
+                />
+                <p class="mt-1 text-xs text-muted-foreground">
+                  Upcoming — not yet available
+                </p>
+              </div>
             </Card.Content>
           </Card.Root>
         </div>
