@@ -1,4 +1,4 @@
-import { throttled } from '$lib/shared/utils/throttled.svelte';
+import { Throttled } from 'runed';
 
 import { THROTTLE_INTERVAL_MS } from './constants';
 import {
@@ -26,19 +26,19 @@ export interface ScatteringInputs {
 export function createScatteringCalculations(
   simulation: ScatteringInputs,
 ): ScatteringMathState {
-  const throttledExcitedStateFraction = throttled(
+  const throttledExcitedStateFraction = new Throttled(
     () => simulation.pump.excitedStateFraction,
     THROTTLE_INTERVAL_MS,
   );
-  const throttledPhotonEnergy = throttled(
+  const throttledPhotonEnergy = new Throttled(
     () => simulation.pump.photonEnergyEv,
     THROTTLE_INTERVAL_MS,
   );
-  const throttledExcitedStateEnergy = throttled(
+  const throttledExcitedStateEnergy = new Throttled(
     () => simulation.pump.excitedStateEnergyEv,
     THROTTLE_INTERVAL_MS,
   );
-  const throttledConcentrationSolute = throttled(
+  const throttledConcentrationSolute = new Throttled(
     () => simulation.sample.concentrationSoluteMolar,
     THROTTLE_INTERVAL_MS,
   );
