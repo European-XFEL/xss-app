@@ -6,7 +6,7 @@
   } from '../lib/run-context';
   import FlaskRoundIcon from '@lucide/svelte/icons/flask-round';
 
-  import type { Snippet } from 'svelte';
+  import { type Snippet, onDestroy } from 'svelte';
 
   import * as Tooltip from '$shadcn/ui/tooltip/index.js';
 
@@ -15,12 +15,44 @@
     sample?: NavSample;
     /** Replaces the default Save run / Export / Add to compare actions. */
     actions?: Snippet;
+    /** Copy a shareable link for the current setup to the clipboard. Only
+     * rendered (as an enabled "Share" button, alongside the default
+     * actions) when provided. */
+    onShare?: () => void | Promise<void>;
   }
 
-  let { sample, actions }: Props = $props();
+  let { sample, actions, onShare }: Props = $props();
 
   const setupComplete = $derived(sample ? isSetupComplete(sample) : false);
   const runTitle = $derived(sample ? getRunTitle(sample) : '');
+
+  type ShareStatus = 'idle' | 'copied' | 'failed';
+  let shareStatus: ShareStatus = $state('idle');
+  let resetShareStatus: ReturnType<typeof setTimeout> | undefined;
+
+  const SHARE_LABEL: Record<ShareStatus, string> = {
+    idle: 'Share',
+    copied: 'Copied!',
+    failed: 'Copy failed',
+  };
+
+  async function handleShareClick(): Promise<void> {
+    if (!onShare) return;
+
+    try {
+      await onShare();
+      shareStatus = 'copied';
+    } catch {
+      shareStatus = 'failed';
+    }
+
+    clearTimeout(resetShareStatus);
+    resetShareStatus = setTimeout(() => {
+      shareStatus = 'idle';
+    }, 1500);
+  }
+
+  onDestroy(() => clearTimeout(resetShareStatus));
 </script>
 
 <header
@@ -72,6 +104,16 @@
     {#if actions}
       {@render actions()}
     {:else}
+      {#if onShare}
+        <button
+          type="button"
+          onclick={handleShareClick}
+          class="rounded-[7px] border border-[rgba(255,255,255,.18)] px-2.5 py-1.5 text-sm font-medium text-chrome-btn"
+        >
+          {SHARE_LABEL[shareStatus]}
+        </button>
+      {/if}
+
       <Tooltip.Root>
         <Tooltip.Trigger>
           {#snippet child({ props })}
