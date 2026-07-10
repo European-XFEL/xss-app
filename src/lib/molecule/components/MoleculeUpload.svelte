@@ -176,8 +176,12 @@
         >
           <Field.Label>Select File</Field.Label>
           <Field.Content>
+            <!-- `files ?? undefined`: the remote-form field types `files` as
+                 `FileList | null`, the Input prop as `FileList | undefined`. -->
+            {@const fileProps = fields.file.as('file')}
             <Input
-              {...fields.file.as('file')}
+              {...fileProps}
+              files={fileProps.files ?? undefined}
               accept=".xyz"
               onchange={handleFileChange}
             />
