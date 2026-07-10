@@ -9,9 +9,11 @@
  *
  * Individual, human-readable params rather than one opaque blob — each
  * field is independent, so a URL missing/mangling one param degrades
- * gracefully instead of invalidating the whole setup. `PARAM.version` is
- * reserved for a future breaking change to this scheme; unset/unknown
- * values are simply ignored today rather than rejected wholesale.
+ * gracefully instead of invalidating the whole setup. `PARAM.version`
+ * gates the whole scheme: a URL from a future, unrecognized version is
+ * treated as if none of the other params were present (falls back to
+ * defaults) rather than risking a misparse of a shape this code doesn't
+ * know about.
  */
 import type { SampleStateInit } from '$lib/sample';
 import type { MoleculeInfo, SolventInfo } from '$lib/shared/contracts';
@@ -65,6 +67,24 @@ function parseNum(raw: string | null): number | null {
   return Number.isFinite(value) ? value : null;
 }
 
+/** What `parseSimulationParams` returns for a URL whose params it can't/
+ * shouldn't interpret (unrecognized `v`) — every field absent, so callers
+ * fall back to defaults exactly as they would for a plain URL. */
+const EMPTY_PARSED_SIMULATION_PARAMS: ParsedSimulationParams = {
+  solventId: null,
+  groundId: null,
+  excitedId: null,
+  concentrationSoluteMolar: null,
+  pump: {
+    photonEnergyEv: null,
+    excitedStateEnergyEv: null,
+    excitedStateFraction: null,
+  },
+  probe: { wavelength: null },
+  detector: { distance: null, beamCenter: null },
+  qRange: null,
+};
+
 /** Parse recognized simulation fields out of a URL's search params. Every
  * field is independently optional; unparseable/missing values come back as
  * `null` so callers can fall back to defaults without the whole setup
@@ -72,6 +92,15 @@ function parseNum(raw: string | null): number | null {
 export function parseSimulationParams(
   searchParams: URLSearchParams,
 ): ParsedSimulationParams {
+  // A missing version param is a fresh/plain URL (e.g. no simulation setup
+  // encoded yet) — nothing to gate. An explicit but unrecognized version is
+  // a URL from a scheme this code doesn't understand, so ignore its params
+  // wholesale rather than risk misinterpreting an incompatible shape.
+  const version = searchParams.get(PARAM.version);
+  if (version !== null && version !== SIMULATION_PARAMS_VERSION) {
+    return EMPTY_PARSED_SIMULATION_PARAMS;
+  }
+
   const beamX = parseNum(searchParams.get(PARAM.beamX));
   const beamY = parseNum(searchParams.get(PARAM.beamY));
 
