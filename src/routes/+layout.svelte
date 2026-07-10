@@ -75,7 +75,12 @@
       qRange: simulation.qRange,
     });
 
-    syncUrl(params);
+    // `untrack`: runed's `useDebounce` keeps its pending-call context in
+    // `$state` and both reads and writes it on every invocation — calling
+    // it tracked from inside this `$effect` makes the effect depend on
+    // state it just mutated, which self-retriggers until Svelte aborts
+    // with `effect_update_depth_exceeded`.
+    untrack(() => void syncUrl(params));
   });
 </script>
 
