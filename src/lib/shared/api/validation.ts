@@ -1,21 +1,42 @@
 import z from 'zod';
 
-export const uploadSchema = z.object({
-  moleculeName: z.string().trim().min(1),
-  description: z.string().trim().min(1),
-  state: z.number().int().min(0),
-  reference: z
-    .string()
-    .trim()
-    .optional()
-    .transform((value) => (value && value.length ? value : null)),
-  atomCount: z.number().int().positive(),
+import {
+  MAX_UPLOAD_ATOM_COUNT,
+  MAX_UPLOAD_FILE_BYTES,
+} from '$lib/shared/contracts';
+
+/**
+ * Validation schema for the molecule upload remote form
+ * ($lib/molecule/upload.remote). Shared between the server handler
+ * (authoritative) and the component's `preflight` (client-side, friendly
+ * errors before a roundtrip) — schemas cannot be exported from `.remote.ts`
+ * files, hence this module.
+ */
+export const uploadMoleculeSchema = z.object({
   file: z
-    .instanceof(File)
-    .refine((value) => value.name.length > 0, 'Please select a file.'),
+    .file('Please select a file')
+    .max(
+      MAX_UPLOAD_FILE_BYTES,
+      `File is too large; the maximum is ${Math.floor(MAX_UPLOAD_FILE_BYTES / 1024)} kB`,
+    ),
+  moleculeName: z.string().trim().min(1, 'Molecule name is required'),
+  description: z.string().trim().min(1, 'Description is required'),
+  state: z
+    .number('State must be a non-negative integer')
+    .int('State must be a non-negative integer')
+    .min(0, 'State must be a non-negative integer'),
+  atomCount: z
+    .number('Atom count must be a positive integer')
+    .int('Atom count must be a positive integer')
+    .min(1, 'Atom count must be a positive integer')
+    .max(
+      MAX_UPLOAD_ATOM_COUNT,
+      `Structure has too many atoms; the maximum is ${MAX_UPLOAD_ATOM_COUNT}`,
+    ),
+  reference: z.string().optional(),
 });
 
-export type UploadInput = z.infer<typeof uploadSchema>;
+export type UploadInput = z.infer<typeof uploadMoleculeSchema>;
 
 export const feedbackCategories = [
   'Content',

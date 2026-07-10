@@ -9,7 +9,6 @@ import type {
   SimRequest,
   SolventIQ,
   SolventInfo,
-  UploadMoleculeResult,
 } from '$lib/shared/contracts';
 
 const STATIC = PUBLIC_TARGET === 'static';
@@ -36,46 +35,7 @@ export async function getMoleculeFileContent(
   return res.json();
 }
 
-export async function uploadMolecule(input: {
-  moleculeName: string;
-  description: string;
-  state: number;
-  reference: string | null;
-  atomCount: number;
-  file: File;
-}): Promise<UploadMoleculeResult> {
-  if (STATIC) {
-    return {
-      success: false,
-      result: null,
-      error: 'Uploading molecules is not supported in the static build.',
-    };
-  }
-
-  const formData = new FormData();
-  formData.append('moleculeName', input.moleculeName);
-  formData.append('description', input.description);
-  formData.append('state', String(input.state));
-  if (input.reference) {
-    formData.append('reference', input.reference);
-  }
-  formData.append('atomCount', String(input.atomCount));
-  formData.append('file', input.file);
-
-  const res = await fetch('/api/upload', {
-    method: 'POST',
-    body: formData,
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(
-      `Failed to upload molecule: ${res.status} ${res.statusText} ${text}`,
-    );
-  }
-
-  return res.json();
-}
+// Molecule uploads go through the remote form in $lib/molecule/upload.remote.
 
 export async function listSolvents(): Promise<SolventInfo[]> {
   const res = await fetch('/api/solvents');

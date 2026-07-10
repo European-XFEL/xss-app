@@ -27,6 +27,12 @@ const VERSION = gitVersion();
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
   preprocess: [vitePreprocess()],
+  compilerOptions: {
+    experimental: {
+      // Required (app-wide) by kit.experimental.remoteFunctions.
+      async: true,
+    },
+  },
   kit: {
     paths: {
       base: process.env.PUBLIC_BASE_PATH,
@@ -47,6 +53,9 @@ const config = {
       // Explicit env var declarations (src/env.ts) — default in SvelteKit 3,
       // replaces the implicit $env/* modules with $app/env/{private,public}.
       explicitEnvironmentVariables: true,
+      // Remote functions (*.remote.ts) — used for the molecule upload form.
+      // Requires compilerOptions.experimental.async below.
+      remoteFunctions: true,
     },
     outDir: STATIC ? '.svelte-kit-static' : '.svelte-kit',
   },
