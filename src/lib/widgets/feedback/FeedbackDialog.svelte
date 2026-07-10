@@ -60,7 +60,7 @@
 
   // Form field states
   let commentValue = $state<string>('');
-  let selectedCategories = new SvelteSet<string>();
+  const selectedCategories = new SvelteSet<string>();
   let submitError = $state<string | null>(null);
   let submitting = $state(false);
 
@@ -235,7 +235,7 @@
       if (result.success) {
         // Reset form
         commentValue = '';
-        selectedCategories = new SvelteSet();
+        selectedCategories.clear();
         region = null;
         regionImage = null;
         open = false;
