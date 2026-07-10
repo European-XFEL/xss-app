@@ -74,45 +74,51 @@
     {:else}
       <Tooltip.Root>
         <Tooltip.Trigger>
-          <span class="inline-flex">
-            <button
-              type="button"
-              disabled
-              class="rounded-[7px] border border-[rgba(255,255,255,.18)] px-2.5 py-1.5 text-sm font-medium text-chrome-btn disabled:pointer-events-none disabled:opacity-50"
-            >
-              Save run
-            </button>
-          </span>
+          {#snippet child({ props })}
+            <span {...props} type={undefined} class="inline-flex">
+              <button
+                type="button"
+                disabled
+                class="rounded-[7px] border border-[rgba(255,255,255,.18)] px-2.5 py-1.5 text-sm font-medium text-chrome-btn disabled:pointer-events-none disabled:opacity-50"
+              >
+                Save run
+              </button>
+            </span>
+          {/snippet}
         </Tooltip.Trigger>
         <Tooltip.Content>Coming soon</Tooltip.Content>
       </Tooltip.Root>
 
       <Tooltip.Root>
         <Tooltip.Trigger>
-          <span class="inline-flex">
-            <button
-              type="button"
-              disabled
-              class="rounded-[7px] border border-[rgba(255,255,255,.18)] px-2.5 py-1.5 text-sm font-medium text-chrome-btn disabled:pointer-events-none disabled:opacity-50"
-            >
-              Export
-            </button>
-          </span>
+          {#snippet child({ props })}
+            <span {...props} type={undefined} class="inline-flex">
+              <button
+                type="button"
+                disabled
+                class="rounded-[7px] border border-[rgba(255,255,255,.18)] px-2.5 py-1.5 text-sm font-medium text-chrome-btn disabled:pointer-events-none disabled:opacity-50"
+              >
+                Export
+              </button>
+            </span>
+          {/snippet}
         </Tooltip.Trigger>
         <Tooltip.Content>Coming soon</Tooltip.Content>
       </Tooltip.Root>
 
       <Tooltip.Root>
         <Tooltip.Trigger>
-          <span class="inline-flex">
-            <button
-              type="button"
-              disabled
-              class="rounded-[7px] bg-primary px-2.5 py-1.5 text-sm font-medium text-primary-foreground disabled:pointer-events-none disabled:opacity-50"
-            >
-              Add to compare
-            </button>
-          </span>
+          {#snippet child({ props })}
+            <span {...props} type={undefined} class="inline-flex">
+              <button
+                type="button"
+                disabled
+                class="rounded-[7px] bg-primary px-2.5 py-1.5 text-sm font-medium text-primary-foreground disabled:pointer-events-none disabled:opacity-50"
+              >
+                Add to compare
+              </button>
+            </span>
+          {/snippet}
         </Tooltip.Trigger>
         <Tooltip.Content>Coming soon</Tooltip.Content>
       </Tooltip.Root>

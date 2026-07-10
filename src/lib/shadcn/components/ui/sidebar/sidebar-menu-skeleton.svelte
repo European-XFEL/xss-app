@@ -13,8 +13,12 @@
 		showIcon?: boolean;
 	} = $props();
 
-	// Random width between 50% and 90%
-	const width = `${Math.floor(Math.random() * 40) + 50}%`;
+	// Random width between 50% and 90%, chosen client-side only (post-mount)
+	// so SSR and the first client render agree and hydration doesn't mismatch.
+	let width = $state("70%");
+	$effect(() => {
+		width = `${Math.floor(Math.random() * 40) + 50}%`;
+	});
 </script>
 
 <div
