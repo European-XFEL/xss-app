@@ -5,15 +5,24 @@
  * Kept as a plain module (no runes) so it can be imported from both a
  * `+layout.server.ts` load (id → object resolution happens there, against
  * the DB/static data source) and client components (serializing the live
- * `SimulationState` back into search params for `replaceState`).
+ * `SimulationState` into a shareable URL via `serializeSimulationParams`).
  *
- * Individual, human-readable params rather than one opaque blob — each
- * field is independent, so a URL missing/mangling one param degrades
- * gracefully instead of invalidating the whole setup. `PARAM.version`
- * gates the whole scheme: a URL from a future, unrecognized version is
- * treated as if none of the other params were present (falls back to
- * defaults) rather than risking a misparse of a shape this code doesn't
- * know about.
+ * Everything is packed into a single opaque `s` param — a version tag
+ * followed by every field, in a fixed order, joined with `|` and
+ * base64url-encoded — rather than one param per field. Ids are 24-char
+ * cuid2 (alphanumeric only) and every numeric field is serialized with
+ * plain `String(number)`, so none of them can ever contain the `|`
+ * separator; that's what makes positional (rather than key=value) packing
+ * safe here. The leading version segment gates the whole scheme: a link
+ * from a future, unrecognized version — or one that's simply malformed
+ * (bad base64, wrong segment count) — is treated as if no simulation setup
+ * were encoded at all (falls back to defaults) rather than risking a
+ * misparse of a shape/encoding this code doesn't know about.
+ *
+ * A legacy fallback parser (`parseLegacySimulationParams`) still reads the
+ * older one-param-per-field scheme (`v`, `solvent`, `ground`, ... as
+ * distinct query params) so links shared before this change keep working;
+ * nothing in this app writes that format anymore.
  */
 import type { SampleStateInit } from '$lib/sample';
 import type { MoleculeInfo, SolventInfo } from '$lib/shared/contracts';
@@ -23,7 +32,12 @@ import type { SimulationStateInit } from './simulation-context.svelte';
 
 export const SIMULATION_PARAMS_VERSION = '1';
 
-export const PARAM = {
+/** The single query param a shared link is encoded into. */
+export const SHARE_PARAM = 's';
+
+/** The older one-param-per-field scheme, kept only so `parseLegacySimulationParams`
+ * can still read links shared before the `SHARE_PARAM` switch. */
+const LEGACY_PARAM = {
   version: 'v',
   solvent: 'solvent',
   ground: 'ground',
@@ -40,6 +54,10 @@ export const PARAM = {
   qMax: 'qMax',
   qStep: 'qStep',
 } as const;
+
+/** Number of `|`-joined segments in a valid `SHARE_PARAM` payload: the
+ * version tag plus every field below, in order. */
+const SEGMENT_COUNT = 15;
 
 export interface ParsedSimulationParams {
   solventId: string | null;
@@ -61,15 +79,16 @@ export interface ParsedSimulationParams {
   qRange: { min: number; max: number; step: number } | null;
 }
 
-function parseNum(raw: string | null): number | null {
-  if (raw === null || raw === '') return null;
+function parseNum(raw: string | null | undefined): number | null {
+  if (raw === null || raw === undefined || raw === '') return null;
   const value = Number(raw);
   return Number.isFinite(value) ? value : null;
 }
 
 /** What `parseSimulationParams` returns for a URL whose params it can't/
- * shouldn't interpret (unrecognized `v`) — every field absent, so callers
- * fall back to defaults exactly as they would for a plain URL. */
+ * shouldn't interpret (unrecognized version, malformed payload) — every
+ * field absent, so callers fall back to defaults exactly as they would for
+ * a plain URL. */
 const EMPTY_PARSED_SIMULATION_PARAMS: ParsedSimulationParams = {
   solventId: null,
   groundId: null,
@@ -85,58 +104,204 @@ const EMPTY_PARSED_SIMULATION_PARAMS: ParsedSimulationParams = {
   qRange: null,
 };
 
-/** Parse recognized simulation fields out of a URL's search params. Every
- * field is independently optional; unparseable/missing values come back as
- * `null` so callers can fall back to defaults without the whole setup
- * being discarded. */
-export function parseSimulationParams(
+/** Encode a UTF-8 string as unpadded base64url. Uses `TextEncoder`/`btoa`
+ * (both available as globals in browsers and in Node ≥18) rather than
+ * `Buffer`, since this module has to run in both environments. */
+function toBase64Url(input: string): string {
+  const bytes = new TextEncoder().encode(input);
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
+
+/** Inverse of `toBase64Url`. Throws (`atob` rejects non-base64 input) on a
+ * malformed payload — callers must catch. */
+function fromBase64Url(input: string): string {
+  const padded =
+    input.replace(/-/g, '+').replace(/_/g, '/') +
+    '='.repeat((4 - (input.length % 4)) % 4);
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+
+/** Decode + validate a `SHARE_PARAM` value down to its raw `|`-joined
+ * segments, or `null` for any failure mode — invalid base64, wrong segment
+ * count, unrecognized version. Split out from `decodeSimulationPayload` so
+ * neither function trips the lint complexity/length limits. */
+function splitSharePayload(encoded: string): string[] | null {
+  let decoded: string;
+  try {
+    decoded = fromBase64Url(encoded);
+  } catch {
+    return null;
+  }
+
+  const segments = decoded.split('|');
+  if (segments.length !== SEGMENT_COUNT) return null;
+  if (segments[0] !== SIMULATION_PARAMS_VERSION) return null;
+  return segments;
+}
+
+function parseBeamCenter(
+  x: string | null,
+  y: string | null,
+): { x: number; y: number } | null {
+  const xNum = parseNum(x);
+  const yNum = parseNum(y);
+  return xNum !== null && yNum !== null ? { x: xNum, y: yNum } : null;
+}
+
+/** Partial q-ranges are meaningless (and `isValidQRange` would reject most
+ * of them anyway) — require all three fields or fall back to `null`. */
+function parseQRange(
+  min: string | null,
+  max: string | null,
+  step: string | null,
+): { min: number; max: number; step: number } | null {
+  const minNum = parseNum(min);
+  const maxNum = parseNum(max);
+  const stepNum = parseNum(step);
+  if (minNum === null || maxNum === null || stepNum === null) return null;
+
+  const candidate = { min: minNum, max: maxNum, step: stepNum };
+  return isValidQRange(candidate) ? candidate : null;
+}
+
+/** Turn already-validated `SHARE_PARAM` segments into `ParsedSimulationParams`.
+ * Segment order must match `serializeSimulationParams`'s `segments` array
+ * exactly — the round-trip test in `simulation-url.test.ts` is what guards
+ * against that drifting. */
+function parseSegments(segments: string[]): ParsedSimulationParams {
+  const [
+    ,
+    solventId,
+    groundId,
+    excitedId,
+    concentration,
+    pumpPhotonEv,
+    pumpExcitedEv,
+    pumpFraction,
+    wavelength,
+    detectorDistance,
+    beamX,
+    beamY,
+    qMin,
+    qMax,
+    qStep,
+  ] = segments;
+
+  return {
+    solventId: solventId || null,
+    groundId: groundId || null,
+    excitedId: excitedId || null,
+    concentrationSoluteMolar: parseNum(concentration),
+    pump: {
+      photonEnergyEv: parseNum(pumpPhotonEv),
+      excitedStateEnergyEv: parseNum(pumpExcitedEv),
+      excitedStateFraction: parseNum(pumpFraction),
+    },
+    probe: {
+      wavelength: parseNum(wavelength),
+    },
+    detector: {
+      distance: parseNum(detectorDistance),
+      beamCenter: parseBeamCenter(beamX, beamY),
+    },
+    qRange: parseQRange(qMin, qMax, qStep),
+  };
+}
+
+/** Decode a `SHARE_PARAM` value into `ParsedSimulationParams`. Any failure
+ * mode — invalid base64, wrong segment count, unrecognized version — comes
+ * back as `EMPTY_PARSED_SIMULATION_PARAMS`, never a thrown error, since this
+ * runs in `+layout.server.ts`'s load path where an uncaught exception would
+ * 500 the page for what's just a bad/stale link. */
+function decodeSimulationPayload(encoded: string): ParsedSimulationParams {
+  const segments = splitSharePayload(encoded);
+  return segments ? parseSegments(segments) : EMPTY_PARSED_SIMULATION_PARAMS;
+}
+
+function hasLegacySimulationParams(searchParams: URLSearchParams): boolean {
+  return Object.values(LEGACY_PARAM).some((key) => searchParams.has(key));
+}
+
+/** Parse the older one-param-per-field scheme. Kept only as a fallback for
+ * links shared before the `SHARE_PARAM` switch — mirrors the semantics
+ * `decodeSimulationPayload` now uses for the current format (independently
+ * optional fields, version gate discards everything on mismatch). */
+function parseLegacySimulationParams(
   searchParams: URLSearchParams,
 ): ParsedSimulationParams {
-  // A missing version param is a fresh/plain URL (e.g. no simulation setup
-  // encoded yet) — nothing to gate. An explicit but unrecognized version is
-  // a URL from a scheme this code doesn't understand, so ignore its params
-  // wholesale rather than risk misinterpreting an incompatible shape.
-  const version = searchParams.get(PARAM.version);
+  const version = searchParams.get(LEGACY_PARAM.version);
   if (version !== null && version !== SIMULATION_PARAMS_VERSION) {
     return EMPTY_PARSED_SIMULATION_PARAMS;
   }
 
-  const beamX = parseNum(searchParams.get(PARAM.beamX));
-  const beamY = parseNum(searchParams.get(PARAM.beamY));
-
-  const qMin = parseNum(searchParams.get(PARAM.qMin));
-  const qMax = parseNum(searchParams.get(PARAM.qMax));
-  const qStep = parseNum(searchParams.get(PARAM.qStep));
-  const qRangeCandidate =
-    qMin !== null && qMax !== null && qStep !== null
-      ? { min: qMin, max: qMax, step: qStep }
-      : null;
-
   return {
-    solventId: searchParams.get(PARAM.solvent),
-    groundId: searchParams.get(PARAM.ground),
-    excitedId: searchParams.get(PARAM.excited),
-    concentrationSoluteMolar: parseNum(searchParams.get(PARAM.concentration)),
+    solventId: searchParams.get(LEGACY_PARAM.solvent),
+    groundId: searchParams.get(LEGACY_PARAM.ground),
+    excitedId: searchParams.get(LEGACY_PARAM.excited),
+    concentrationSoluteMolar: parseNum(
+      searchParams.get(LEGACY_PARAM.concentration),
+    ),
     pump: {
-      photonEnergyEv: parseNum(searchParams.get(PARAM.pumpPhotonEv)),
-      excitedStateEnergyEv: parseNum(searchParams.get(PARAM.pumpExcitedEv)),
-      excitedStateFraction: parseNum(searchParams.get(PARAM.pumpFraction)),
+      photonEnergyEv: parseNum(searchParams.get(LEGACY_PARAM.pumpPhotonEv)),
+      excitedStateEnergyEv: parseNum(
+        searchParams.get(LEGACY_PARAM.pumpExcitedEv),
+      ),
+      excitedStateFraction: parseNum(
+        searchParams.get(LEGACY_PARAM.pumpFraction),
+      ),
     },
     probe: {
-      wavelength: parseNum(searchParams.get(PARAM.wavelength)),
+      wavelength: parseNum(searchParams.get(LEGACY_PARAM.wavelength)),
     },
     detector: {
-      distance: parseNum(searchParams.get(PARAM.detectorDistance)),
-      beamCenter:
-        beamX !== null && beamY !== null ? { x: beamX, y: beamY } : null,
+      distance: parseNum(searchParams.get(LEGACY_PARAM.detectorDistance)),
+      beamCenter: parseBeamCenter(
+        searchParams.get(LEGACY_PARAM.beamX),
+        searchParams.get(LEGACY_PARAM.beamY),
+      ),
     },
-    // Partial q-ranges are meaningless (and `isValidQRange` would reject
-    // most of them anyway) — require all three or fall back to default.
-    qRange:
-      qRangeCandidate && isValidQRange(qRangeCandidate)
-        ? qRangeCandidate
-        : null,
+    qRange: parseQRange(
+      searchParams.get(LEGACY_PARAM.qMin),
+      searchParams.get(LEGACY_PARAM.qMax),
+      searchParams.get(LEGACY_PARAM.qStep),
+    ),
   };
+}
+
+/** Whether a URL carries an encoded simulation setup in either the current
+ * (`SHARE_PARAM`) or legacy (one-param-per-field) scheme — used to decide
+ * whether a restore happened and the URL should be cleaned back to the
+ * plain path. */
+export function hasEncodedSimulationParams(
+  searchParams: URLSearchParams,
+): boolean {
+  return (
+    searchParams.has(SHARE_PARAM) || hasLegacySimulationParams(searchParams)
+  );
+}
+
+/** Parse recognized simulation fields out of a URL's search params.
+ * Prefers the current `SHARE_PARAM` encoding; falls back to the legacy
+ * one-param-per-field scheme for older links. Every field is independently
+ * optional; unparseable/missing values come back as `null` so callers can
+ * fall back to defaults without the whole setup being discarded. */
+export function parseSimulationParams(
+  searchParams: URLSearchParams,
+): ParsedSimulationParams {
+  const encoded = searchParams.get(SHARE_PARAM);
+  if (encoded !== null) return decodeSimulationPayload(encoded);
+  if (hasLegacySimulationParams(searchParams)) {
+    return parseLegacySimulationParams(searchParams);
+  }
+  return EMPTY_PARSED_SIMULATION_PARAMS;
 }
 
 type NonNullFields<T> = { [K in keyof T]?: Exclude<T[K], null> };
@@ -213,39 +378,35 @@ export interface SerializableSimulationState {
   qRange: { min: number; max: number; step: number };
 }
 
-/** Serialize the live simulation state back into search params, for
- * `replaceState` to write after every edit. Only emits a param when the
- * corresponding value is set, keeping the URL as short as practical. */
+/** Serialize the live simulation state into a single-param `URLSearchParams`
+ * (`SHARE_PARAM` only) for the Share button to copy into a link. Field
+ * order matches `decodeSimulationPayload`'s destructure exactly — changing
+ * one without the other is a silent drift, which is what the round-trip
+ * test in `simulation-url.test.ts` guards against. */
 export function serializeSimulationParams(
   state: SerializableSimulationState,
 ): URLSearchParams {
-  const params = new URLSearchParams();
+  const segments = [
+    SIMULATION_PARAMS_VERSION,
+    state.sample.solvent?.id ?? '',
+    state.sample.ground?.id ?? '',
+    state.sample.excited?.id ?? '',
+    state.sample.concentrationSoluteMolar !== null
+      ? String(state.sample.concentrationSoluteMolar)
+      : '',
+    String(state.pump.photonEnergyEv),
+    String(state.pump.excitedStateEnergyEv),
+    String(state.pump.excitedStateFraction),
+    String(state.probe.wavelength),
+    String(state.detector.distance),
+    String(state.detector.beamCenter.x),
+    String(state.detector.beamCenter.y),
+    String(state.qRange.min),
+    String(state.qRange.max),
+    String(state.qRange.step),
+  ];
 
-  params.set(PARAM.version, SIMULATION_PARAMS_VERSION);
-
-  if (state.sample.solvent) params.set(PARAM.solvent, state.sample.solvent.id);
-  if (state.sample.ground) params.set(PARAM.ground, state.sample.ground.id);
-  if (state.sample.excited) params.set(PARAM.excited, state.sample.excited.id);
-  if (state.sample.concentrationSoluteMolar !== null) {
-    params.set(
-      PARAM.concentration,
-      String(state.sample.concentrationSoluteMolar),
-    );
-  }
-
-  params.set(PARAM.pumpPhotonEv, String(state.pump.photonEnergyEv));
-  params.set(PARAM.pumpExcitedEv, String(state.pump.excitedStateEnergyEv));
-  params.set(PARAM.pumpFraction, String(state.pump.excitedStateFraction));
-
-  params.set(PARAM.wavelength, String(state.probe.wavelength));
-
-  params.set(PARAM.detectorDistance, String(state.detector.distance));
-  params.set(PARAM.beamX, String(state.detector.beamCenter.x));
-  params.set(PARAM.beamY, String(state.detector.beamCenter.y));
-
-  params.set(PARAM.qMin, String(state.qRange.min));
-  params.set(PARAM.qMax, String(state.qRange.max));
-  params.set(PARAM.qStep, String(state.qRange.step));
-
-  return params;
+  return new URLSearchParams({
+    [SHARE_PARAM]: toBase64Url(segments.join('|')),
+  });
 }
