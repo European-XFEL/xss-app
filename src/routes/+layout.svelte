@@ -1,5 +1,6 @@
 <script lang="ts">
   import '$css';
+  import { useDebounce } from 'runed';
 
   import { untrack } from 'svelte';
 
@@ -34,6 +35,29 @@
   // current history entry's URL/state — it never navigates or triggers a
   // `load` rerun — so this can't create a write/read feedback loop with
   // the load function above.
+  //
+  // Only the write (`replaceState` below) is debounced — `params` is built
+  // synchronously inside the `$effect` on every run, since `$effect` only
+  // tracks state read *synchronously* during its own execution: reading
+  // `simulation.pump` etc. here (including indirectly, via
+  // `serializeSimulationParams`) is what makes per-field edits re-trigger
+  // this effect. Reading them later, inside the debounced callback, would
+  // not.
+  const syncUrl = useDebounce((params: URLSearchParams) => {
+    // Stay on the current route and just rewrite the search string.
+    // `page.route.id` is only null for the (rare) case there's no matched
+    // route, e.g. a 404 — nothing to sync the URL for there.
+    const routeId = page.route.id;
+    if (!routeId) return;
+
+    const target = resolve(`${routeId}?${params.toString()}`);
+    // `page.state` is passed through (not omitted) so this rewrite
+    // preserves any shallow-routing state already attached to the current
+    // history entry — omitting it would silently drop that state on every
+    // debounced sync.
+    replaceState(target, page.state);
+  }, 400);
+
   $effect(() => {
     const params = serializeSimulationParams({
       sample: {
@@ -51,18 +75,7 @@
       qRange: simulation.qRange,
     });
 
-    const timeout = setTimeout(() => {
-      // Stay on the current route and just rewrite the search string.
-      // `page.route.id` is only null for the (rare) case there's no
-      // matched route, e.g. a 404 — nothing to sync the URL for there.
-      const routeId = page.route.id;
-      if (!routeId) return;
-
-      const target = resolve(`${routeId}?${params.toString()}`);
-      replaceState(target, page.state);
-    }, 400);
-
-    return () => clearTimeout(timeout);
+    syncUrl(params);
   });
 </script>
 
