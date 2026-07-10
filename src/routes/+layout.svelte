@@ -1,9 +1,9 @@
 <script lang="ts">
   import '$css';
 
-  import { onMount, untrack } from 'svelte';
+  import { untrack } from 'svelte';
 
-  import { replaceState } from '$app/navigation';
+  import { afterNavigate, replaceState } from '$app/navigation';
   import { asset, resolve } from '$app/paths';
   import { page } from '$app/state';
 
@@ -34,18 +34,28 @@
   // above — once `simulation` has been seeded, leaving them in the address
   // bar is stale and confusing (e.g. it looks "unsaved-but-synced" even
   // though edits no longer write back to the URL). Clean the URL back to
-  // the plain path exactly once, on mount, rather than a recurring
-  // `$effect` (which could refire and fight a later, unrelated query
-  // param). `page.state` is passed through (not omitted) so this preserves
-  // any shallow-routing state already attached to the current history
-  // entry.
-  onMount(() => {
+  // the plain path once the params have done their job.
+  //
+  // `afterNavigate` fires for the very first load too, but SvelteKit's
+  // client-side router runs *all* registered `afterNavigate` (and
+  // `onMount`) callbacks synchronously as part of its own `initialize()`,
+  // before it flips the internal flag that makes `replaceState` legal to
+  // call — calling it directly here throws "cannot be called before
+  // router is initialized". Deferring one tick with `setTimeout` runs
+  // after `initialize()` has returned, once the router considers itself
+  // started. `afterNavigate` fires again on every later navigation too,
+  // but `hasEncodedSimulationParams` is false by then (this same check
+  // already cleaned the params), so this is naturally a no-op afterward
+  // rather than needing a one-time guard. `page.state` is passed through
+  // (not omitted) so this preserves any shallow-routing state already
+  // attached to the current history entry.
+  afterNavigate(() => {
     if (!hasEncodedSimulationParams(page.url.searchParams)) return;
 
     const routeId = page.route.id;
     if (!routeId) return;
 
-    replaceState(resolve(routeId), page.state);
+    setTimeout(() => replaceState(resolve(routeId), page.state));
   });
 </script>
 
