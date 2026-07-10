@@ -3,7 +3,8 @@
 
   import * as Field from '$shadcn/ui/field';
 
-  import { NumSlider } from '$lib/shared/ui';
+  import { formatSigFigs } from '$lib/shared/format';
+  import { NumSlider, RevealableValue } from '$lib/shared/ui';
 
   type Props = {
     probe: XRayProbe;
@@ -27,7 +28,10 @@
         step="0.01"
       />
       <p class="text-xs text-muted-foreground">
-        ≈ {photonEnergyKev.toPrecision(3)} keV
+        ≈ <RevealableValue
+          display={formatSigFigs(photonEnergyKev)}
+          full={`${photonEnergyKev}`}
+        /> keV
       </p>
     </Field.Field>
   </Field.Group>

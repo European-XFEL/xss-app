@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { formatSigFigs } from '$lib/shared/format';
+  import { RevealableValue } from '$lib/shared/ui';
+
   import DSSPlot from './DSSPlot.svelte';
 
   interface Props {
@@ -14,13 +17,6 @@
 
   const results: Props = $props();
 
-  function fmt(value: number, sigFigs = 3): string {
-    const abs = Math.abs(value);
-    if (abs === 0) return '0';
-    if (abs >= 0.01 && abs < 10000) return +value.toPrecision(sigFigs) + '';
-    return value.toExponential(sigFigs - 1);
-  }
-
   const deltaT = $derived(results.deltaTemperatureK);
   const energy = $derived(results.depositedEnergyJoule);
   const [qMin, qMax] = $derived(results.detectorQRange);
@@ -34,12 +30,17 @@
 
   const metrics = $derived<Metric[]>([
     deltaT != null
-      ? { label: 'ΔT', display: fmt(deltaT), unit: 'K', full: `${deltaT} K` }
+      ? {
+          label: 'ΔT',
+          display: formatSigFigs(deltaT),
+          unit: 'K',
+          full: `${deltaT} K`,
+        }
       : { label: 'ΔT', display: '—', unit: 'K', full: '' },
     energy != null
       ? {
           label: 'Deposited Energy',
-          display: fmt(energy),
+          display: formatSigFigs(energy),
           unit: 'J',
           full: `${energy} J`,
         }
@@ -47,7 +48,7 @@
     qMin != null && qMax != null
       ? {
           label: 'Q range',
-          display: `${fmt(qMin)} – ${fmt(qMax)}`,
+          display: `${formatSigFigs(qMin)} – ${formatSigFigs(qMax)}`,
           unit: 'Å⁻¹',
           full: `${qMin} – ${qMax} Å⁻¹`,
         }
@@ -58,10 +59,14 @@
 <div class="divide-y divide-line">
   <div class="flex divide-x divide-line-soft py-3 first:pt-0 last:pb-0">
     {#each metrics as metric (metric.label)}
-      <div class="flex-1 px-4 first:pl-0 last:pr-0" title={metric.full}>
+      <div class="flex-1 px-4 first:pl-0 last:pr-0">
         <div>{metric.label}</div>
         <div class="mt-1 font-mono text-base font-semibold">
-          {metric.display}
+          {#if metric.full}
+            <RevealableValue display={metric.display} full={metric.full} />
+          {:else}
+            {metric.display}
+          {/if}
           <span class="text-xs font-normal text-muted-foreground">
             {metric.unit}
           </span>

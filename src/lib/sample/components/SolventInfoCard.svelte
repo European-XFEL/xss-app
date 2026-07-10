@@ -3,7 +3,8 @@
 
   import * as Table from '$shadcn/ui/table/index.js';
 
-  import { ChannelPanel } from '$lib/shared/ui';
+  import { formatSigFigs } from '$lib/shared/format';
+  import { ChannelPanel, RevealableValue } from '$lib/shared/ui';
 
   interface Props {
     solvent: Sample['solvent'];
@@ -11,16 +12,28 @@
 
   let { solvent }: Props = $props();
 
-  const rows = $derived.by(() => {
-    // if (!solvent) return;
+  /** One display row: 3-sig-fig text plus the full-precision text for the
+   * reveal-on-focus overlay ('' while no solvent is selected — nothing to
+   * reveal). */
+  function row(label: string, unit: string, value: number | undefined) {
     return [
-      ['ρ<sub>m</sub>', 'mol/m<sup>3</sup>', solvent?.rhom.toPrecision(5)],
-      ['Cpm', 'J/mol/K', solvent?.cpm.toPrecision(3)],
-      ['Q Min', 'Å<sup>-1</sup>', solvent?.qMin.toPrecision(3)],
-      ['Q Max', 'Å<sup>-1</sup>', solvent?.qMax.toPrecision(3)],
-      ['Q Step', 'Å<sup>-1</sup>', solvent?.qStep.toPrecision(3)],
-    ];
-  });
+      label,
+      unit,
+      formatSigFigs(value),
+      value == null ? '' : `${value}`,
+    ] as const;
+  }
+
+  // 3 significant figures everywhere, matching the app-wide display
+  // convention (rhom previously stood out at 5 sig figs). Full precision
+  // stays reachable via RevealableValue.
+  const rows = $derived.by(() => [
+    row('ρ<sub>m</sub>', 'mol/m<sup>3</sup>', solvent?.rhom),
+    row('Cpm', 'J/mol/K', solvent?.cpm),
+    row('Q Min', 'Å<sup>-1</sup>', solvent?.qMin),
+    row('Q Max', 'Å<sup>-1</sup>', solvent?.qMax),
+    row('Q Step', 'Å<sup>-1</sup>', solvent?.qStep),
+  ]);
 </script>
 
 <ChannelPanel
@@ -30,11 +43,17 @@
 >
   <Table.Root>
     <Table.Body>
-      {#each rows as [key, unit, value] (key)}
+      {#each rows as [key, unit, display, fullValue] (key)}
         <Table.Row>
           <!-- eslint-disable-next-line svelte/no-at-html-tags -->
           <Table.Cell class="font-medium">{@html key}</Table.Cell>
-          <Table.Cell>{value}</Table.Cell>
+          <Table.Cell>
+            {#if fullValue}
+              <RevealableValue display={display ?? '—'} full={fullValue} />
+            {:else}
+              {display}
+            {/if}
+          </Table.Cell>
           <!-- eslint-disable-next-line svelte/no-at-html-tags -->
           <Table.Cell class="text-end">{@html unit}</Table.Cell>
         </Table.Row>
