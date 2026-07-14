@@ -79,17 +79,11 @@ const EMPTY_PARSED_SIMULATION_PARAMS: ParsedSimulationParams = {
   qRange: null,
 };
 
-/** Encode a UTF-8 string as unpadded base64url. Uses `TextEncoder`/`btoa`
- * (both available as globals in browsers and in Node ≥18) rather than
- * `Buffer`, since this module has to run in both environments. */
+/** Encode an ASCII string as unpadded base64url. Every SHARE_PARAM
+ * segment is ASCII (cuid2 ids + String(number)) joined with `|`, so plain
+ * `btoa` suffices — no UTF-8 byte handling is needed. */
 function toBase64Url(input: string): string {
-  const bytes = new TextEncoder().encode(input);
-  let binary = '';
-  for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary)
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
+  return btoa(input).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 /** Inverse of `toBase64Url`. Throws (`atob` rejects non-base64 input) on a
@@ -98,10 +92,7 @@ function fromBase64Url(input: string): string {
   const padded =
     input.replace(/-/g, '+').replace(/_/g, '/') +
     '='.repeat((4 - (input.length % 4)) % 4);
-  const binary = atob(padded);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return new TextDecoder().decode(bytes);
+  return atob(padded);
 }
 
 /** Decode + validate a `SHARE_PARAM` value down to its raw `|`-joined
