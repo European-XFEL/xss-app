@@ -2,7 +2,8 @@
   import { useSimulationState } from '$lib/app/simulation-context.svelte';
   import { MoleculeCardSelection, MoleculeTableCard } from '$lib/molecule';
   import { SolventCard, SolventInfoCard } from '$lib/sample';
-  import { listMolecules, listSolvents } from '$lib/shared/api/api';
+  import { listSolvents } from '$lib/sample/solvent.remote';
+  import { listMolecules } from '$lib/shared/api/api';
   import { createScatteringResource } from '$lib/simulation';
 
   const simulation = useSimulationState();
