@@ -16,8 +16,10 @@
   import * as Textarea from '$shadcn/ui/textarea/index.js';
   import * as Tooltip from '$shadcn/ui/tooltip/index.js';
 
-  import { submitFeedback } from '$lib/shared/api/api';
+  import { feedbackCategories } from '$lib/shared/api/validation';
   import type { Capability } from '$lib/shared/health';
+
+  import { submitFeedback } from './feedback.remote';
 
   interface Props {
     capability?: Capability;
@@ -44,12 +46,11 @@
     height: number;
   };
 
-  const categoryOptions = [
-    { label: 'Content', value: 'Content' },
-    { label: 'Interface', value: 'Interface' },
-    { label: 'Bug', value: 'Bug' },
-    { label: 'Suggestion', value: 'Suggestion' },
-  ] as const;
+  type FeedbackCategory = (typeof feedbackCategories)[number];
+  const categoryOptions = feedbackCategories.map((value) => ({
+    label: value,
+    value,
+  }));
 
   let open = $state(false);
   let selecting = $state(false);
@@ -60,7 +61,7 @@
 
   // Form field states
   let commentValue = $state<string>('');
-  const selectedCategories = new SvelteSet<string>();
+  const selectedCategories = new SvelteSet<FeedbackCategory>();
   let submitError = $state<string | null>(null);
   let submitting = $state(false);
 
@@ -204,7 +205,7 @@
     }
   }
 
-  function toggleCategory(value: string) {
+  function toggleCategory(value: FeedbackCategory) {
     if (selectedCategories.has(value)) {
       selectedCategories.delete(value);
     } else {
@@ -224,7 +225,8 @@
     submitting = true;
 
     try {
-      const result = await submitFeedback({
+      // Throws on failure — a successful return means the row was stored.
+      await submitFeedback({
         url: pageUrl,
         comment: commentValue.trim(),
         categories: Array.from(selectedCategories),
@@ -232,16 +234,12 @@
         regionImage: regionImage ?? undefined,
       });
 
-      if (result.success) {
-        // Reset form
-        commentValue = '';
-        selectedCategories.clear();
-        region = null;
-        regionImage = null;
-        open = false;
-      } else {
-        submitError = 'Failed to submit feedback';
-      }
+      // Reset form
+      commentValue = '';
+      selectedCategories.clear();
+      region = null;
+      regionImage = null;
+      open = false;
     } catch (err) {
       submitError = err instanceof Error ? err.message : 'Submission failed';
     } finally {

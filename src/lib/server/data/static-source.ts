@@ -229,9 +229,8 @@ export const staticSimulationSource: SimulationDataSource = {
 
 export const staticFeedbackSource: FeedbackDataSource = {
   async createFeedback(_data: FeedbackInput): Promise<FeedbackResult> {
-    return {
-      success: false,
-      id: null,
-    };
+    // Unreachable in practice: the static host has no server to run the
+    // feedback command, and the dialog is disabled by capabilities anyway.
+    throw error(501, 'Feedback is not supported in the static build');
   },
 };

@@ -274,6 +274,8 @@ export const dbFeedbackSource: FeedbackDataSource = {
       })
       .returning({ id: schema.feedback.id });
 
-    return { success: true, id: inserted?.[0]?.id ?? null };
+    const id = inserted?.[0]?.id;
+    if (!id) throw error(500, 'Failed to store feedback');
+    return { id };
   },
 };

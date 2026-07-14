@@ -2,10 +2,10 @@
  * Shared client/server contracts.
  *
  * The single sanctioned crossing point for types that flow between the
- * browser and the server: request/response DTOs used by `$lib/shared/api/api`
- * and `$lib/server/data`, plus the type-only surface derived from the
- * generated gRPC protos. Nothing outside `$lib/server` should import from
- * `$lib/server` directly, even for types — import from here instead.
+ * browser and the server: request/response DTOs used by the `*.remote.ts`
+ * functions and `$lib/server/data`, plus the type-only surface derived from
+ * the generated gRPC protos. Nothing outside `$lib/server` should import
+ * from `$lib/server` directly, even for types — import from here instead.
  */
 import type * as protoFiles from '$lib/server/grpc/gen/files_pb';
 import type * as protoSim from '$lib/server/grpc/gen/simulation_pb';
@@ -82,6 +82,8 @@ export interface DebyeResult {
 
 // ─── Feedback ───────────────────────────────────────────────────────────────
 
+// `feedbackSchema` in $lib/shared/api/validation is pinned to this shape
+// with a `satisfies` check, so the two cannot silently drift.
 export interface FeedbackInput {
   url: string;
   comment?: string;
@@ -91,8 +93,7 @@ export interface FeedbackInput {
 }
 
 export interface FeedbackResult {
-  success: boolean;
-  id: string | null;
+  id: string;
 }
 
 // ─── Proto-derived types ────────────────────────────────────────────────────

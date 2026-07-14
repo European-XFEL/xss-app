@@ -1,6 +1,7 @@
 import z from 'zod';
 
 import {
+  type FeedbackInput,
   MAX_UPLOAD_ATOM_COUNT,
   MAX_UPLOAD_FILE_BYTES,
   type SimRequest,
@@ -46,6 +47,7 @@ export const feedbackCategories = [
   'Suggestion',
 ] as const;
 
+// Pinned to the `FeedbackInput` contract — see the note on `simulationSchema`.
 export const feedbackSchema = z.object({
   url: z.string().url(),
   comment: z.string().trim().max(2000).optional(),
@@ -55,9 +57,7 @@ export const feedbackSchema = z.object({
     .transform((value) => value ?? []),
   region: z.string().optional(),
   regionImage: z.string().optional(),
-});
-
-export type FeedbackInput = z.infer<typeof feedbackSchema>;
+}) satisfies z.ZodType<FeedbackInput, unknown>;
 
 // Pinned to the `SimRequest` contract (the boundaries rules let server code
 // import only $lib/shared/contracts, so the interface lives there and this
