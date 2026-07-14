@@ -18,18 +18,6 @@ import type {
   UploadMoleculeResult,
 } from '$lib/shared/contracts';
 
-export type {
-  DebyeResult,
-  FeedbackInput,
-  FeedbackResult,
-  MoleculeFileContent,
-  MoleculeInfo,
-  SimRequest,
-  SolventIQ,
-  SolventInfo,
-  UploadMoleculeResult,
-} from '$lib/shared/contracts';
-
 // ─── Molecule types ─────────────────────────────────────────────────────────
 
 export interface UploadMoleculeInput {

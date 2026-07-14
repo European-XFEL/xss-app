@@ -43,16 +43,3 @@ export const simulationSource: SimulationDataSource = STATIC
 export const feedbackSource: FeedbackDataSource = STATIC
   ? staticFeedbackSource
   : dbFeedbackSource;
-
-export type {
-  DebyeResult,
-  FeedbackInput,
-  FeedbackResult,
-  MoleculeFileContent,
-  MoleculeInfo,
-  SimRequest,
-  SolventIQ,
-  SolventInfo,
-  UploadMoleculeInput,
-  UploadMoleculeResult,
-} from './types';

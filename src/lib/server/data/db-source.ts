@@ -20,22 +20,24 @@ import {
   createConnectTransport,
 } from '$lib/server/grpc';
 import { MAX_UPLOAD_ATOM_COUNT } from '$lib/shared/contracts';
-
 import type {
   DebyeResult,
-  FeedbackDataSource,
   FeedbackInput,
   FeedbackResult,
-  MoleculeDataSource,
   MoleculeFileContent,
   MoleculeInfo,
   SimRequest,
-  SimulationDataSource,
-  SolventDataSource,
   SolventIQ,
   SolventInfo,
-  UploadMoleculeInput,
   UploadMoleculeResult,
+} from '$lib/shared/contracts';
+
+import type {
+  FeedbackDataSource,
+  MoleculeDataSource,
+  SimulationDataSource,
+  SolventDataSource,
+  UploadMoleculeInput,
 } from './types';
 
 const BACKEND_URL = BACKEND_URL_ENV ?? 'http://localhost:50051';
