@@ -63,6 +63,11 @@ services:
       DB_NAME: 'xss-app'
       PUBLIC_BASE_PATH: '/xss-app'
       PORT: '8000'
+      # adapter-node needs the public origin to reconstruct request URLs;
+      # without it, kit's same-origin check 403s every remote command/form
+      # POST (feedback, upload). kit.csrf.trustedOrigins does NOT apply to
+      # remote functions. Override for local prod runs (http://localhost:8000).
+      ORIGIN: '${ORIGIN:-https://exfldadev01.desy.de}'
     build:
       context: .
       target: prod
