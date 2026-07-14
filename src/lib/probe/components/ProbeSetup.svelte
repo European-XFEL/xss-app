@@ -1,13 +1,11 @@
 <script lang="ts">
-  import type { XRayProbe } from '../types';
-
   import * as Field from '$shadcn/ui/field';
 
   import { formatSigFigs } from '$lib/shared/format';
   import { NumSlider, RevealableValue } from '$lib/shared/ui';
 
   type Props = {
-    probe: XRayProbe;
+    probe: { wavelength: number };
   };
 
   let { probe = $bindable() }: Props = $props();
