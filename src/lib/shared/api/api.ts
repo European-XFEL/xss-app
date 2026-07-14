@@ -4,37 +4,14 @@ import type {
   DebyeResult,
   FeedbackInput,
   FeedbackResult,
-  MoleculeFileContent,
-  MoleculeInfo,
   SimRequest,
 } from '$lib/shared/contracts';
 
 const STATIC = PUBLIC_TARGET === 'static';
 
-export async function listMolecules(): Promise<MoleculeInfo[]> {
-  const res = await fetch('/api/molecules');
-  if (!res.ok) {
-    throw new Error(
-      `Failed to list molecules: ${res.status} ${res.statusText}`,
-    );
-  }
-  return res.json();
-}
-
-export async function getMoleculeFileContent(
-  id: string,
-): Promise<MoleculeFileContent> {
-  const res = await fetch(`/api/molecules?id=${encodeURIComponent(id)}`);
-  if (!res.ok) {
-    throw new Error(
-      `Failed to get molecule file content: ${res.status} ${res.statusText}`,
-    );
-  }
-  return res.json();
-}
-
-// Molecule uploads go through the remote form in $lib/molecule/upload.remote.
-// Solvent list/detail go through the remote query in $lib/sample/solvent.remote.
+// Molecule list/detail/upload go through the remote functions in
+// $lib/molecule/molecule.remote. Solvent list/detail go through the remote
+// functions in $lib/sample/solvent.remote.
 
 export async function getDebyeResult(
   request: SimRequest,
