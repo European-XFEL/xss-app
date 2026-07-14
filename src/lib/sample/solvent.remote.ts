@@ -49,7 +49,7 @@ import { PUBLIC_TARGET } from '$app/env/public';
 import { prerender } from '$app/server';
 
 import { solventSource } from '$lib/server/data';
-import { solventIdSchema } from '$lib/shared/api/validation';
+import { idSchema } from '$lib/shared/api/validation';
 
 const STATIC = PUBLIC_TARGET === 'static';
 
@@ -61,7 +61,7 @@ export const listSolvents = prerender(async () => {
 // throws a proper `error(404, 'Solvent not found')` for an unknown id, so
 // it propagates as-is — no extra try/catch needed here.
 export const getSolventIQ = prerender(
-  solventIdSchema,
+  idSchema,
   async (id) => {
     return await solventSource.getSolventIQ(id);
   },

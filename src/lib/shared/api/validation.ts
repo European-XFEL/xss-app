@@ -7,7 +7,7 @@ import {
 
 /**
  * Validation schema for the molecule upload remote form
- * ($lib/molecule/upload.remote). Shared between the server handler
+ * ($lib/molecule/molecule.remote). Shared between the server handler
  * (authoritative) and the component's `preflight` (client-side, friendly
  * errors before a roundtrip) — schemas cannot be exported from `.remote.ts`
  * files, hence this module.
@@ -70,8 +70,9 @@ export const simulationSchema = z.object({
 export type SimulationInput = z.infer<typeof simulationSchema>;
 
 /**
- * Validation schema for the `getSolventIQ` remote query's `id` argument
- * ($lib/sample/solvent.remote) — schemas cannot be exported from
+ * Validation schema for remote functions taking a single entity id argument
+ * (`getSolventIQ` in $lib/sample/solvent.remote, `getMoleculeFileContent` in
+ * $lib/molecule/molecule.remote) — schemas cannot be exported from
  * `.remote.ts` files, hence this module.
  */
-export const solventIdSchema = z.string().min(1, 'Solvent id is required');
+export const idSchema = z.string().min(1, 'Id is required');

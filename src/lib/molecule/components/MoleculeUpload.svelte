@@ -10,32 +10,25 @@
   import * as Textarea from '$shadcn/ui/textarea/index.js';
   import * as Tooltip from '$shadcn/ui/tooltip/index.js';
 
-  import { uploadMolecule } from '$lib/molecule/upload.remote';
-  import type { listMolecules } from '$lib/shared/api/api';
+  import { uploadMolecule } from '$lib/molecule/molecule.remote';
   import { uploadMoleculeSchema } from '$lib/shared/api/validation';
   import {
     MAX_UPLOAD_ATOM_COUNT,
     MAX_UPLOAD_FILE_BYTES,
   } from '$lib/shared/contracts';
+  import type { MoleculeInfo } from '$lib/shared/contracts';
   import type { Capability } from '$lib/shared/health';
 
-  type Molecules = Awaited<ReturnType<typeof listMolecules>>;
-
   interface Props {
-    molecules?: Molecules;
+    // Read-only, used only for the name-conflict preflight check; the
+    // molecule list itself refreshes via the upload form's single-flight
+    // `listMolecules` refresh (see molecule.remote.ts).
+    molecules?: MoleculeInfo[];
     capability?: Capability;
-    // Called after a successful upload so the caller can refresh its molecule
-    // list (this component has no way to refetch or mutate the caller's data
-    // itself: `molecules` below is read-only, used only for the name-conflict
-    // preflight check).
-    onUploadSuccess?: () => void;
   }
 
-  let {
-    molecules,
-    capability = page.data.capabilities.upload,
-    onUploadSuccess,
-  }: Props = $props();
+  let { molecules, capability = page.data.capabilities.upload }: Props =
+    $props();
 
   let disabled = $derived(!capability.available);
   let disabledMessage = $derived(
@@ -54,7 +47,6 @@
         if (!(await f.submit())) return; // validation issues render inline
         const result = uploadMolecule.result;
         if (result?.success && result.result) {
-          onUploadSuccess?.();
           open = false;
           resetForm();
         } else {
