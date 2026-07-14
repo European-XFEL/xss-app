@@ -1,9 +1,8 @@
 <script lang="ts">
-  import type { Pump } from '../types';
-
   import * as Field from '$shadcn/ui/field';
   import * as Tabs from '$shadcn/ui/tabs';
 
+  import type { Pump } from '$lib/shared/contracts';
   import { NumSlider } from '$lib/shared/ui';
 
   type Props = {
