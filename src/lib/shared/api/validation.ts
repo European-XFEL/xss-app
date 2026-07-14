@@ -68,3 +68,10 @@ export const simulationSchema = z.object({
 });
 
 export type SimulationInput = z.infer<typeof simulationSchema>;
+
+/**
+ * Validation schema for the `getSolventIQ` remote query's `id` argument
+ * ($lib/sample/solvent.remote) — schemas cannot be exported from
+ * `.remote.ts` files, hence this module.
+ */
+export const solventIdSchema = z.string().min(1, 'Solvent id is required');
