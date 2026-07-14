@@ -7,7 +7,6 @@
  * the generated gRPC protos. Nothing outside `$lib/server` should import
  * from `$lib/server` directly, even for types — import from here instead.
  */
-import type * as protoFiles from '$lib/server/grpc/gen/files_pb';
 import type * as protoSim from '$lib/server/grpc/gen/simulation_pb';
 
 // ─── Molecule ───────────────────────────────────────────────────────────────
@@ -97,12 +96,6 @@ export interface FeedbackResult {
 }
 
 // ─── Proto-derived types ────────────────────────────────────────────────────
-
-export type FileNoContent = Omit<protoFiles.File, 'contents' | '$typeName'>;
-
-export type StructureFile = Omit<FileNoContent, 'type'>;
-
-export type SolventFile = Omit<FileNoContent, 'type'>;
 
 export type QRange = Omit<protoSim.QRange, '$typeName'>;
 
