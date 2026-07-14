@@ -7,8 +7,6 @@ import type {
   MoleculeFileContent,
   MoleculeInfo,
   SimRequest,
-  SolventIQ,
-  SolventInfo,
 } from '$lib/shared/contracts';
 
 const STATIC = PUBLIC_TARGET === 'static';
@@ -36,24 +34,7 @@ export async function getMoleculeFileContent(
 }
 
 // Molecule uploads go through the remote form in $lib/molecule/upload.remote.
-
-export async function listSolvents(): Promise<SolventInfo[]> {
-  const res = await fetch('/api/solvents');
-  if (!res.ok) {
-    throw new Error(`Failed to list solvents: ${res.status} ${res.statusText}`);
-  }
-  return res.json();
-}
-
-export async function getSolventIQ(id: string): Promise<SolventIQ> {
-  const res = await fetch(`/api/solvents?id=${encodeURIComponent(id)}`);
-  if (!res.ok) {
-    throw new Error(
-      `Failed to get solvent IQ: ${res.status} ${res.statusText}`,
-    );
-  }
-  return res.json();
-}
+// Solvent list/detail go through the remote query in $lib/sample/solvent.remote.
 
 export async function getDebyeResult(
   request: SimRequest,
