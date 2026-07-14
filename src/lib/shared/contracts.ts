@@ -64,6 +64,8 @@ export interface SolventIQ {
 
 // ─── Simulation ─────────────────────────────────────────────────────────────
 
+// `simulationSchema` in $lib/shared/api/validation is pinned to this shape
+// with a `satisfies` check, so the two cannot silently drift.
 export interface SimRequest {
   fileId: string;
   qRange: {

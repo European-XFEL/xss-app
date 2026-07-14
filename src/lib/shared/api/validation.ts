@@ -3,6 +3,7 @@ import z from 'zod';
 import {
   MAX_UPLOAD_ATOM_COUNT,
   MAX_UPLOAD_FILE_BYTES,
+  type SimRequest,
 } from '$lib/shared/contracts';
 
 /**
@@ -58,6 +59,9 @@ export const feedbackSchema = z.object({
 
 export type FeedbackInput = z.infer<typeof feedbackSchema>;
 
+// Pinned to the `SimRequest` contract (the boundaries rules let server code
+// import only $lib/shared/contracts, so the interface lives there and this
+// schema is type-checked against it instead of being the type's source).
 export const simulationSchema = z.object({
   fileId: z.string(),
   qRange: z.object({
@@ -65,9 +69,7 @@ export const simulationSchema = z.object({
     max: z.number(),
     step: z.number(),
   }),
-});
-
-export type SimulationInput = z.infer<typeof simulationSchema>;
+}) satisfies z.ZodType<SimRequest>;
 
 /**
  * Validation schema for remote functions taking a single entity id argument

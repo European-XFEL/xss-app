@@ -1,8 +1,8 @@
 import { getSolventIQ } from '$lib/sample/solvent.remote';
-import { getDebyeResult } from '$lib/shared/api/api';
 import type { QRange } from '$lib/shared/contracts';
 
 import { type ScatteringSeries, createQGrid, interpolateLinear } from './math';
+import { getDebyeResult } from './simulation.remote';
 
 export type ResourceState<T> =
   | { status: 'idle' }
