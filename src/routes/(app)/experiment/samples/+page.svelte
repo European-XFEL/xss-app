@@ -1,31 +1,20 @@
 <script lang="ts">
   import { useSimulationState } from '$lib/app/simulation-context.svelte';
   import { MoleculeCardSelection, MoleculeTableCard } from '$lib/molecule';
+  import { listMolecules } from '$lib/molecule/molecule.remote';
   import { SolventCard, SolventInfoCard } from '$lib/sample';
   import { listSolvents } from '$lib/sample/solvent.remote';
-  import { listMolecules } from '$lib/shared/api/api';
-  import { createScatteringResource } from '$lib/simulation';
 
   const simulation = useSimulationState();
 
-  type ListsResult = {
-    solvents: Awaited<ReturnType<typeof listSolvents>>;
-    molecules: Awaited<ReturnType<typeof listMolecules>>;
-  };
+  // Stable remote-function instances: `.current` starts undefined and
+  // updates reactively, including after the upload form's single-flight
+  // `listMolecules` refresh (see molecule.remote.ts).
+  const moleculesQuery = listMolecules();
+  const solventsQuery = listSolvents();
 
-  const listResource = createScatteringResource<ListsResult>(
-    async () => {
-      const [solvents, molecules] = await Promise.all([
-        listSolvents(),
-        listMolecules(),
-      ]);
-      return { solvents, molecules };
-    },
-    () => true,
-  );
-
-  const solvents = $derived(listResource.value?.solvents ?? []);
-  const molecules = $derived(listResource.value?.molecules ?? []);
+  const solvents = $derived(solventsQuery.current ?? []);
+  const molecules = $derived(moleculesQuery.current ?? []);
 </script>
 
 <div class="flex flex-col gap-6">
@@ -49,6 +38,5 @@
     onToggleGround={(molecule) => simulation.sample.toggleGround(molecule)}
     onToggleExcited={(molecule) => simulation.sample.toggleExcited(molecule)}
     onSelectGroup={(molecules) => simulation.sample.selectGroup(molecules)}
-    onUploadSuccess={() => listResource.refetch()}
   />
 </div>

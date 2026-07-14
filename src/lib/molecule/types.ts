@@ -1,8 +1,8 @@
-import type { listMolecules } from '$lib/shared/api/api';
+import type { MoleculeInfo } from '$lib/shared/contracts';
 
-export type Molecules = Awaited<ReturnType<typeof listMolecules>>;
+export type Molecules = MoleculeInfo[];
 
-export type Molecule = Molecules[number];
+export type Molecule = MoleculeInfo;
 
 export type MoleculeSelection = {
   ground: Molecule | null;

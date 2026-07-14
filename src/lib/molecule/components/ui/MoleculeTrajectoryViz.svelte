@@ -3,8 +3,8 @@
 
   import * as Field from '$shadcn/ui/field/index.js';
 
+  import { getMoleculeFileContent } from '$lib/molecule/molecule.remote';
   import type { Sample } from '$lib/sample';
-  import { getMoleculeFileContent } from '$lib/shared/api/api';
   import { Placeholder } from '$lib/shared/ui';
 
   import { useMatterviz } from './useMatterviz.svelte';

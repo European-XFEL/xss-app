@@ -4,10 +4,10 @@
   import { MoleculeFields } from '$lib/molecule';
   import type { Sample, Solvents } from '$lib/sample';
   import { SolventFields } from '$lib/sample';
-  import type { listMolecules } from '$lib/shared/api/api';
+  import type { MoleculeInfo } from '$lib/shared/contracts';
   import { ChannelPanel } from '$lib/shared/ui';
 
-  type Molecules = Awaited<ReturnType<typeof listMolecules>>;
+  type Molecules = MoleculeInfo[];
 
   interface Props {
     solvent: Sample['solvent'];

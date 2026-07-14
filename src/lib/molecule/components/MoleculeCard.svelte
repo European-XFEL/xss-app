@@ -2,12 +2,12 @@
   import { Spinner } from '$shadcn/ui/spinner';
 
   import type { Sample } from '$lib/sample';
-  import type { listMolecules } from '$lib/shared/api/api';
+  import type { MoleculeInfo } from '$lib/shared/contracts';
   import { ChannelPanel } from '$lib/shared/ui';
 
   import MoleculeFields from './MoleculeFields.svelte';
 
-  type Molecules = Awaited<ReturnType<typeof listMolecules>>;
+  type Molecules = MoleculeInfo[];
 
   type Props = {
     molecules: Molecules;

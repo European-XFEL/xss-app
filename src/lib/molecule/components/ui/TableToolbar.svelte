@@ -15,16 +15,10 @@
     globalFilter: string;
     onGlobalFilterChange: (value: string) => void;
     molecules?: Molecules;
-    onUploadSuccess?: () => void;
   };
 
-  let {
-    table,
-    globalFilter,
-    onGlobalFilterChange,
-    molecules,
-    onUploadSuccess,
-  }: Props = $props();
+  let { table, globalFilter, onGlobalFilterChange, molecules }: Props =
+    $props();
 
   function handleInputChange(e: Event) {
     const target = e.target as HTMLInputElement;
@@ -40,7 +34,7 @@
       oninput={handleInputChange}
       class="h-9 w-64"
     />
-    <MoleculeUpload {molecules} {onUploadSuccess} />
+    <MoleculeUpload {molecules} />
   </div>
   <div class="flex items-center gap-2">
     <DropdownMenu.Root>

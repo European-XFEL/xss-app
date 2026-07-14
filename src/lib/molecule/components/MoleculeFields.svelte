@@ -3,9 +3,9 @@
   import * as Select from '$shadcn/ui/select/index.js';
 
   import type { Sample } from '$lib/sample';
-  import type { listMolecules } from '$lib/shared/api/api';
+  import type { MoleculeInfo } from '$lib/shared/contracts';
 
-  type Molecules = Awaited<ReturnType<typeof listMolecules>>;
+  type Molecules = MoleculeInfo[];
 
   type Props = {
     molecules: Molecules;
@@ -111,7 +111,11 @@
   <Field.Set class="flex flex-row gap-4">
     <Field.Field>
       <Field.Label>Ground State</Field.Label>
-      <Select.Root type="single" value={groundId} onValueChange={onGroundChange}>
+      <Select.Root
+        type="single"
+        value={groundId}
+        onValueChange={onGroundChange}
+      >
         <Select.Trigger>
           {ground ? `${ground.filename}` : 'Select ground state'}
         </Select.Trigger>
@@ -126,7 +130,11 @@
     </Field.Field>
     <Field.Field>
       <Field.Label>Excited State</Field.Label>
-      <Select.Root type="single" value={excitedId} onValueChange={onExcitedChange}>
+      <Select.Root
+        type="single"
+        value={excitedId}
+        onValueChange={onExcitedChange}
+      >
         <Select.Trigger>
           {excited ? `${excited.filename}` : 'Select excited state'}
         </Select.Trigger>

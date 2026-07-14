@@ -6,8 +6,8 @@
   import * as Tabs from '$shadcn/ui/tabs/index.js';
 
   import { useSimulationState } from '$lib/app/simulation-context.svelte';
+  import { listMolecules } from '$lib/molecule/molecule.remote';
   import { listSolvents } from '$lib/sample/solvent.remote';
-  import { listMolecules } from '$lib/shared/api/api';
   import {
     computeDeltaS,
     createScatteringCalculations,
@@ -28,24 +28,14 @@
 
   const simulation = useSimulationState();
 
-  type ListsResult = {
-    solvents: Awaited<ReturnType<typeof listSolvents>>;
-    molecules: Awaited<ReturnType<typeof listMolecules>>;
-  };
+  // Stable remote-function instances: `.current` starts undefined and
+  // updates reactively, including after the upload form's single-flight
+  // `listMolecules` refresh (see molecule.remote.ts).
+  const moleculesQuery = listMolecules();
+  const solventsQuery = listSolvents();
 
-  const listResource = createScatteringResource<ListsResult>(
-    async () => {
-      const [solvents, molecules] = await Promise.all([
-        listSolvents(),
-        listMolecules(),
-      ]);
-      return { solvents, molecules };
-    },
-    () => true,
-  );
-
-  const solvents = $derived(listResource.value?.solvents ?? []);
-  const molecules = $derived(listResource.value?.molecules ?? []);
+  const solvents = $derived(solventsQuery.current ?? []);
+  const molecules = $derived(moleculesQuery.current ?? []);
 
   let short = $state(true);
 
@@ -136,10 +126,16 @@
   // Surface any fetch failure so a backend/DB/parse error is visible rather
   // than silently rendering as an empty chart.
   const fetchError = $derived(
-    listResource.error ?? soluteResource.error ?? solventResource.error,
+    moleculesQuery.error ??
+      solventsQuery.error ??
+      soluteResource.error ??
+      solventResource.error,
   );
   const isFetching = $derived(
-    listResource.loading || soluteResource.loading || solventResource.loading,
+    moleculesQuery.loading ||
+      solventsQuery.loading ||
+      soluteResource.loading ||
+      solventResource.loading,
   );
 
   $effect(() => {
@@ -147,7 +143,10 @@
   });
 
   function retryFetches() {
-    void listResource.refetch();
+    // Only query-typed remote functions are refreshable — on the static
+    // target the lists are prerendered (served from the build, can't fail),
+    // hence the optional call instead of a plain `.refresh()`.
+    void (moleculesQuery as { refresh?: () => Promise<void> }).refresh?.();
     void soluteResource.refetch();
     void solventResource.refetch();
   }
