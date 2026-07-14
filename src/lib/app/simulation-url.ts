@@ -18,11 +18,6 @@
  * (bad base64, wrong segment count) — is treated as if no simulation setup
  * were encoded at all (falls back to defaults) rather than risking a
  * misparse of a shape/encoding this code doesn't know about.
- *
- * A legacy fallback parser (`parseLegacySimulationParams`) still reads the
- * older one-param-per-field scheme (`v`, `solvent`, `ground`, ... as
- * distinct query params) so links shared before this change keep working;
- * nothing in this app writes that format anymore.
  */
 import type { SampleStateInit } from '$lib/sample';
 import type { MoleculeInfo, SolventInfo } from '$lib/shared/contracts';
@@ -34,26 +29,6 @@ export const SIMULATION_PARAMS_VERSION = '1';
 
 /** The single query param a shared link is encoded into. */
 export const SHARE_PARAM = 's';
-
-/** The older one-param-per-field scheme, kept only so `parseLegacySimulationParams`
- * can still read links shared before the `SHARE_PARAM` switch. */
-const LEGACY_PARAM = {
-  version: 'v',
-  solvent: 'solvent',
-  ground: 'ground',
-  excited: 'excited',
-  concentration: 'conc',
-  pumpPhotonEv: 'pumpE',
-  pumpExcitedEv: 'pumpExE',
-  pumpFraction: 'pumpFrac',
-  wavelength: 'wavelength',
-  detectorDistance: 'detDist',
-  beamX: 'beamX',
-  beamY: 'beamY',
-  qMin: 'qMin',
-  qMax: 'qMax',
-  qStep: 'qStep',
-} as const;
 
 /** Number of `|`-joined segments in a valid `SHARE_PARAM` payload: the
  * version tag plus every field below, in order. */
@@ -226,82 +201,26 @@ function decodeSimulationPayload(encoded: string): ParsedSimulationParams {
   return segments ? parseSegments(segments) : EMPTY_PARSED_SIMULATION_PARAMS;
 }
 
-function hasLegacySimulationParams(searchParams: URLSearchParams): boolean {
-  return Object.values(LEGACY_PARAM).some((key) => searchParams.has(key));
-}
-
-/** Parse the older one-param-per-field scheme. Kept only as a fallback for
- * links shared before the `SHARE_PARAM` switch — mirrors the semantics
- * `decodeSimulationPayload` now uses for the current format (independently
- * optional fields, version gate discards everything on mismatch). */
-function parseLegacySimulationParams(
-  searchParams: URLSearchParams,
-): ParsedSimulationParams {
-  const version = searchParams.get(LEGACY_PARAM.version);
-  if (version !== null && version !== SIMULATION_PARAMS_VERSION) {
-    return EMPTY_PARSED_SIMULATION_PARAMS;
-  }
-
-  return {
-    solventId: searchParams.get(LEGACY_PARAM.solvent),
-    groundId: searchParams.get(LEGACY_PARAM.ground),
-    excitedId: searchParams.get(LEGACY_PARAM.excited),
-    concentrationSoluteMolar: parseNum(
-      searchParams.get(LEGACY_PARAM.concentration),
-    ),
-    pump: {
-      photonEnergyEv: parseNum(searchParams.get(LEGACY_PARAM.pumpPhotonEv)),
-      excitedStateEnergyEv: parseNum(
-        searchParams.get(LEGACY_PARAM.pumpExcitedEv),
-      ),
-      excitedStateFraction: parseNum(
-        searchParams.get(LEGACY_PARAM.pumpFraction),
-      ),
-    },
-    probe: {
-      wavelength: parseNum(searchParams.get(LEGACY_PARAM.wavelength)),
-    },
-    detector: {
-      distance: parseNum(searchParams.get(LEGACY_PARAM.detectorDistance)),
-      beamCenter: parseBeamCenter(
-        searchParams.get(LEGACY_PARAM.beamX),
-        searchParams.get(LEGACY_PARAM.beamY),
-      ),
-    },
-    qRange: parseQRange(
-      searchParams.get(LEGACY_PARAM.qMin),
-      searchParams.get(LEGACY_PARAM.qMax),
-      searchParams.get(LEGACY_PARAM.qStep),
-    ),
-  };
-}
-
-/** Whether a URL carries an encoded simulation setup in either the current
- * (`SHARE_PARAM`) or legacy (one-param-per-field) scheme — used to decide
+/** Whether a URL carries an encoded simulation setup — used to decide
  * whether a restore happened and the URL should be cleaned back to the
  * plain path. */
 export function hasEncodedSimulationParams(
   searchParams: URLSearchParams,
 ): boolean {
-  return (
-    searchParams.has(SHARE_PARAM) || hasLegacySimulationParams(searchParams)
-  );
+  return searchParams.has(SHARE_PARAM);
 }
 
-/** Parse recognized simulation fields out of a URL's search params.
- * Prefers the current `SHARE_PARAM` encoding; falls back to the legacy
- * one-param-per-field scheme for older links. Every field is independently
- * optional; unparseable/missing values come back as `null` so callers can
- * fall back to defaults without the whole setup being discarded. */
+/** Parse recognized simulation fields out of a URL's search params. Every
+ * field is independently optional; unparseable/missing values come back as
+ * `null` so callers can fall back to defaults without the whole setup being
+ * discarded. */
 export function parseSimulationParams(
   searchParams: URLSearchParams,
 ): ParsedSimulationParams {
   const encoded = searchParams.get(SHARE_PARAM);
-  if (encoded !== null) return decodeSimulationPayload(encoded);
-  if (hasLegacySimulationParams(searchParams)) {
-    return parseLegacySimulationParams(searchParams);
-  }
-  return EMPTY_PARSED_SIMULATION_PARAMS;
+  return encoded !== null
+    ? decodeSimulationPayload(encoded)
+    : EMPTY_PARSED_SIMULATION_PARAMS;
 }
 
 type NonNullFields<T> = { [K in keyof T]?: Exclude<T[K], null> };

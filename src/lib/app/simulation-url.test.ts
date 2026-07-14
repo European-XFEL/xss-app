@@ -100,9 +100,7 @@ const FIXTURE_SEGMENTS = [
   '0.0123',
 ];
 
-/** What `parseSimulationParams` should return for `fixture`, whether it
- * arrived via the current `SHARE_PARAM` encoding or the legacy
- * one-param-per-field scheme. */
+/** What `parseSimulationParams` should return for `fixture`. */
 const EXPECTED_PARSED: ParsedSimulationParams = {
   solventId: solvent.id,
   groundId: ground.id,
@@ -130,7 +128,7 @@ const EXPECTED_INIT: SimulationStateInit = {
 };
 
 /** Encode a raw `|`-joined payload the same way `serializeSimulationParams`
- * does, for tests that need to hand-construct a malformed/legacy `s` value
+ * does, for tests that need to hand-construct a malformed `s` value
  * rather than go through the real encoder. Deliberately independent of
  * `simulation-url.ts`'s internal `toBase64Url` (not exported) so a bug in
  * that function can't hide a bug in this test. */
@@ -260,36 +258,6 @@ describe('malformed share param', () => {
   });
 });
 
-describe('legacy one-param-per-field links', () => {
-  it('still parses and reproduces the original setup', () => {
-    const legacyParams = new URLSearchParams({
-      v: '1',
-      solvent: solvent.id,
-      ground: ground.id,
-      excited: excited.id,
-      conc: '0.0234',
-      pumpE: '4.75',
-      pumpExE: '2.25',
-      pumpFrac: '0.63',
-      wavelength: '1.789',
-      detDist: '123.4',
-      beamX: '321.5',
-      beamY: '654.25',
-      qMin: '0.0111',
-      qMax: '7.234',
-      qStep: '0.0123',
-    });
-
-    const parsed = parseSimulationParams(legacyParams);
-    expect(buildSimulationStateInit(parsed, resolved)).toEqual(EXPECTED_INIT);
-  });
-
-  it('falls back to defaults for an unrecognized legacy version', () => {
-    const legacyParams = new URLSearchParams({ v: '999', solvent: solvent.id });
-    expect(parseSimulationParams(legacyParams).solventId).toBeNull();
-  });
-});
-
 describe('hasEncodedSimulationParams', () => {
   it('is false for a plain URL', () => {
     expect(hasEncodedSimulationParams(new URLSearchParams())).toBe(false);
@@ -298,10 +266,5 @@ describe('hasEncodedSimulationParams', () => {
   it('is true when the share param is present', () => {
     const params = serializeSimulationParams(fixture);
     expect(hasEncodedSimulationParams(params)).toBe(true);
-  });
-
-  it('is true for a legacy-format link', () => {
-    const legacyParams = new URLSearchParams({ v: '1', solvent: 'x' });
-    expect(hasEncodedSimulationParams(legacyParams)).toBe(true);
   });
 });
