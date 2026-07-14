@@ -10,7 +10,7 @@
   import * as Sidebar from '$shadcn/ui/sidebar/index.js';
 
   import {
-    createSimulationState,
+    SimulationState,
     setSimulationState,
   } from '$lib/app/simulation-context.svelte';
   import { hasEncodedSimulationParams } from '$lib/app/simulation-url';
@@ -27,7 +27,7 @@
   // created, `simulation` is the single source of truth; the URL is no
   // longer kept in sync with it (see the Share button instead) and is
   // never read again after this point.
-  const simulation = createSimulationState(untrack(() => data.simulationSetup));
+  const simulation = new SimulationState(untrack(() => data.simulationSetup));
   setSimulationState(simulation);
 
   // A shared/legacy link's params are only meaningful for the one restore

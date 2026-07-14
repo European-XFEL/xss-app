@@ -81,12 +81,6 @@ export class SimulationState {
   }
 }
 
-export function createSimulationState(
-  init?: SimulationStateInit,
-): SimulationState {
-  return new SimulationState(init);
-}
-
 export function setSimulationState(state: SimulationState): void {
   setContext<SimulationState>(APP_STATE_KEY, state);
 }
