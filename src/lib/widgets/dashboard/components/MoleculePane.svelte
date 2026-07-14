@@ -3,7 +3,7 @@
   import type { SampleState } from '$lib/sample';
   import { Placeholder } from '$lib/shared/ui';
 
-  import type { VizMode } from './types';
+  import type { VizMode } from './VizModeToggle.svelte';
 
   interface Props {
     sample: SampleState;
@@ -25,7 +25,9 @@
   {:else}
     <div class="grid gap-3 md:grid-cols-2">
       <div class="flex flex-col gap-2">
-        <h3 class="text-xs font-semibold text-muted-foreground">Ground State</h3>
+        <h3 class="text-xs font-semibold text-muted-foreground">
+          Ground State
+        </h3>
         <MoleculeViz molecule={sample.ground} />
       </div>
       <div class="flex flex-col gap-2">

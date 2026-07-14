@@ -1,7 +1,10 @@
+<script module lang="ts">
+  /** Molecule visualization view mode, shared by MoleculePane and this toggle. */
+  export type VizMode = 'trajectory' | 'individual';
+</script>
+
 <script lang="ts">
   import { cn } from '$lib/shadcn/utils.js';
-
-  import type { VizMode } from './types';
 
   interface Props {
     value: VizMode;
