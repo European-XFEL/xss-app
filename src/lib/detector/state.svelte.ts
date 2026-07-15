@@ -49,7 +49,8 @@ function calculateImageShape(modules: DetectorModule[]): Shape {
 export class DetectorState implements Detector {
   name: string;
   readonly pixelSize: number;
-  readonly modules: DetectorModule[];
+  // mutable: setDetector() replaces the array when switching detectors
+  modules: DetectorModule[];
 
   distance: number;
   beamCenter: CartesianPoint;
