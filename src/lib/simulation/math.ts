@@ -20,7 +20,9 @@ export type InterpolationOptions = {
 export function computeConcentrationSolvent(
   solventRhom?: number | null,
 ): number | undefined {
-  if (!Number.isFinite(solventRhom)) return undefined;
+  if (typeof solventRhom !== 'number' || !Number.isFinite(solventRhom)) {
+    return undefined;
+  }
   return solventRhom / 1000.0;
 }
 
@@ -102,9 +104,11 @@ export function computeDeltaT(
     concentrationExcited == null ||
     concentrationSolvent == null ||
     // Solvent
+    typeof solventCpm !== 'number' ||
     !Number.isFinite(solventCpm) ||
     solventCpm === 0 ||
     // Delta E
+    typeof deltaEJ !== 'number' ||
     !Number.isFinite(deltaEJ)
   ) {
     return undefined;
