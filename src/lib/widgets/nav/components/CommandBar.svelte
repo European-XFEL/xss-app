@@ -116,8 +116,8 @@
 
       <Tooltip.Root>
         <Tooltip.Trigger>
-          {#snippet child({ props })}
-            <span {...props} type={undefined} class="inline-flex">
+          {#snippet child({ props: { type: _type, ...props } })}
+            <span {...props} class="inline-flex">
               <button
                 type="button"
                 disabled
@@ -133,8 +133,8 @@
 
       <Tooltip.Root>
         <Tooltip.Trigger>
-          {#snippet child({ props })}
-            <span {...props} type={undefined} class="inline-flex">
+          {#snippet child({ props: { type: _type, ...props } })}
+            <span {...props} class="inline-flex">
               <button
                 type="button"
                 disabled
@@ -150,8 +150,8 @@
 
       <Tooltip.Root>
         <Tooltip.Trigger>
-          {#snippet child({ props })}
-            <span {...props} type={undefined} class="inline-flex">
+          {#snippet child({ props: { type: _type, ...props } })}
+            <span {...props} class="inline-flex">
               <button
                 type="button"
                 disabled

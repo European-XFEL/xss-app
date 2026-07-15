@@ -254,8 +254,8 @@
   {#if disabled}
     <Tooltip.Root>
       <Tooltip.Trigger>
-        {#snippet child({ props })}
-          <span {...props} type={undefined} class="inline-flex w-full">
+        {#snippet child({ props: { type: _type, ...props } })}
+          <span {...props} class="inline-flex w-full">
             <Sidebar.MenuButton aria-disabled="true" tabindex={-1}>
               <MessageSquare />
               <span>Feedback</span>
