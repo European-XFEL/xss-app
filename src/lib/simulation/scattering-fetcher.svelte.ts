@@ -1,3 +1,5 @@
+import { untrack } from 'svelte';
+
 import { getSolventIQ } from '$lib/sample/solvent.remote';
 import type { QRange } from '$lib/shared/contracts';
 
@@ -6,7 +8,11 @@ import { getDebyeResult } from './simulation.remote';
 
 export type ResourceState<T> =
   | { status: 'idle' }
-  | { status: 'loading' }
+  // `value` carries the last successful result through a refetch so
+  // consumers (e.g. the dashboard plot) keep rendering the previous data
+  // instead of clearing and replaying their enter animation on every
+  // input change (initial-dev-opx).
+  | { status: 'loading'; value: T | null }
   | { status: 'success'; value: T }
   | { status: 'error'; error: Error };
 
@@ -35,7 +41,15 @@ export function createScatteringResource<T>(
     }
 
     const currentRequest = (requestId += 1);
-    state = { status: 'loading' };
+    // `untrack`: runFetch runs inside $effect, so an untracked read keeps
+    // `state` itself out of the effect's dependencies (reading it tracked
+    // would make the write below re-trigger the effect in a loop).
+    const previous = untrack(() =>
+      state.status === 'success' || state.status === 'loading'
+        ? state.value
+        : null,
+    );
+    state = { status: 'loading', value: previous };
 
     try {
       const value = await fetcher();
@@ -62,7 +76,9 @@ export function createScatteringResource<T>(
       return state;
     },
     get value() {
-      return state.status === 'success' ? state.value : null;
+      return state.status === 'success' || state.status === 'loading'
+        ? state.value
+        : null;
     },
     get loading() {
       return state.status === 'loading';
