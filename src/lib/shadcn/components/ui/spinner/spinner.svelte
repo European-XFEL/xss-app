@@ -11,6 +11,8 @@
 		name,
 		color,
 		stroke,
+		// deprecated alias also present on SVGAttributes; drop it, `class` above covers it
+		className: _deprecatedClassName,
 		"aria-label": ariaLabel = "Loading",
 		...restProps
 	}: SVGAttributes<SVGSVGElement> = $props();
