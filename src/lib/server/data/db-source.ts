@@ -142,7 +142,12 @@ export const dbMoleculeSource: MoleculeDataSource = {
 
 export const dbSolventSource: SolventDataSource = {
   async listSolvents(): Promise<SolventInfo[]> {
-    return await db.select(schema.solventsInfo).from(schema.solvents);
+    const rows = await db.select(schema.solventsInfo).from(schema.solvents);
+    // solvents.updatedAt is nullable in the DB; the domain type uses undefined for "never updated"
+    return rows.map((row) => ({
+      ...row,
+      updatedAt: row.updatedAt ?? undefined,
+    }));
   },
 
   async getSolventIQ(id: string): Promise<SolventIQ> {
