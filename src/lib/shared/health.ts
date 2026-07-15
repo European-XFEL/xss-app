@@ -46,8 +46,7 @@ export interface Health {
 }
 
 export type Capability =
-  | { available: true }
-  | { available: false; reason: string };
+  { available: true } | { available: false; reason: string };
 
 export type Capabilities = {
   upload: Capability;

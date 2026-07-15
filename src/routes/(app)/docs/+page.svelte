@@ -235,9 +235,7 @@
   >
     <TriangleAlert class="mt-0.5 size-4 shrink-0" />
     <div>
-      <p class="text-sm font-bold tracking-tight">
-        Physics Simplifications
-      </p>
+      <p class="text-sm font-bold tracking-tight">Physics Simplifications</p>
       <ul
         class="mt-1.5 list-disc space-y-0.5 pl-4 text-sm leading-snug text-muted-foreground"
       >
