@@ -33,6 +33,38 @@ export const variables = defineEnvVars({
     schema: optional,
     description: 'Sentry DSN; error reporting is disabled when unset',
   },
+  // Per-feature Sentry toggles: every feature is ON by default when the DSN
+  // is set; set a variable to "false" to disable that feature.
+  PUBLIC_SENTRY_TRACES: {
+    public: true,
+    schema: optional,
+    description: 'Set to "false" to disable Sentry performance tracing',
+  },
+  PUBLIC_SENTRY_REPLAY: {
+    public: true,
+    schema: optional,
+    description: 'Set to "false" to disable Sentry session replay',
+  },
+  PUBLIC_SENTRY_PROFILING: {
+    public: true,
+    schema: optional,
+    description: 'Set to "false" to disable Sentry browser profiling',
+  },
+  PUBLIC_SENTRY_LOGS: {
+    public: true,
+    schema: optional,
+    description: 'Set to "false" to disable Sentry log forwarding',
+  },
+  PUBLIC_SENTRY_METRICS: {
+    public: true,
+    schema: optional,
+    description: 'Set to "false" to disable Sentry metrics',
+  },
+  PUBLIC_SENTRY_FEEDBACK: {
+    public: true,
+    schema: optional,
+    description: 'Set to "false" to disable the Sentry feedback widget',
+  },
   PUBLIC_PRERENDER_ALL: {
     public: true,
     schema: optional,

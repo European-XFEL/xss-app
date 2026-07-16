@@ -5,10 +5,20 @@ import { sequence } from '@sveltejs/kit/hooks';
 
 import { dev, version } from '$app/env';
 import { DB_HOST, DB_NAME, DB_PASSWORD, DB_USER } from '$app/env/private';
-import { PUBLIC_SENTRY_DSN, PUBLIC_TARGET } from '$app/env/public';
+import {
+  PUBLIC_SENTRY_DSN,
+  PUBLIC_SENTRY_LOGS,
+  PUBLIC_SENTRY_METRICS,
+  PUBLIC_SENTRY_PROFILING,
+  PUBLIC_SENTRY_TRACES,
+  PUBLIC_TARGET,
+} from '$app/env/public';
 
 import { initDb } from '$lib/server/db';
 import { getCapabilities, getHealth } from '$lib/server/health';
+
+// Feature toggles default to on; set the env var to "false" to disable.
+const on = (flag: string | undefined) => flag !== 'false';
 
 Sentry.init({
   dsn: PUBLIC_SENTRY_DSN,
@@ -16,8 +26,9 @@ Sentry.init({
   environment: dev ? 'development' : 'production',
   // kit.version.name — "<target>-<git describe>" (svelte.config.js).
   release: version,
-  tracesSampleRate: 1.0,
-  enableLogs: true,
+  tracesSampleRate: on(PUBLIC_SENTRY_TRACES) ? 1.0 : 0,
+  enableLogs: on(PUBLIC_SENTRY_LOGS),
+  enableMetrics: on(PUBLIC_SENTRY_METRICS),
 });
 
 // Initialize the database connection at server startup.
@@ -30,6 +41,12 @@ if (!STATIC && HAS_DB_CREDS) {
 }
 
 const appHandle: Handle = async ({ event, resolve }) => {
+  // Browser profiling (hooks.client.ts) only runs when the document response
+  // carries this header.
+  if (on(PUBLIC_SENTRY_PROFILING)) {
+    event.setHeaders({ 'Document-Policy': 'js-profiling' });
+  }
+
   const [health, capabilities] = await Promise.all([
     getHealth(event.fetch),
     getCapabilities(event.fetch),
