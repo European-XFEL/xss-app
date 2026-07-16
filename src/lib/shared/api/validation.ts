@@ -34,6 +34,14 @@ const atomCountSchema = z
   );
 const referenceSchema = z.string().optional();
 
+// Shared by uploadMoleculeSchema and replaceMoleculeFileSchema.
+const fileSchema = z
+  .file('Please select a file')
+  .max(
+    MAX_UPLOAD_FILE_BYTES,
+    `File is too large; the maximum is ${Math.floor(MAX_UPLOAD_FILE_BYTES / 1024)} kB`,
+  );
+
 /**
  * Validation schema for the molecule upload remote form
  * ($lib/molecule/molecule.remote). Shared between the server handler
@@ -42,12 +50,7 @@ const referenceSchema = z.string().optional();
  * files, hence this module.
  */
 export const uploadMoleculeSchema = z.object({
-  file: z
-    .file('Please select a file')
-    .max(
-      MAX_UPLOAD_FILE_BYTES,
-      `File is too large; the maximum is ${Math.floor(MAX_UPLOAD_FILE_BYTES / 1024)} kB`,
-    ),
+  file: fileSchema,
   moleculeName: moleculeNameSchema,
   description: descriptionSchema,
   state: stateSchema,
@@ -72,12 +75,32 @@ export const editMoleculeFileSchema = z.object({
 /**
  * Validation schema for editing a molecule's header fields — the fields
  * shared by all of its structure files (`editMolecule` in
- * $lib/molecule/molecule.remote).
+ * $lib/molecule/molecule.remote). Atom count is per-file derived data (see
+ * `extractAtomCount` in db-source.ts) and not editable here.
  */
 export const editMoleculeSchema = z.object({
   originalName: z.string().min(1, 'Original name is required'),
   moleculeName: moleculeNameSchema,
-  atomCount: atomCountSchema,
+});
+
+/**
+ * Validation schemas for the delete/content-replace remote functions
+ * ($lib/molecule/molecule.remote).
+ */
+export const deleteMoleculeFileSchema = z.object({ id: idSchema });
+
+export const deleteMoleculeSchema = z.object({
+  originalName: z.string().min(1, 'Original name is required'),
+});
+
+export const editMoleculeFileContentsSchema = z.object({
+  id: idSchema,
+  contents: z.string().min(1, 'Contents are required'),
+});
+
+export const replaceMoleculeFileSchema = z.object({
+  id: idSchema,
+  file: fileSchema,
 });
 
 // Pinned to the `SimRequest` contract (the boundaries rules let server code

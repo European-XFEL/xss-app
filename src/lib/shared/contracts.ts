@@ -20,6 +20,7 @@ export interface MoleculeInfo {
   state: number;
   reference: string | null;
   atomCount: number;
+  readOnly: boolean;
   createdAt: Date;
   updatedAt: Date | undefined;
 }

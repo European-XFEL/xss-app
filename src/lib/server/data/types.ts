@@ -36,11 +36,24 @@ export interface EditMoleculeFileInput {
   reference: string | null;
 }
 
-/** Header fields shared by all structure files of a molecule. */
+/**
+ * Header fields shared by all structure files of a molecule. Atom count is
+ * per-file derived data (see `extractAtomCount` in db-source.ts), not a
+ * header field, so it's not editable here.
+ */
 export interface EditMoleculeInput {
   originalName: string;
   moleculeName: string;
-  atomCount: number;
+}
+
+export interface EditMoleculeFileContentsInput {
+  id: string;
+  contents: string;
+}
+
+export interface ReplaceMoleculeFileInput {
+  id: string;
+  file: File;
 }
 
 export interface MoleculeDataSource {
@@ -49,6 +62,12 @@ export interface MoleculeDataSource {
   uploadMolecule(input: UploadMoleculeInput): Promise<UploadMoleculeResult>;
   editMoleculeFile(input: EditMoleculeFileInput): Promise<MutationResult>;
   editMolecule(input: EditMoleculeInput): Promise<MutationResult>;
+  deleteMoleculeFile(id: string): Promise<MutationResult>;
+  deleteMolecule(originalName: string): Promise<MutationResult>;
+  editMoleculeFileContents(
+    input: EditMoleculeFileContentsInput,
+  ): Promise<MutationResult>;
+  replaceMoleculeFile(input: ReplaceMoleculeFileInput): Promise<MutationResult>;
 }
 
 // ─── Solvent types ──────────────────────────────────────────────────────────
