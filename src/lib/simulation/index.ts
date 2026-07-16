@@ -9,3 +9,5 @@ export {
   scaleSoluteByExcitedFraction,
 } from './scattering.svelte';
 export { isValidQRange } from './math';
+export { computeDebyeIq } from './kernel/debye';
+export { parseXyz } from './kernel/xyz-parser';

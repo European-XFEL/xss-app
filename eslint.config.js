@@ -196,6 +196,18 @@ export default defineConfig(
               from: { type: 'server' },
               allow: { to: { type: ['server', 'contracts'] } },
             },
+            // The server-side simulation data source runs the Debye kernel
+            // (a pure compute module that lives in the simulation feature) as
+            // its primary compute path, with the gRPC backend as fallback. This
+            // is the one sanctioned server → feature crossing; scoped to
+            // simulation only (not features at large) and index.ts-only via the
+            // entry-point rule below.
+            {
+              from: { type: 'server' },
+              allow: {
+                to: { type: 'feature', captured: { feature: 'simulation' } },
+              },
+            },
             // Entry-point enforcement: features and widgets are consumed only
             // via their public index.ts; deep imports are banned regardless of
             // the allow rules above (last matching rule wins).

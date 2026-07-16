@@ -30,6 +30,7 @@ import type {
   SolventInfo,
   UploadMoleculeResult,
 } from '$lib/shared/contracts';
+import { computeDebyeIq, parseXyz } from '$lib/simulation';
 
 import type {
   EditMoleculeFileContentsInput,
@@ -400,10 +401,49 @@ export const dbSolventSource: SolventDataSource = {
 
 // ─── Simulation Data Source ─────────────────────────────────────────────────
 
+/**
+ * Compute Debye I(Q) for a structure file, preferring the in-process
+ * TypeScript kernel and falling back to the Python gRPC backend.
+ *
+ * The kernel is the proven-parity primary path (see
+ * `src/lib/simulation/kernel/debye.parity.test.ts`). Any failure parsing the
+ * file or evaluating the kernel — e.g. an element symbol absent from
+ * `FORM_FACTOR_COEFFICIENTS`, or malformed contents — is caught and the gRPC
+ * backend is used instead, so a kernel gap never breaks simulation for users.
+ */
+async function computeDebye(
+  file: { filename: string; contents: string },
+  request: SimRequest,
+): Promise<DebyeResult> {
+  try {
+    const { elements, xyz } = parseXyz(file.contents);
+    return computeDebyeIq(elements, xyz, request.qRange);
+  } catch (err) {
+    console.warn(
+      'TS Debye kernel failed; falling back to gRPC backend:',
+      err instanceof Error ? err.message : err,
+    );
+  }
+
+  const requestBody = {
+    structure: {
+      filename: file.filename,
+      contents: new TextEncoder().encode(file.contents),
+    },
+    qRange: {
+      min: request.qRange.min,
+      max: request.qRange.max,
+      step: request.qRange.step,
+    },
+  };
+
+  return simClient.calcDebye(requestBody);
+}
+
 export const dbSimulationSource: SimulationDataSource = {
-  // Linear cache-lookup → compute → best-effort-cache-write flow; splitting
-  // it would hide the fallback ordering that is the whole point here.
-  // eslint-disable-next-line max-lines-per-function
+  // Cache-lookup → compute (see computeDebye for the TS-primary/gRPC-fallback
+  // ordering) → best-effort cache write. The cache write is agnostic to which
+  // path produced the result.
   async getDebyeResult(request: SimRequest): Promise<DebyeResult> {
     const fetched = await db.query.intensities.findFirst({
       where: {
@@ -429,22 +469,7 @@ export const dbSimulationSource: SimulationDataSource = {
       throw error(404, 'Molecule not found');
     }
 
-    const encoder = new TextEncoder();
-    const contents = encoder.encode(file.contents);
-
-    const requestBody = {
-      structure: {
-        filename: file.filename,
-        contents: contents,
-      },
-      qRange: {
-        min: request.qRange.min,
-        max: request.qRange.max,
-        step: request.qRange.step,
-      },
-    };
-
-    const result = await simClient.calcDebye(requestBody);
+    const result = await computeDebye(file, request);
 
     // Best-effort cache write
     try {
