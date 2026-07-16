@@ -26,7 +26,9 @@ export const variables = defineEnvVars({
     // dead-code-eliminated (previously imported from $env/static/public).
     static: true,
     schema: optional,
-    description: 'Build target: "node" (server) or "static" (GitHub Pages)',
+    description:
+      'Build target: "node" (server), "static" (demo, GitHub Pages), or ' +
+      '"local" (backendless client-side build)',
   },
   PUBLIC_SENTRY_DSN: {
     public: true,

@@ -2,6 +2,7 @@ node_modules
 .deno-deploy
 .gh-pages
 .svelte-kit-static
+.svelte-kit-local
 
 # Output
 .output
@@ -11,6 +12,7 @@ node_modules
 /.svelte-kit
 /build
 /build-static
+/build-local
 
 # OS
 .DS_Store
