@@ -15,7 +15,9 @@ const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url));
 
 export default defineConfig(
   includeIgnoreFile(gitignorePath),
-  { ignores: ['stories/**', 'src/lib/shadcn/**'] },
+  // src/lib/server/grpc/gen is protoc-generated (protoc-gen-es); lint rules
+  // don't apply to code we don't hand-edit.
+  { ignores: ['stories/**', 'src/lib/shadcn/**', 'src/lib/server/grpc/gen/**'] },
   js.configs.recommended,
   ts.configs.recommended,
   svelte.configs.recommended,
