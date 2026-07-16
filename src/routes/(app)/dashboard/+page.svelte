@@ -179,10 +179,6 @@
                   Retry
                 </button>
               </div>
-            {:else if isFetching}
-              <p class="mb-2 px-1 text-sm text-muted-foreground">
-                Computing scattering signals…
-              </p>
             {/if}
             <Tabs.Root bind:value={centerTab} class="w-full gap-0">
               <div
