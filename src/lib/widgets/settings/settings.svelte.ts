@@ -62,10 +62,19 @@ export function readSetting(id: string): boolean {
   return initialValue(def ?? { id, label: '', description: '', default: false });
 }
 
-// True until the user has made a choice for every known setting — used to
-// auto-open and emphasise the Settings popover on first visit.
-export function hasStoredPreferences(): boolean {
-  return SETTINGS_SCHEMA.every((def) => readCookie(cookieName(def.id)) !== null);
+// Tracks whether the user has ever opened the Settings popover, independent
+// of individual setting values — `uploadAcknowledged` in particular is only
+// ever set from the upload flow (initial-dev-2qo), not by visiting the
+// popover, so gating on "every setting has a cookie" would re-open the
+// popover on every load for anyone who hasn't uploaded yet.
+const SEEN_COOKIE = `${COOKIE_PREFIX}seen`;
+
+export function hasSeenSettings(): boolean {
+  return readCookie(SEEN_COOKIE) !== null;
+}
+
+export function markSettingsSeen() {
+  writeCookie(SEEN_COOKIE, 'true');
 }
 
 class SettingsStore {

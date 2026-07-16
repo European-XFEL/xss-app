@@ -10,18 +10,26 @@
 
   import { cn } from '$lib/shadcn/utils.js';
 
-  import { hasStoredPreferences, SETTINGS_SCHEMA, settings } from './settings.svelte';
+  import {
+    hasSeenSettings,
+    markSettingsSeen,
+    SETTINGS_SCHEMA,
+    settings,
+  } from './settings.svelte';
 
-  // First visit (no cookie for any setting yet): auto-open the popover and
-  // emphasise the entry so the user notices it rather than silently
-  // defaulting. `browser` guards SSR, where cookies aren't readable and the
-  // popover should render closed anyway.
-  const unseen = browser && !hasStoredPreferences();
+  // First visit (popover never opened before): auto-open it and emphasise
+  // the entry so the user notices it rather than silently defaulting.
+  // `browser` guards SSR, where cookies aren't readable and the popover
+  // should render closed anyway.
+  const unseen = browser && !hasSeenSettings();
   let firstVisit = $state(unseen);
   let open = $state(unseen);
 
   $effect(() => {
-    if (!open) firstVisit = false;
+    if (!open) {
+      if (firstVisit) markSettingsSeen();
+      firstVisit = false;
+    }
   });
 </script>
 
