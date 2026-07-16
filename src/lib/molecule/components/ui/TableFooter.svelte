@@ -7,10 +7,9 @@
   let { rowCount, groupCount }: Props = $props();
 </script>
 
-<div class="flex items-center justify-between text-sm text-muted-foreground">
+<div class="flex items-center justify-end text-sm text-muted-foreground">
   <div>
-    {rowCount} molecule entries across
+    {rowCount} structure files across
     {groupCount} molecules
   </div>
-  <div class="text-xs">Double-click to edit fields</div>
 </div>

@@ -40,8 +40,8 @@
       {/if}
     </Card.Title>
     <Card.Description>
-      Browse available molecules. Use the Ground and Excited buttons to select
-      molecules for analysis.
+      Use the Ground and Excited buttons to select molecules for analysis, and
+      the edit buttons to change a molecule or a structure file.
     </Card.Description>
   </Card.Header>
   <Card.Content>

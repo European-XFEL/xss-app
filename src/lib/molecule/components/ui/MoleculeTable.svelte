@@ -1,11 +1,12 @@
 <script lang="ts">
-  import type { Molecule, Molecules } from '../../types';
+  import type { Molecule, MoleculeDialogIntent, Molecules } from '../../types';
   import {
     type GroupRow,
     type MoleculeRow,
     type TableRow,
     createMoleculeColumns,
   } from '../columns';
+  import MoleculeFormDialog from '../MoleculeFormDialog.svelte';
   import {
     type ColumnFiltersState,
     type SortingState,
@@ -19,6 +20,8 @@
   import { flip } from 'svelte/animate';
   import { SvelteMap } from 'svelte/reactivity';
   import { slide } from 'svelte/transition';
+
+  import { page } from '$app/state';
 
   import { FlexRender, createSvelteTable } from '$shadcn/ui/data-table';
   import { Spinner } from '$shadcn/ui/spinner';
@@ -55,44 +58,24 @@
   let columnVisibility = $state<VisibilityState>({
     sha: false,
     atomCount: false,
-    state: false,
     createdAt: false,
     updatedAt: false,
     id: false,
   });
   let globalFilter = $state('');
 
-  // Editable cell state
-  let editingCell = $state<{ id: string; field: string } | null>(null);
-  let editValue = $state('');
+  // Shared upload/edit dialog: cells signal intent via the editing handlers
+  // (columns.ts) and this single dialog instance serves all of them.
+  let dialogOpen = $state(false);
+  let dialogIntent = $state<MoleculeDialogIntent>({ mode: 'create' });
 
-  // Editing handlers
-  function startEditing(
-    id: string,
-    field: string,
-    currentValue: string | number | null,
-  ) {
-    editingCell = { id, field };
-    editValue = currentValue?.toString() ?? '';
+  function openDialog(intent: MoleculeDialogIntent) {
+    dialogIntent = intent;
+    dialogOpen = true;
   }
 
-  function saveEdit(value: string) {
-    if (editingCell) {
-      // TODO: persist the edit; value coercion (atomCount → int) lives here
-      // once the save path exists.
-      const _finalValue =
-        editingCell.field === 'atomCount'
-          ? Number.parseInt(value) || 0
-          : value || null;
-    }
-    editingCell = null;
-    editValue = '';
-  }
-
-  function cancelEdit() {
-    editingCell = null;
-    editValue = '';
-  }
+  // Editing shares the upload capability: both need the database.
+  const capability = $derived(page.data.capabilities.upload);
 
   // Group molecules by name - this transforms flat molecule list into hierarchical data
   let groupedData = $derived.by((): TableRow[] => {
@@ -119,18 +102,23 @@
   // Create columns with handlers
   const columns = $derived(
     createMoleculeColumns({
-      editingCell,
-      editValue,
-      onStartEdit: startEditing,
-      onSaveEdit: saveEdit,
-      onCancelEdit: cancelEdit,
-      onEditValueChange: (v) => (editValue = v),
       selection: {
         groundId: ground?.id ?? null,
         excitedId: excited?.id ?? null,
         toggleGround: onToggleGround,
         toggleExcited: onToggleExcited,
         selectGroup: onSelectGroup,
+      },
+      editing: {
+        enabled: capability.available,
+        onEditMolecule: (group) =>
+          openDialog({
+            mode: 'edit-molecule',
+            moleculeName: group.moleculeName,
+            atomCount: group.atomCount,
+          }),
+        onAddFile: (moleculeName) => openDialog({ mode: 'create', moleculeName }),
+        onEditFile: (molecule) => openDialog({ mode: 'edit-file', molecule }),
       },
     }),
   );
@@ -178,7 +166,8 @@
     {table}
     {globalFilter}
     onGlobalFilterChange={(value) => (globalFilter = value)}
-    {molecules}
+    {capability}
+    onUpload={() => openDialog({ mode: 'create' })}
   />
 
   <div class="rounded-md border">
@@ -217,7 +206,13 @@
                 : ''}"
           >
             {#each row.getVisibleCells() as cell (cell.id)}
-              <Table.Cell>
+              <!-- Top-align so a tall wrapped description doesn't vertically
+                   center its neighbors; the description cell wraps freely. -->
+              <Table.Cell
+                class="align-top {cell.column.id === 'description'
+                  ? 'min-w-56 whitespace-normal'
+                  : ''}"
+              >
                 <div in:slide|global={{ duration: 300, delay: index * 60 }}>
                   <FlexRender
                     content={cell.column.columnDef.cell}
@@ -251,3 +246,5 @@
 
   <TableFooter rowCount={molecules.length} groupCount={groupedData.length} />
 </div>
+
+<MoleculeFormDialog bind:open={dialogOpen} intent={dialogIntent} {molecules} />

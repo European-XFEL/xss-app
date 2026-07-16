@@ -32,19 +32,18 @@ export type MoleculeSelection = {
   selectGroup: (molecules: Molecule[]) => void;
 };
 
-// Type for external state handlers
+// Edit entry points, injected from the table so the cells only signal intent;
+// the table owns the shared edit/upload dialog (MoleculeFormDialog).
+export type MoleculeTableEditing = {
+  enabled: boolean;
+  onEditMolecule: (group: GroupRow) => void;
+  onAddFile: (moleculeName: string) => void;
+  onEditFile: (molecule: MoleculeRow) => void;
+};
+
 export type MoleculeTableHandlers = {
-  editingCell: { id: string; field: string } | null;
-  editValue: string;
-  onStartEdit: (
-    id: string,
-    field: string,
-    value: string | number | null,
-  ) => void;
-  onSaveEdit: (value: string) => void;
-  onCancelEdit: () => void;
-  onEditValueChange: (value: string) => void;
   selection: MoleculeSelection;
+  editing: MoleculeTableEditing;
 };
 
 const columnHelper = createColumnHelper<TableRow>();
@@ -54,7 +53,7 @@ const columnHelper = createColumnHelper<TableRow>();
 // eslint-disable-next-line max-lines-per-function
 export function createMoleculeColumns(handlers: MoleculeTableHandlers) {
   return [
-    // Molecule Name column
+    // Molecule name / selection column
     columnHelper.accessor('moleculeName', {
       header: ({ column }) =>
         renderComponent(HeaderButton, {
@@ -66,21 +65,17 @@ export function createMoleculeColumns(handlers: MoleculeTableHandlers) {
         }),
       cell: ({ row }) => {
         if (row.depth === 0) {
-          // Group header - show molecule name and count
+          // Group header - show molecule name plus atoms/file-count meta
           return renderComponent(Cells.MoleculeTitle, {
             group: row.original as GroupRow,
             selection: handlers.selection,
           });
         }
 
-        if (row.depth > 0) {
-          return renderComponent(Cells.Selection, {
-            molecule: row.original as MoleculeRow,
-            selection: handlers.selection,
-          });
-        }
-        // Hide in child rows since shown in group header
-        return '';
+        return renderComponent(Cells.Selection, {
+          molecule: row.original as MoleculeRow,
+          selection: handlers.selection,
+        });
       },
     }),
 
@@ -89,46 +84,9 @@ export function createMoleculeColumns(handlers: MoleculeTableHandlers) {
       header: 'Filename',
       cell: ({ row }) => {
         if (row.depth === 0) return '';
-        const molecule = row.original as MoleculeRow;
-        const isEditing =
-          handlers.editingCell?.id === molecule.id &&
-          handlers.editingCell?.field === 'filename';
-        return renderComponent(Cells.TextEditable, {
-          value: molecule.filename,
-          isEditing,
-          editValue: handlers.editValue,
-          onStartEdit: () =>
-            handlers.onStartEdit(molecule.id, 'filename', molecule.filename),
-          onSave: handlers.onSaveEdit,
-          onCancel: handlers.onCancelEdit,
-          onEditValueChange: handlers.onEditValueChange,
-        });
-      },
-    }),
-
-    // Description column
-    columnHelper.accessor('description', {
-      header: 'Description',
-      cell: ({ row }) => {
-        if (row.depth === 0) return '';
-        const molecule = row.original as MoleculeRow;
-        const isEditing =
-          handlers.editingCell?.id === molecule.id &&
-          handlers.editingCell?.field === 'description';
-        return renderComponent(Cells.TextEditable, {
-          value: molecule.description,
-          isEditing,
-          editValue: handlers.editValue,
-          maxWidth: '300px',
-          onStartEdit: () =>
-            handlers.onStartEdit(
-              molecule.id,
-              'description',
-              molecule.description,
-            ),
-          onSave: handlers.onSaveEdit,
-          onCancel: handlers.onCancelEdit,
-          onEditValueChange: handlers.onEditValueChange,
+        return renderComponent(Cells.Text, {
+          text: (row.original as MoleculeRow).filename,
+          class: 'font-mono text-xs',
         });
       },
     }),
@@ -137,15 +95,21 @@ export function createMoleculeColumns(handlers: MoleculeTableHandlers) {
     columnHelper.accessor('state', {
       header: 'State',
       cell: ({ row, getValue }) => {
-        const groupRow = row.original as GroupRow;
-        if (row.depth === 0)
-          return renderComponent(Cells.Text, {
-            text: `(${groupRow.molecules.length} states)`,
-            class: 'text-muted-foreground',
-          });
-
+        if (row.depth === 0) return '';
         return renderComponent(Cells.StateBadge, {
           state: getValue() as number,
+        });
+      },
+    }),
+
+    // Description column — wraps to any length (see the cell class override
+    // in MoleculeTable.svelte)
+    columnHelper.accessor('description', {
+      header: 'Description',
+      cell: ({ row }) => {
+        if (row.depth === 0) return '';
+        return renderComponent(Cells.Text, {
+          text: (row.original as MoleculeRow).description,
         });
       },
     }),
@@ -155,23 +119,28 @@ export function createMoleculeColumns(handlers: MoleculeTableHandlers) {
       header: 'Reference',
       cell: ({ row }) => {
         if (row.depth === 0) return '';
-        const molecule = row.original as MoleculeRow;
-        const isEditing =
-          handlers.editingCell?.id === molecule.id &&
-          handlers.editingCell?.field === 'reference';
-        return renderComponent(Cells.ReferenceEditable, {
-          value: molecule.reference,
-          isEditing,
-          editValue: handlers.editValue,
-          onStartEdit: () =>
-            handlers.onStartEdit(
-              molecule.id,
-              'reference',
-              molecule.reference ?? null,
-            ),
-          onSave: handlers.onSaveEdit,
-          onCancel: handlers.onCancelEdit,
-          onEditValueChange: handlers.onEditValueChange,
+        return renderComponent(Cells.Reference, {
+          value: (row.original as MoleculeRow).reference,
+        });
+      },
+    }),
+
+    // Edit column — group rows get "Edit molecule" / "+ file", file rows get
+    // a per-row edit button; both open the shared dialog.
+    columnHelper.display({
+      id: 'edit',
+      header: 'Edit',
+      enableHiding: false,
+      cell: ({ row }) => {
+        if (row.depth === 0) {
+          return renderComponent(Cells.Actions, {
+            editing: handlers.editing,
+            group: row.original as GroupRow,
+          });
+        }
+        return renderComponent(Cells.Actions, {
+          editing: handlers.editing,
+          molecule: row.original as MoleculeRow,
         });
       },
     }),
