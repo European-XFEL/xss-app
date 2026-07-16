@@ -13,11 +13,14 @@
  *   a `prerender`'s browser-side Cache API response would go stale until the
  *   next deployment; `query` stays fresh and is refreshable after uploads.
  *
- * `getMoleculeFileContent` follows `$lib/sample/solvent.remote` exactly: a
- * given id's contents never change (uploads create new ids), so `prerender`
- * is safe on every target. See that module's doc comment for why `inputs` is
- * gated behind the static target (kit prerender-queue race, initial-dev-a69)
- * and why `dynamic: true` is needed for ids that didn't exist at build time.
+ * `getMoleculeFileContent` is target-switched like `listMolecules`: on the
+ * static target contents are fixed at build time so `prerender` applies (see
+ * `$lib/sample/solvent.remote` for why `inputs` is gated behind the static
+ * target — kit prerender-queue race, initial-dev-a69 — and why
+ * `dynamic: true` is needed). On node it must be a `query`: the
+ * editMoleculeFileContents/replaceMoleculeFile mutations rewrite an existing
+ * id's contents, so a prerender's browser-side Cache API response would stay
+ * stale until the next deployment.
  */
 import * as Sentry from '@sentry/sveltekit';
 
@@ -55,21 +58,25 @@ export const listMolecules = STATIC
 // The underlying data source (db-source.ts / static-source.ts) already
 // throws a proper `error(404, 'Molecule not found')` for an unknown id, so
 // it propagates as-is — no extra try/catch needed here.
-export const getMoleculeFileContent = prerender(
-  idSchema,
-  async (id) => {
-    return await moleculeSource.getMoleculeFileContent(id);
-  },
-  {
-    dynamic: true,
-    inputs: STATIC
-      ? async () => {
+const getMoleculeFileContentQuery = query(idSchema, async (id) => {
+  return await moleculeSource.getMoleculeFileContent(id);
+});
+
+export const getMoleculeFileContent = STATIC
+  ? prerender(
+      idSchema,
+      async (id) => {
+        return await moleculeSource.getMoleculeFileContent(id);
+      },
+      {
+        dynamic: true,
+        inputs: async () => {
           const molecules = await moleculeSource.listMolecules();
           return molecules.map((molecule) => molecule.id);
-        }
-      : undefined,
-  },
-);
+        },
+      },
+    )
+  : getMoleculeFileContentQuery;
 
 export const uploadMolecule = form(
   uploadMoleculeSchema,
@@ -205,7 +212,12 @@ export const editMoleculeFileContents = command(
       id,
       contents,
     });
-    if (result.success) void listMoleculesQuery().refresh();
+    if (result.success) {
+      // Contents changes re-derive the atom count (list) and rewrite the
+      // cached file contents (detail) — refresh both in this flight.
+      void listMoleculesQuery().refresh();
+      void getMoleculeFileContentQuery(id).refresh();
+    }
     return result;
   },
 );
@@ -224,7 +236,11 @@ export const replaceMoleculeFile = form(
       id: data.id,
       file: data.file,
     });
-    if (result.success) void listMoleculesQuery().refresh();
+    if (result.success) {
+      // Same rationale as editMoleculeFileContents above.
+      void listMoleculesQuery().refresh();
+      void getMoleculeFileContentQuery(data.id).refresh();
+    }
     return result;
   },
 );
