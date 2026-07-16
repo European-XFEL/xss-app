@@ -9,6 +9,7 @@ import {
   PUBLIC_SENTRY_PROFILING,
   PUBLIC_SENTRY_REPLAY,
   PUBLIC_SENTRY_TRACES,
+  PUBLIC_TARGET,
 } from '$app/env/public';
 
 // Feature toggles default to on; set the env var to "false" to disable.
@@ -20,6 +21,11 @@ Sentry.init({
   environment: dev ? 'development' : 'production',
   // kit.version.name — "<target>-<git describe>" (svelte.config.js).
   release: version,
+  // Route envelopes through our own /monitoring server route instead of
+  // POSTing to ingest.sentry.io directly — Firefox ETP and ad-blockers treat
+  // the latter as third-party tracking and block it with a CORS failure.
+  // No server route exists on static (GitHub Pages) builds, so skip there.
+  tunnel: PUBLIC_TARGET === 'static' ? undefined : '/monitoring',
   tracesSampleRate: on(PUBLIC_SENTRY_TRACES) ? 1.0 : 0,
   enableLogs: on(PUBLIC_SENTRY_LOGS),
   enableMetrics: on(PUBLIC_SENTRY_METRICS),
