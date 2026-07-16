@@ -20,7 +20,13 @@ from .gen.simulation_pb2 import (
 )
 
 # Disabled when SENTRY_DSN is unset; the Starlette integration auto-enables.
-sentry_sdk.init(dsn=os.environ.get("SENTRY_DSN"), traces_sample_rate=1.0)
+# environment/release come from SENTRY_ENVIRONMENT/SENTRY_RELEASE env vars,
+# which the SDK reads natively.
+sentry_sdk.init(
+    dsn=os.environ.get("SENTRY_DSN"),
+    traces_sample_rate=1.0,
+    enable_logs=True,
+)
 
 
 class QRange(BaseModel):
