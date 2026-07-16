@@ -34,6 +34,9 @@ Before running it on any component below, re-apply the customization afterward (
 - `card.svelte` — keep `ring-inset` on the root (upstream mira ships `ring-1` without it).
 - `input.svelte`, `select-trigger.svelte` — keep `border-line` (this app's border token, set in
   `src/app.css`); upstream uses stock `border-input`.
+- `slider.svelte` — keep `bg-line` on the track span (upstream ships `bg-muted`, which matches
+  the card surface in dark mode and makes the inactive track invisible). The track's classes
+  are hardcoded — the `class` prop only reaches the root — so this must be hand-patched.
 
 When a component's `class` prop is forwarded to the element you need to change (check by
 reading the file), prefer overriding at the call site over editing the vendored file — that
