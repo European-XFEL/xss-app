@@ -36,6 +36,7 @@ const ground: MoleculeInfo = {
   state: 0,
   reference: null,
   atomCount: 12,
+  readOnly: false,
   createdAt: new Date('2024-01-02'),
   updatedAt: undefined,
 };
@@ -49,6 +50,7 @@ const excited: MoleculeInfo = {
   state: 1,
   reference: null,
   atomCount: 12,
+  readOnly: false,
   createdAt: new Date('2024-01-03'),
   updatedAt: undefined,
 };

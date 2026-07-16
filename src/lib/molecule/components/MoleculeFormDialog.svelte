@@ -135,7 +135,6 @@
       molForm?.fields.set({
         originalName: intent.moleculeName,
         moleculeName: intent.moleculeName,
-        atomCount: intent.atomCount,
       });
     } else if (intent.moleculeName) {
       uploadMolecule.fields.moleculeName.set(intent.moleculeName);
@@ -467,21 +466,6 @@
               >
             {/if}
             {#each fields.moleculeName.issues() ?? [] as issue (issue.message)}
-              <Field.Error>{issue.message}</Field.Error>
-            {/each}
-          </Field.Field>
-
-          <Field.Field
-            data-invalid={fields.atomCount.issues() ? true : undefined}
-          >
-            <Field.FieldLabel>Atom Count</Field.FieldLabel>
-            <Field.Content>
-              <Input {...fields.atomCount.as('number')} min="1" step="1" />
-            </Field.Content>
-            <Field.Description
-              >Applies to all structure files of this molecule.</Field.Description
-            >
-            {#each fields.atomCount.issues() ?? [] as issue (issue.message)}
               <Field.Error>{issue.message}</Field.Error>
             {/each}
           </Field.Field>
