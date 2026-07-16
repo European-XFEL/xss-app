@@ -1,10 +1,7 @@
 import { Throttled } from 'runed';
 
 import { THROTTLE_INTERVAL_MS } from './constants';
-import {
-  type ScatteringMathSources,
-  ScatteringMathState,
-} from './state.svelte';
+import { ScatteringMathState } from './state.svelte';
 
 /**
  * The slice of simulation state the scattering calculations read. Declared
