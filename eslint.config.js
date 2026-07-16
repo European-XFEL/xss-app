@@ -17,7 +17,7 @@ export default defineConfig(
   includeIgnoreFile(gitignorePath),
   // src/lib/server/grpc/gen is protoc-generated (protoc-gen-es); lint rules
   // don't apply to code we don't hand-edit.
-  { ignores: ['stories/**', 'src/lib/shadcn/**', 'src/lib/server/grpc/gen/**'] },
+  { ignores: ['src/lib/shadcn/**', 'src/lib/server/grpc/gen/**'] },
   js.configs.recommended,
   ts.configs.recommended,
   svelte.configs.recommended,
@@ -71,6 +71,10 @@ export default defineConfig(
       },
       'boundaries/elements': [
         // Order matters: first match wins, so list more specific patterns first.
+        // Storybook stories are colocated with their components but exempt
+        // from feature/widget boundaries: they may import sample/seed data
+        // from anywhere to demo a component.
+        { type: 'stories', pattern: 'src/**/*.stories.svelte', mode: 'full' },
         // contracts = the sanctioned client/server type-crossing surface.
         {
           type: 'contracts',
@@ -203,6 +207,11 @@ export default defineConfig(
               message:
                 'Import features and widgets through their public index.ts, not internal files',
             },
+            // Stories are colocated with their component and may import it
+            // (and any sample/seed data) directly, bypassing the index.ts
+            // entry-point rule above — this must stay last (rules cascade,
+            // last match wins).
+            { from: { type: 'stories' }, allow: { to: { type: '*' } } },
           ],
         },
       ],
