@@ -188,6 +188,9 @@ export const dbSolventSource: SolventDataSource = {
 // ─── Simulation Data Source ─────────────────────────────────────────────────
 
 export const dbSimulationSource: SimulationDataSource = {
+  // Linear cache-lookup → compute → best-effort-cache-write flow; splitting
+  // it would hide the fallback ordering that is the whole point here.
+  // eslint-disable-next-line max-lines-per-function
   async getDebyeResult(request: SimRequest): Promise<DebyeResult> {
     const fetched = await db.query.intensities.findFirst({
       where: {
