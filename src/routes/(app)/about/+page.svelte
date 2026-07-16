@@ -42,6 +42,25 @@
       tag: 'Library',
     },
   ] as const;
+
+  // Formerly the sidebar "Features & Bugs" modal; entries already shipped
+  // (plot/data export, direct ΔE input) have been dropped.
+  const plannedFeatures = [
+    '2D detector image simulation',
+    'Jupyter Notebook generation for configured runs',
+    'Result comparison',
+    'Simulation history view',
+    'Additional detectors / flexible detector configuration',
+    'Simulation node graph viewer',
+    'Contextual warnings — e.g. if a simulation exceeds the ∂S/∂T data range',
+  ] as const;
+
+  const knownIssues = [
+    'Unrealistic detector module movement',
+    'Animations replaying on navigation',
+    'Inconsistent molecule name display/state',
+    'Inconsistent use of X-ray energy state',
+  ] as const;
 </script>
 
 <div class="mx-auto flex max-w-[820px] flex-col gap-8 px-6 py-10">
@@ -135,6 +154,30 @@
             </p>
           </div>
         </div>
+      {/each}
+    </ChannelPanel>
+  </section>
+
+  <section class="grid items-start gap-6 md:grid-cols-2">
+    <ChannelPanel
+      label="Planned Features"
+      description="On the roadmap, not yet implemented."
+    >
+      {#each plannedFeatures as feature (feature)}
+        <p class="py-2.5 text-sm text-muted-foreground first:pt-0 last:pb-0">
+          {feature}
+        </p>
+      {/each}
+    </ChannelPanel>
+
+    <ChannelPanel
+      label="Known Issues"
+      description="Bugs we know about and plan to fix."
+    >
+      {#each knownIssues as issue (issue)}
+        <p class="py-2.5 text-sm text-muted-foreground first:pt-0 last:pb-0">
+          {issue}
+        </p>
       {/each}
     </ChannelPanel>
   </section>
