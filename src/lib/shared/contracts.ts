@@ -79,22 +79,6 @@ export interface DebyeResult {
   i: number[];
 }
 
-// ─── Feedback ───────────────────────────────────────────────────────────────
-
-// `feedbackSchema` in $lib/shared/api/validation is pinned to this shape
-// with a `satisfies` check, so the two cannot silently drift.
-export interface FeedbackInput {
-  url: string;
-  comment?: string;
-  categories: string[];
-  region?: string;
-  regionImage?: string;
-}
-
-export interface FeedbackResult {
-  id: string;
-}
-
 // ─── Proto-derived types ────────────────────────────────────────────────────
 
 export type QRange = Omit<protoSim.QRange, '$typeName'>;

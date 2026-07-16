@@ -22,8 +22,6 @@ import {
 import { MAX_UPLOAD_ATOM_COUNT } from '$lib/shared/contracts';
 import type {
   DebyeResult,
-  FeedbackInput,
-  FeedbackResult,
   MoleculeFileContent,
   MoleculeInfo,
   SimRequest,
@@ -33,7 +31,6 @@ import type {
 } from '$lib/shared/contracts';
 
 import type {
-  FeedbackDataSource,
   MoleculeDataSource,
   SimulationDataSource,
   SolventDataSource,
@@ -254,35 +251,5 @@ export const dbSimulationSource: SimulationDataSource = {
     }
 
     return result;
-  },
-};
-
-// ─── Feedback Data Source ───────────────────────────────────────────────────
-
-export const dbFeedbackSource: FeedbackDataSource = {
-  async createFeedback(data: FeedbackInput): Promise<FeedbackResult> {
-    let region: unknown = null;
-    if (data.region) {
-      try {
-        region = JSON.parse(data.region);
-      } catch (err) {
-        console.warn('Failed to parse feedback region JSON', err);
-      }
-    }
-
-    const inserted = await db
-      .insert(schema.feedback)
-      .values({
-        url: data.url,
-        comment: data.comment?.length ? data.comment : null,
-        categories: data.categories.length ? data.categories : null,
-        region,
-        regionImage: data.regionImage?.length ? data.regionImage : null,
-      })
-      .returning({ id: schema.feedback.id });
-
-    const id = inserted?.[0]?.id;
-    if (!id) throw error(500, 'Failed to store feedback');
-    return { id };
   },
 };

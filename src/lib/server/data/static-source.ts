@@ -22,8 +22,6 @@ import { error } from '@sveltejs/kit';
 
 import type {
   DebyeResult,
-  FeedbackInput,
-  FeedbackResult,
   MoleculeFileContent,
   MoleculeInfo,
   SimRequest,
@@ -33,7 +31,6 @@ import type {
 } from '$lib/shared/contracts';
 
 import type {
-  FeedbackDataSource,
   MoleculeDataSource,
   SimulationDataSource,
   SolventDataSource,
@@ -225,15 +222,5 @@ export const staticSimulationSource: SimulationDataSource = {
       501,
       'Simulation is not supported in the static build. Use the production build with a database.',
     );
-  },
-};
-
-// ─── Feedback Data Source ───────────────────────────────────────────────────
-
-export const staticFeedbackSource: FeedbackDataSource = {
-  async createFeedback(_data: FeedbackInput): Promise<FeedbackResult> {
-    // Unreachable in practice: the static host has no server to run the
-    // feedback command, and the dialog is disabled by capabilities anyway.
-    throw error(501, 'Feedback is not supported in the static build');
   },
 };

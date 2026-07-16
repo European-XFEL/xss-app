@@ -2,8 +2,8 @@
  * Shared health/capability types.
  *
  * Reported by the server (see `$lib/server/health`) and consumed by client
- * components that gate features on backend availability (e.g. upload,
- * feedback). Lives in shared since both sides need it.
+ * components that gate features on backend availability (e.g. upload).
+ * Lives in shared since both sides need it.
  */
 export interface BaseHealth {
   configured: boolean;
@@ -50,6 +50,5 @@ export type Capability =
 
 export type Capabilities = {
   upload: Capability;
-  feedback: Capability;
   simulation: Capability;
 };

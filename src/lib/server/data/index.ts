@@ -8,19 +8,16 @@
 import { PUBLIC_TARGET } from '$app/env/public';
 
 import {
-  dbFeedbackSource,
   dbMoleculeSource,
   dbSimulationSource,
   dbSolventSource,
 } from './db-source';
 import {
-  staticFeedbackSource,
   staticMoleculeSource,
   staticSimulationSource,
   staticSolventSource,
 } from './static-source';
 import type {
-  FeedbackDataSource,
   MoleculeDataSource,
   SimulationDataSource,
   SolventDataSource,
@@ -39,7 +36,3 @@ export const solventSource: SolventDataSource = STATIC
 export const simulationSource: SimulationDataSource = STATIC
   ? staticSimulationSource
   : dbSimulationSource;
-
-export const feedbackSource: FeedbackDataSource = STATIC
-  ? staticFeedbackSource
-  : dbFeedbackSource;

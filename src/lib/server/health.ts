@@ -138,7 +138,6 @@ export async function getCapabilities(
 
   const res: Capabilities = {
     upload: capability(health.db.healthy, DB_UNAVAILABLE_REASON),
-    feedback: capability(health.db.healthy, DB_UNAVAILABLE_REASON),
     simulation: capability(health.backend.healthy, BACKEND_UNAVAILABLE_REASON),
   };
 

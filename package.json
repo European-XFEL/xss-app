@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
+    "dev": "dotenv -e .env -- vite dev",
     "build": "dotenv -e .env -- vite build",
     "build:s": "dotenv -e .env.gh -- vite build",
     "build:g": "dotenv -e .env.gh -- vite build && rm -rf .gh-pages/docs && cp -r build-static .gh-pages/docs",
@@ -70,7 +70,6 @@
     "eslint-plugin-boundaries": "^6.0.2",
     "eslint-plugin-svelte": "^3.20.0",
     "globals": "^16.5.0",
-    "html-to-image": "^1.11.13",
     "katex": "^0.16.47",
     "matterviz": "^0.3.7",
     "paneforge": "^1.0.2",

@@ -8,8 +8,6 @@
  */
 import type {
   DebyeResult,
-  FeedbackInput,
-  FeedbackResult,
   MoleculeFileContent,
   MoleculeInfo,
   SimRequest,
@@ -46,10 +44,4 @@ export interface SolventDataSource {
 
 export interface SimulationDataSource {
   getDebyeResult(request: SimRequest): Promise<DebyeResult>;
-}
-
-// ─── Feedback types ─────────────────────────────────────────────────────────
-
-export interface FeedbackDataSource {
-  createFeedback(data: FeedbackInput): Promise<FeedbackResult>;
 }
