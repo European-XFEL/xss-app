@@ -3,13 +3,13 @@ import { defineRelations } from 'drizzle-orm';
 import * as schema from './schema.ts';
 
 export const relations = defineRelations(schema, (r) => ({
-  molecules: {
+  moleculeFiles: {
     intensities: r.many.intensities(),
   },
   intensities: {
-    molecule: r.one.molecules({
+    molecule: r.one.moleculeFiles({
       from: r.intensities.moleculeId,
-      to: r.molecules.id,
+      to: r.moleculeFiles.id,
     }),
   },
 }));

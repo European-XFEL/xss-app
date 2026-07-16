@@ -1,12 +1,10 @@
 import { init } from '@paralleldrive/cuid2';
-import { eq, getColumns } from 'drizzle-orm';
-import { sql } from 'drizzle-orm';
+import { getColumns } from 'drizzle-orm';
 import {
   char,
   integer,
   numeric,
   pgTable,
-  pgView,
   text,
   timestamp,
   unique,
@@ -52,61 +50,9 @@ export const moleculeFiles = pgTable('moleculeFiles', {
   ...timestamps,
 });
 
-export const moleculesOverride = pgTable('molecules_override', {
-  moleculeId: char({ length: uIdLength })
-    .primaryKey()
-    .references(() => moleculeFiles.id, { onDelete: 'cascade' })
-    .notNull(),
-
-  moleculeName: text(),
-  description: text(),
-  state: integer(),
-  reference: text(),
-  ...timestamps,
-});
-
-export const molecules = pgView('molecules').as((qb) =>
-  qb
-    .select({
-      id: moleculeFiles.id,
-
-      filename: moleculeFiles.filename,
-      contents: moleculeFiles.contents,
-      sha: moleculeFiles.sha,
-
-      // merged fields
-      moleculeName:
-        sql<string>`coalesce(${moleculesOverride.moleculeName}, ${moleculeFiles.moleculeName})`.as(
-          'moleculeName',
-        ),
-      description:
-        sql<string>`coalesce(${moleculesOverride.description}, ${moleculeFiles.description})`.as(
-          'description',
-        ),
-      state:
-        sql<number>`coalesce(${moleculesOverride.state}, ${moleculeFiles.state})`.as(
-          'state',
-        ),
-      reference: sql<
-        string | null
-      >`coalesce(${moleculesOverride.reference}, ${moleculeFiles.reference})`.as(
-        'reference',
-      ),
-
-      atomCount: moleculeFiles.atomCount,
-      createdAt: moleculeFiles.createdAt,
-      updatedAt: sql<Date>`
-        greatest(${moleculeFiles.updatedAt}, coalesce(${moleculesOverride.updatedAt}, ${moleculeFiles.updatedAt}))
-      `.as('updatedAt'),
-    })
-    .from(moleculeFiles)
-    .leftJoin(
-      moleculesOverride,
-      eq(moleculesOverride.moleculeId, moleculeFiles.id),
-    ),
-);
-
-const { contents: _m_contents, ...moleculesInfo } = getColumns(molecules);
+// Edits (see $lib/server/data) update `moleculeFiles` rows in place, so no
+// override table/view layer is needed — this is the single source of truth.
+const { contents: _m_contents, ...moleculesInfo } = getColumns(moleculeFiles);
 
 export { moleculesInfo };
 

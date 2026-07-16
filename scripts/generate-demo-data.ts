@@ -149,10 +149,10 @@ async function buildSolventFileMap(): Promise<Map<string, string>> {
 async function generateMolecules(): Promise<MoleculeDemoRecord[]> {
   console.log('Reading molecules from database...');
 
-  // Query molecule info (without contents) from the molecules view
+  // Query molecule info (without contents) from the moleculeFiles table
   const molecules = await db
     .select(schema.moleculesInfo)
-    .from(schema.molecules);
+    .from(schema.moleculeFiles);
 
   console.log(`Found ${molecules.length} molecules`);
 

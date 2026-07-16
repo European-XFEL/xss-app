@@ -67,11 +67,16 @@ function extractAtomCount(contents: string) {
 
 export const dbMoleculeSource: MoleculeDataSource = {
   async listMolecules(): Promise<MoleculeInfo[]> {
-    return await db.select(schema.moleculesInfo).from(schema.molecules);
+    const rows = await db
+      .select(schema.moleculesInfo)
+      .from(schema.moleculeFiles);
+    // moleculeFiles.updatedAt is nullable in the DB; the domain type uses
+    // undefined for "never updated"
+    return rows.map((row) => ({ ...row, updatedAt: row.updatedAt ?? undefined }));
   },
 
   async getMoleculeFileContent(id: string): Promise<MoleculeFileContent> {
-    const res = await db.query.molecules.findFirst({
+    const res = await db.query.moleculeFiles.findFirst({
       where: { id },
       columns: { contents: true },
     });
@@ -117,7 +122,11 @@ export const dbMoleculeSource: MoleculeDataSource = {
           contents,
         })
         .returning(schema.moleculesInfo);
-      return { success: true, result: result?.[0] };
+      const row = result[0];
+      return {
+        success: true,
+        result: { ...row, updatedAt: row.updatedAt ?? undefined },
+      };
     } catch (err) {
       console.error('Failed to insert molecule:', err);
       if (err instanceof DrizzleQueryError) {
@@ -208,7 +217,7 @@ export const dbSimulationSource: SimulationDataSource = {
       };
     }
 
-    const file = await db.query.molecules.findFirst({
+    const file = await db.query.moleculeFiles.findFirst({
       where: { id: request.fileId },
     });
 
