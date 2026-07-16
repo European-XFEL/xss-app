@@ -49,6 +49,9 @@ export type MoleculeTableHandlers = {
 
 const columnHelper = createColumnHelper<TableRow>();
 
+// Declarative column list: one accessor per table column; splitting it up
+// would only scatter the table's shape across helpers.
+// eslint-disable-next-line max-lines-per-function
 export function createMoleculeColumns(handlers: MoleculeTableHandlers) {
   return [
     // Molecule Name column
