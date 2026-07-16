@@ -57,6 +57,13 @@ type SolventDifferentials = {
 
 const atomCountLine = /^(\s*\d+)/;
 
+/** Postgres unique-constraint violation (SQLSTATE 23505). */
+function isUniqueViolation(err: unknown): boolean {
+  if (!(err instanceof DrizzleQueryError)) return false;
+  const cause = err.cause as { code?: string } | undefined;
+  return cause?.code === '23505';
+}
+
 function extractAtomCount(contents: string) {
   const firstLine = contents.split(/\r?\n/, 1)[0]?.trim();
   if (!firstLine) return null;
@@ -75,7 +82,10 @@ export const dbMoleculeSource: MoleculeDataSource = {
       .from(schema.moleculeFiles);
     // moleculeFiles.updatedAt is nullable in the DB; the domain type uses
     // undefined for "never updated"
-    return rows.map((row) => ({ ...row, updatedAt: row.updatedAt ?? undefined }));
+    return rows.map((row) => ({
+      ...row,
+      updatedAt: row.updatedAt ?? undefined,
+    }));
   },
 
   async getMoleculeFileContent(id: string): Promise<MoleculeFileContent> {
@@ -94,7 +104,6 @@ export const dbMoleculeSource: MoleculeDataSource = {
   async uploadMolecule(
     input: UploadMoleculeInput,
   ): Promise<UploadMoleculeResult> {
-    const filename = input.file.name;
     const contents = await input.file.text();
     const derivedAtomCount = extractAtomCount(contents);
     const resolvedAtomCount = derivedAtomCount ?? input.atomCount;
@@ -121,7 +130,7 @@ export const dbMoleculeSource: MoleculeDataSource = {
           state: input.state,
           reference: input.reference ?? null,
           atomCount: resolvedAtomCount,
-          filename,
+          filename: input.file.name,
           contents,
         })
         .returning(schema.moleculesInfo);
@@ -132,15 +141,12 @@ export const dbMoleculeSource: MoleculeDataSource = {
       };
     } catch (err) {
       console.error('Failed to insert molecule:', err);
-      if (err instanceof DrizzleQueryError) {
-        const cause = err.cause as { code?: string } | undefined;
-        if (cause?.code === '23505') {
-          return {
-            success: false,
-            result: null,
-            error: 'A molecule with this name already exists.',
-          };
-        }
+      if (isUniqueViolation(err)) {
+        return {
+          success: false,
+          result: null,
+          error: 'A molecule with this name already exists.',
+        };
       }
       throw err;
     }
@@ -294,11 +300,7 @@ export const dbSimulationSource: SimulationDataSource = {
         q: result.q.map(String),
       });
     } catch (err) {
-      const cause =
-        err instanceof DrizzleQueryError
-          ? (err.cause as { code?: string } | undefined)
-          : undefined;
-      if (cause?.code !== '23505') {
+      if (!isUniqueViolation(err)) {
         console.error('Failed to cache intensity result:', err);
       }
     }
