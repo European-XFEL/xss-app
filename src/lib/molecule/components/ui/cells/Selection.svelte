@@ -29,4 +29,5 @@
   >
     Excited
   </Button>
+  <span class="font-mono text-xs text-muted-foreground">{molecule.state}</span>
 </div>

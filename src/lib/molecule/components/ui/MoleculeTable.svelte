@@ -167,8 +167,6 @@
     {table}
     {globalFilter}
     onGlobalFilterChange={(value) => (globalFilter = value)}
-    {capability}
-    onUpload={() => openDialog({ mode: 'create' })}
   />
 
   <div class="rounded-md border">
@@ -245,7 +243,12 @@
     </Table.Root>
   </div>
 
-  <TableFooter rowCount={molecules.length} groupCount={groupedData.length} />
+  <TableFooter
+    rowCount={molecules.length}
+    groupCount={groupedData.length}
+    {capability}
+    onUpload={() => openDialog({ mode: 'create' })}
+  />
 </div>
 
 <MoleculeFormDialog bind:open={dialogOpen} intent={dialogIntent} {molecules} />

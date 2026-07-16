@@ -91,17 +91,6 @@ export function createMoleculeColumns(handlers: MoleculeTableHandlers) {
       },
     }),
 
-    // State column
-    columnHelper.accessor('state', {
-      header: 'State',
-      cell: ({ row, getValue }) => {
-        if (row.depth === 0) return '';
-        return renderComponent(Cells.StateBadge, {
-          state: getValue() as number,
-        });
-      },
-    }),
-
     // Description column — wraps to any length (see the cell class override
     // in MoleculeTable.svelte)
     columnHelper.accessor('description', {

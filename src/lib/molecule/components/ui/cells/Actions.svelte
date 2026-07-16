@@ -4,10 +4,11 @@
     MoleculeRow,
     MoleculeTableEditing,
   } from '../../columns';
+  import FileUp from '@lucide/svelte/icons/file-up';
   import Pencil from '@lucide/svelte/icons/pencil';
-  import Plus from '@lucide/svelte/icons/plus';
 
   import { Button } from '$shadcn/ui/button';
+  import * as Tooltip from '$shadcn/ui/tooltip';
 
   // Renders the edit affordances for either a group header row (edit
   // molecule / add file) or a structure file row (edit file).
@@ -32,16 +33,24 @@
       <Pencil class="size-3" />
       Edit molecule
     </Button>
-    <Button
-      variant="outline"
-      size="sm"
-      class="h-7 px-2 text-xs"
-      disabled={!editing.enabled}
-      onclick={() => editing.onAddFile(group.moleculeName)}
-    >
-      <Plus class="size-3" />
-      file
-    </Button>
+    <Tooltip.Root>
+      <Tooltip.Trigger>
+        {#snippet child({ props })}
+          <Button
+            {...props}
+            variant="outline"
+            size="icon"
+            class="size-7"
+            disabled={!editing.enabled}
+            onclick={() => editing.onAddFile(group.moleculeName)}
+          >
+            <FileUp class="size-3.5" />
+            <span class="sr-only">Add structure file</span>
+          </Button>
+        {/snippet}
+      </Tooltip.Trigger>
+      <Tooltip.Content side="top" align="center">Add structure file</Tooltip.Content>
+    </Tooltip.Root>
   </div>
 {:else if molecule}
   <div class="flex justify-end">
