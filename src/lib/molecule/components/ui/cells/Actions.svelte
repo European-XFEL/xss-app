@@ -49,7 +49,9 @@
           </Button>
         {/snippet}
       </Tooltip.Trigger>
-      <Tooltip.Content side="top" align="center">Add structure file</Tooltip.Content>
+      <Tooltip.Content side="top" align="center"
+        >Add structure file</Tooltip.Content
+      >
     </Tooltip.Root>
   </div>
 {:else if molecule}
