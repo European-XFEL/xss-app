@@ -1,4 +1,6 @@
+import logging
 import os
+import time
 from typing import Annotated
 
 import sentry_sdk
@@ -18,6 +20,11 @@ from .gen.simulation_pb2 import (
     SolventInfoRequest,
     SolventInfoResponse,
 )
+
+# INFO so instrumentation logs pass the root logger filter; Sentry's logging
+# integration forwards INFO+ records as logs when enable_logs is set.
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Disabled when SENTRY_DSN is unset; the Starlette integration auto-enables.
 # environment/release come from SENTRY_ENVIRONMENT/SENTRY_RELEASE env vars,
@@ -56,9 +63,24 @@ class SimulationService(simulation_connect.SimulationService):
         structure = request.structure
         File(filename=structure.filename, contents=structure.contents)
 
+        start = time.perf_counter()
         result = calc_debye(
             q_range=request.q_range,
             structure=request.structure,
+        )
+        duration_ms = (time.perf_counter() - start) * 1000
+
+        sentry_sdk.metrics.count("backend.calc_debye.runs", 1)
+        sentry_sdk.metrics.distribution(
+            "backend.calc_debye.duration", duration_ms, unit="millisecond"
+        )
+        logger.info(
+            "calc_debye completed in %.0f ms (%s, q %.3f-%.3f step %.4f)",
+            duration_ms,
+            structure.filename,
+            q_range.min,
+            q_range.max,
+            q_range.step,
         )
 
         return SimulationResponse(q=result[0], i=result[1])
@@ -73,6 +95,7 @@ class SimulationService(simulation_connect.SimulationService):
         try:
             rhom, cpm = get_solvent_info(request.name)
         except Exception as exc:
+            logger.warning("Solvent lookup failed for %r: %s", request.name, exc)
             raise ConnectError(
                 Code.NOT_FOUND,
                 f"Solvent '{request.name}' not recognized: {exc}",
