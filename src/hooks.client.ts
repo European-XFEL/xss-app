@@ -12,8 +12,16 @@ import {
   PUBLIC_TARGET,
 } from '$app/env/public';
 
+import { readSetting } from '$lib/widgets/settings/settings.svelte';
+
 // Feature toggles default to on; set the env var to "false" to disable.
 const on = (flag: string | undefined) => flag !== 'false';
+
+// Unlike error capture/tracing/profiling (legitimate interest), session
+// replay records DOM + interaction data tied to a session, so it also
+// requires the user's opt-in via the Settings popover (initial-dev-95a) —
+// the env flag alone is not enough to enable it.
+const replayEnabled = on(PUBLIC_SENTRY_REPLAY) && readSetting('sentryReplay');
 
 Sentry.init({
   dsn: PUBLIC_SENTRY_DSN,
@@ -30,14 +38,14 @@ Sentry.init({
   enableLogs: on(PUBLIC_SENTRY_LOGS),
   enableMetrics: on(PUBLIC_SENTRY_METRICS),
   // Record 10% of sessions, and always the full session when it errors.
-  replaysSessionSampleRate: on(PUBLIC_SENTRY_REPLAY) ? 0.1 : 0,
-  replaysOnErrorSampleRate: on(PUBLIC_SENTRY_REPLAY) ? 1.0 : 0,
+  replaysSessionSampleRate: replayEnabled ? 0.1 : 0,
+  replaysOnErrorSampleRate: replayEnabled ? 1.0 : 0,
   // Profile whole sessions, capturing while a trace is active. Also needs
   // the Document-Policy: js-profiling response header (hooks.server.ts).
   profileSessionSampleRate: on(PUBLIC_SENTRY_PROFILING) ? 1.0 : 0,
   profileLifecycle: 'trace',
   integrations: [
-    ...(on(PUBLIC_SENTRY_REPLAY) ? [Sentry.replayIntegration()] : []),
+    ...(replayEnabled ? [Sentry.replayIntegration()] : []),
     ...(on(PUBLIC_SENTRY_PROFILING)
       ? [Sentry.browserProfilingIntegration()]
       : []),

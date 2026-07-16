@@ -30,6 +30,7 @@
     MAX_UPLOAD_FILE_BYTES,
   } from '$lib/shared/contracts';
   import type { MoleculeInfo } from '$lib/shared/contracts';
+  import { settings } from '$lib/widgets/settings';
 
   interface Props {
     open?: boolean;
@@ -51,6 +52,37 @@
   // Delete flow (edit modes): a nested confirm dialog guards the command.
   let confirmDeleteOpen = $state(false);
   let deleting = $state(false);
+
+  // No-auth notice (initial-dev-2qo): the app has no authentication, so
+  // anything uploaded is visible to anyone. Blocks the first file-upload
+  // attempt (new molecule, or replacing an existing file's contents) behind
+  // an explicit acknowledgement, persisted via the same settings store as
+  // the Sentry consent toggle (initial-dev-95a).
+  let ackOpen = $state(false);
+  let pendingUpload: (() => void) | null = null;
+
+  function requireUploadAck(action: () => void) {
+    if (settings.get('uploadAcknowledged')) {
+      action();
+      return;
+    }
+    pendingUpload = action;
+    ackOpen = true;
+  }
+
+  function confirmUploadAck() {
+    settings.set('uploadAcknowledged', true);
+    ackOpen = false;
+    const action = pendingUpload;
+    pendingUpload = null;
+    action?.();
+  }
+
+  // Dismissing without confirming (Esc / overlay / close button) cancels
+  // the pending upload rather than bypassing the notice.
+  $effect(() => {
+    if (!ackOpen) pendingUpload = null;
+  });
 
   // Contents preview / in-place editing (edit-file mode). `contents === null`
   // means still loading; the token discards stale loads across reopens.
@@ -239,6 +271,7 @@
     submitError = null;
     fileError = null;
     confirmDeleteOpen = false;
+    ackOpen = false;
     editingContents = false;
     if (intent.mode === 'edit-file') {
       fileForm?.fields.set({
@@ -371,7 +404,11 @@
   }
 </script>
 
-{#snippet formFooter(submitLabel: string, formId?: string)}
+{#snippet formFooter(
+  submitLabel: string,
+  formId?: string,
+  requiresUploadAck = false,
+)}
   {#if submitError}
     <div class="text-sm text-destructive">{submitError}</div>
   {/if}
@@ -395,6 +432,13 @@
       type="submit"
       form={formId}
       disabled={submitting || nameConflict || readOnly}
+      onclick={requiresUploadAck && !settings.get('uploadAcknowledged')
+        ? (event) => {
+            event.preventDefault();
+            const form = event.currentTarget.form;
+            requireUploadAck(() => form?.requestSubmit());
+          }
+        : undefined}
     >
       {#if submitting}
         <Spinner class="mr-2 h-4 w-4 animate-spin" />
@@ -528,7 +572,7 @@
           </Field.Group>
         </Field.Set>
 
-        {@render formFooter('Upload')}
+        {@render formFooter('Upload', undefined, true)}
       </form>
     {:else if intent.mode === 'edit-file' && fileForm && fileFormProps}
       {@const fields = fileForm.fields}
@@ -688,7 +732,10 @@
             {...replaceFileProps}
             files={replaceFileProps.files ?? undefined}
             accept=".xyz"
-            onchange={(e) => e.currentTarget.form?.requestSubmit()}
+            onchange={(e) => {
+              const form = e.currentTarget.form;
+              requireUploadAck(() => form?.requestSubmit());
+            }}
           />
         </form>
       {/if}
@@ -765,6 +812,29 @@
           <Spinner class="mr-2 h-4 w-4 animate-spin" />
         {/if}
         Delete
+      </Button.Root>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
+
+<!-- No-auth notice (initial-dev-2qo), blocking the first file upload
+     (new molecule or file replace) until explicitly acknowledged. -->
+<Dialog.Root bind:open={ackOpen}>
+  <Dialog.Content class="sm:max-w-100" showCloseButton={false}>
+    <Dialog.Header>
+      <Dialog.Title>This app has no authentication</Dialog.Title>
+      <Dialog.Description>
+        Anything you upload — the file and its metadata — is visible to
+        anyone who can reach this site. Don't upload anything you wouldn't
+        want publicly accessible.
+      </Dialog.Description>
+    </Dialog.Header>
+    <Dialog.Footer>
+      <Dialog.Close class={buttonVariants({ variant: 'outline' })}>
+        Cancel
+      </Dialog.Close>
+      <Button.Root type="button" onclick={confirmUploadAck}>
+        I understand, upload anyway
       </Button.Root>
     </Dialog.Footer>
   </Dialog.Content>
