@@ -18,9 +18,3 @@ export type MoleculeDialogIntent =
   | { mode: 'create'; moleculeName?: string }
   | { mode: 'edit-file'; molecule: Molecule }
   | { mode: 'edit-molecule'; moleculeName: string; atomCount: number };
-
-export function formatState(state: number): string {
-  if (state === 0) return 'Ground (S\u2080)';
-  if (state === 1) return 'Excited (S\u2081)';
-  return `State ${state}`;
-}
