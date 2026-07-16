@@ -29,6 +29,7 @@
     min="0.001"
     max="100"
     step="0.001"
+    logarithmic
     bind:value={concentrationSoluteMolar}
   />
 </div>

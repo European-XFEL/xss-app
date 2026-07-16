@@ -13,6 +13,15 @@
     min?: string | number;
     max?: string | number;
     step?: string | number;
+    /**
+     * Drag the slider track over log10(value) instead of value. For wide
+     * ranges (many decades) this keeps the slider's own step count small
+     * (bits-ui does O(steps) work per pointermove — see #initial-dev-kfb)
+     * and gives even resolution across every decade. The paired number
+     * input is unaffected and still edits the raw value at `step`.
+     * Requires min > 0.
+     */
+    logarithmic?: boolean;
     'aria-invalid'?: HTMLInputAttributes['aria-invalid'];
   };
 
@@ -24,15 +33,25 @@
     min,
     max,
     step,
+    logarithmic = false,
     ...rest
   }: Props = $props();
 
   const numMin = $derived(min === undefined ? undefined : Number(min));
   const numMax = $derived(max === undefined ? undefined : Number(max));
   const numStep = $derived(step === undefined ? undefined : Number(step));
+  // Only valid for min > 0; log-space div by ~100 steps regardless of range.
+  const logMode = $derived(logarithmic && !!numMin && numMin > 0);
 
   let sliderValue = $derived(
     typeof value === 'number' ? value : Number(value ?? numMin ?? 0),
+  );
+
+  const logMin = $derived(logMode ? Math.log10(numMin as number) : 0);
+  const logMax = $derived(logMode ? Math.log10(numMax as number) : 0);
+  const logStep = $derived(logMode ? (logMax - logMin) / 100 : 0);
+  const logSliderValue = $derived(
+    logMode ? Math.log10(Math.max(sliderValue, numMin as number)) : 0,
   );
 </script>
 
@@ -51,11 +70,12 @@
   </div>
   <Slider
     type="single"
-    value={sliderValue}
-    onValueChange={(next) => (value = next)}
-    min={numMin}
-    max={numMax}
-    step={numStep}
+    value={logMode ? logSliderValue : sliderValue}
+    onValueChange={(next) =>
+      (value = logMode ? Number((10 ** next).toPrecision(3)) : next)}
+    min={logMode ? logMin : numMin}
+    max={logMode ? logMax : numMax}
+    step={logMode ? logStep : numStep}
     aria-invalid={rest['aria-invalid']}
     class={classRange}
   />
