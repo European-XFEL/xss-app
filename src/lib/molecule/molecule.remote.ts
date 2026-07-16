@@ -44,12 +44,20 @@ import type {
 } from '$lib/shared/contracts';
 
 const STATIC = PUBLIC_TARGET === 'static';
+// Reads are prerendered for both serverless adapter-static builds: `static`
+// (demo) and `local` (client-side). A `query` cannot run on a fully
+// prerendered, backendless deploy, so the demo dataset is baked in at build
+// time and served from the browser Cache API. Runtime mutations remain gated on
+// `STATIC` alone (unchanged); in `local` they're unreachable because the upload
+// capability is reported unavailable (see `getCapabilities`) until bead ej2.9
+// wires client-side CRUD.
+const PRERENDERED = STATIC || PUBLIC_TARGET === 'local';
 
 const listMoleculesQuery = query(async () => {
   return await moleculeSource.listMolecules();
 });
 
-export const listMolecules = STATIC
+export const listMolecules = PRERENDERED
   ? prerender(async () => {
       return await moleculeSource.listMolecules();
     })
@@ -62,7 +70,7 @@ const getMoleculeFileContentQuery = query(idSchema, async (id) => {
   return await moleculeSource.getMoleculeFileContent(id);
 });
 
-export const getMoleculeFileContent = STATIC
+export const getMoleculeFileContent = PRERENDERED
   ? prerender(
       idSchema,
       async (id) => {
