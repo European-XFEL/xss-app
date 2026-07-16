@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/sveltekit';
 
+import { dev } from '$app/env';
 import { PUBLIC_SENTRY_DSN } from '$app/env/public';
-import { dev } from '$app/environment';
 
 Sentry.init({
   dsn: PUBLIC_SENTRY_DSN,
