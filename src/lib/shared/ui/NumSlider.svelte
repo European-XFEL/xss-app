@@ -20,6 +20,15 @@
      * and gives even resolution across every decade. The paired number
      * input is unaffected and still edits the raw value at `step`.
      * Requires min > 0.
+     *
+     * Writes back to `value` on release (bits-ui's onValueCommit) rather
+     * than on every drag tick (onValueChange): bits-ui's controlled Slider
+     * re-emits onValueChange any time its `value` prop changes for *any*
+     * reason, including its own internal step-grid correction — so with a
+     * coarse log grid, typing a precise value into the number input would
+     * otherwise immediately get snapped and clobbered by that echo.
+     * onValueCommit only fires from a genuine drag-release/keyboard nudge,
+     * so it can't be triggered by that correction.
      */
     logarithmic?: boolean;
     'aria-invalid'?: HTMLInputAttributes['aria-invalid'];
@@ -71,8 +80,12 @@
   <Slider
     type="single"
     value={logMode ? logSliderValue : sliderValue}
-    onValueChange={(next) =>
-      (value = logMode ? Number((10 ** next).toPrecision(3)) : next)}
+    onValueChange={logMode ? undefined : (next) => (value = next)}
+    onValueCommit={
+      logMode
+        ? (next) => (value = Number((10 ** next).toPrecision(3)))
+        : undefined
+    }
     min={logMode ? logMin : numMin}
     max={logMode ? logMax : numMax}
     step={logMode ? logStep : numStep}
