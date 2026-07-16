@@ -27,11 +27,15 @@ get along, so we shut typescript up by casting `value` to `never`.
 	{...restProps}
 >
 	{#snippet children({ thumbItems })}
+		<!-- Track uses this app's `line` token instead of upstream's `bg-muted`:
+		     --muted matches the card surface in dark mode (both surface0), which
+		     made the inactive track invisible. Documented in CLAUDE.md's
+		     shadcn-overrides list; re-apply after `shadcn-svelte add --overwrite`. -->
 		<span
 			data-slot="slider-track"
 			data-orientation={orientation}
 			class={cn(
-				"bg-muted rounded-md data-horizontal:h-1 data-horizontal:w-full data-vertical:h-full data-vertical:w-1 bg-muted relative grow overflow-hidden data-horizontal:w-full data-vertical:h-full"
+				"bg-line rounded-md data-horizontal:h-1 data-horizontal:w-full data-vertical:h-full data-vertical:w-1 relative grow overflow-hidden data-horizontal:w-full data-vertical:h-full"
 			)}
 		>
 			<SliderPrimitive.Range
