@@ -1,5 +1,6 @@
 x-common-env: &common-env
   BACKEND_URL: 'http://backend:50051'
+  PUBLIC_SENTRY_DSN: '${PUBLIC_SENTRY_DSN:-}'
   DB_USER: '${DB_USER:?error}'
   DB_PASSWORD: '${DB_PASSWORD:?error}'
   DB_HOST: '${DOCKER_DB_HOST:-db}'
@@ -19,6 +20,8 @@ services:
 
   backend:
     build: ./backend
+    environment:
+      SENTRY_DSN: '${SENTRY_DSN:-}'
     ports:
       - 50051:50051
 
