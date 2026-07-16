@@ -32,7 +32,8 @@ torch = [
 ]
 
 [tool.ruff]
-exclude = ["src/server/api"]
+# gen/ is protoc-generated; don't lint or format code we don't hand-edit.
+exclude = ["src/server/api", "src/simex_debye_grpc/gen"]
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
