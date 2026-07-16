@@ -3,7 +3,7 @@ import * as Sentry from '@sentry/sveltekit';
 import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 
-import { dev } from '$app/env';
+import { dev, version } from '$app/env';
 import { DB_HOST, DB_NAME, DB_PASSWORD, DB_USER } from '$app/env/private';
 import { PUBLIC_SENTRY_DSN, PUBLIC_TARGET } from '$app/env/public';
 
@@ -14,7 +14,10 @@ Sentry.init({
   dsn: PUBLIC_SENTRY_DSN,
   enabled: Boolean(PUBLIC_SENTRY_DSN),
   environment: dev ? 'development' : 'production',
+  // kit.version.name — "<target>-<git describe>" (svelte.config.js).
+  release: version,
   tracesSampleRate: 1.0,
+  enableLogs: true,
 });
 
 // Initialize the database connection at server startup.
