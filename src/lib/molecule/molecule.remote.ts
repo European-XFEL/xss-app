@@ -19,6 +19,8 @@
  * gated behind the static target (kit prerender-queue race, initial-dev-a69)
  * and why `dynamic: true` is needed for ids that didn't exist at build time.
  */
+import * as Sentry from '@sentry/sveltekit';
+
 import { PUBLIC_TARGET } from '$app/env/public';
 import { form, prerender, query } from '$app/server';
 
@@ -77,11 +79,23 @@ export const uploadMolecule = form(
       file: data.file,
     });
 
+    Sentry.metrics.count('molecule.uploads', 1, {
+      attributes: { status: result.success ? 'ok' : 'error' },
+    });
     if (result.success) {
+      Sentry.logger.info('Molecule uploaded', {
+        moleculeName: data.moleculeName,
+        atomCount: data.atomCount,
+      });
       // Single-flight mutation: send the refreshed molecule list back with
       // this response instead of letting the client invalidate every query
       // (which would also re-run the expensive Debye queries).
       void listMoleculesQuery().refresh();
+    } else {
+      Sentry.logger.warn('Molecule upload failed', {
+        moleculeName: data.moleculeName,
+        error: result.error,
+      });
     }
 
     return result;

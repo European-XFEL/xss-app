@@ -10,11 +10,37 @@
  * fails exactly like the previous client-side fetch('/api/simulation') did
  * (see initial-dev-4dy), so no STATIC guard is added.
  */
+import * as Sentry from '@sentry/sveltekit';
+
 import { query } from '$app/server';
 
 import { simulationSource } from '$lib/server/data';
 import { simulationSchema } from '$lib/shared/api/validation';
 
 export const getDebyeResult = query(simulationSchema, async (request) => {
-  return await simulationSource.getDebyeResult(request);
+  const start = Date.now();
+  try {
+    const result = await simulationSource.getDebyeResult(request);
+    Sentry.metrics.count('simulation.runs', 1, {
+      attributes: { status: 'ok' },
+    });
+    Sentry.metrics.distribution('simulation.duration', Date.now() - start, {
+      unit: 'millisecond',
+    });
+    Sentry.logger.info('Debye simulation completed', {
+      fileId: request.fileId,
+      qPoints: result.q.length,
+      durationMs: Date.now() - start,
+    });
+    return result;
+  } catch (err) {
+    Sentry.metrics.count('simulation.runs', 1, {
+      attributes: { status: 'error' },
+    });
+    Sentry.logger.error('Debye simulation failed', {
+      fileId: request.fileId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    throw err;
+  }
 });

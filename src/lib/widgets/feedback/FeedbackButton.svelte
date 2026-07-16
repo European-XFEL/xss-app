@@ -17,6 +17,7 @@
 
   async function openFeedback() {
     if (!feedback) return;
+    Sentry.metrics.count('feedback.opened', 1);
     if (!form) {
       form = await feedback.createForm();
       form.appendToDom();
