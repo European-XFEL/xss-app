@@ -1,3 +1,4 @@
+import { sentrySvelteKit } from '@sentry/sveltekit';
 import tailwindcss from '@tailwindcss/vite';
 import { visualizer } from 'rollup-plugin-visualizer';
 import devtoolsJson from 'vite-plugin-devtools-json';
@@ -16,6 +17,11 @@ export default defineConfig({
     isProd ? devtoolsJson() : null,
     lucidePreprocess(),
     tailwindcss(),
+    sentrySvelteKit({
+      // Source-map upload needs SENTRY_ORG/SENTRY_PROJECT/SENTRY_AUTH_TOKEN;
+      // skip it (and its per-build warning) when no token is configured.
+      autoUploadSourceMaps: Boolean(process.env.SENTRY_AUTH_TOKEN),
+    }),
     sveltekit(),
     visualizer({
       emitFile: true,

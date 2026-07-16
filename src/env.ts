@@ -28,6 +28,11 @@ export const variables = defineEnvVars({
     schema: optional,
     description: 'Build target: "node" (server) or "static" (GitHub Pages)',
   },
+  PUBLIC_SENTRY_DSN: {
+    public: true,
+    schema: optional,
+    description: 'Sentry DSN; error reporting is disabled when unset',
+  },
   PUBLIC_PRERENDER_ALL: {
     public: true,
     schema: optional,

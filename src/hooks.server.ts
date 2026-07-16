@@ -1,10 +1,19 @@
+import * as Sentry from '@sentry/sveltekit';
+
 import type { Handle } from '@sveltejs/kit';
+import { sequence } from '@sveltejs/kit/hooks';
 
 import { DB_HOST, DB_NAME, DB_PASSWORD, DB_USER } from '$app/env/private';
-import { PUBLIC_TARGET } from '$app/env/public';
+import { PUBLIC_SENTRY_DSN, PUBLIC_TARGET } from '$app/env/public';
 
 import { initDb } from '$lib/server/db';
 import { getCapabilities, getHealth } from '$lib/server/health';
+
+Sentry.init({
+  dsn: PUBLIC_SENTRY_DSN,
+  enabled: Boolean(PUBLIC_SENTRY_DSN),
+  tracesSampleRate: 1.0,
+});
 
 // Initialize the database connection at server startup.
 // Skip for static builds and for environments without DB credentials.
@@ -15,7 +24,7 @@ if (!STATIC && HAS_DB_CREDS) {
   initDb();
 }
 
-export const handle: Handle = async ({ event, resolve }) => {
+const appHandle: Handle = async ({ event, resolve }) => {
   const [health, capabilities] = await Promise.all([
     getHealth(event.fetch),
     getCapabilities(event.fetch),
@@ -26,3 +35,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
   return await resolve(event);
 };
+
+export const handle = sequence(Sentry.sentryHandle(), appHandle);
+
+export const handleError = Sentry.handleErrorWithSentry();
