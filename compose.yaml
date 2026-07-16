@@ -22,6 +22,7 @@ services:
     build: ./backend
     environment:
       SENTRY_DSN: '${SENTRY_DSN:-}'
+      SENTRY_ENVIRONMENT: '${SENTRY_ENVIRONMENT:-production}'
     ports:
       - 50051:50051
 

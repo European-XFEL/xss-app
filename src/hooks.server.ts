@@ -5,6 +5,7 @@ import { sequence } from '@sveltejs/kit/hooks';
 
 import { DB_HOST, DB_NAME, DB_PASSWORD, DB_USER } from '$app/env/private';
 import { PUBLIC_SENTRY_DSN, PUBLIC_TARGET } from '$app/env/public';
+import { dev } from '$app/environment';
 
 import { initDb } from '$lib/server/db';
 import { getCapabilities, getHealth } from '$lib/server/health';
@@ -12,6 +13,7 @@ import { getCapabilities, getHealth } from '$lib/server/health';
 Sentry.init({
   dsn: PUBLIC_SENTRY_DSN,
   enabled: Boolean(PUBLIC_SENTRY_DSN),
+  environment: dev ? 'development' : 'production',
   tracesSampleRate: 1.0,
 });
 
