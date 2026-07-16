@@ -15,6 +15,7 @@ dependencies = [
     "pydantic>=2.12.5",
     "pyfai>=2025.3.0",
     "scipy>=1.16.3",
+    "sentry-sdk>=2.65.0",
     "simex-debye",
     "simex-lite",
     "starlette>=0.52.1",

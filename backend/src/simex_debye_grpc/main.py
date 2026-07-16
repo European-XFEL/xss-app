@@ -1,5 +1,7 @@
+import os
 from typing import Annotated
 
+import sentry_sdk
 from starlette.applications import Starlette
 from starlette.responses import PlainTextResponse
 from starlette.routing import Route, Mount
@@ -16,6 +18,9 @@ from .gen.simulation_pb2 import (
     SolventInfoRequest,
     SolventInfoResponse,
 )
+
+# Disabled when SENTRY_DSN is unset; the Starlette integration auto-enables.
+sentry_sdk.init(dsn=os.environ.get("SENTRY_DSN"), traces_sample_rate=1.0)
 
 
 class QRange(BaseModel):
@@ -68,6 +73,7 @@ class SimulationService(simulation_connect.SimulationService):
             ) from exc
 
         return SolventInfoResponse(rhom=rhom, cpm=cpm)
+
 
 async def healthz(_request):
     return PlainTextResponse("ok", status_code=200)
