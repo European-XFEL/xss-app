@@ -78,7 +78,9 @@
 
   function saveEdit(value: string) {
     if (editingCell) {
-      const finalValue =
+      // TODO: persist the edit; value coercion (atomCount → int) lives here
+      // once the save path exists.
+      const _finalValue =
         editingCell.field === 'atomCount'
           ? Number.parseInt(value) || 0
           : value || null;
