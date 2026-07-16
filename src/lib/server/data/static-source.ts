@@ -24,6 +24,7 @@ import type {
   DebyeResult,
   MoleculeFileContent,
   MoleculeInfo,
+  MutationResult,
   SimRequest,
   SolventIQ,
   SolventInfo,
@@ -31,6 +32,8 @@ import type {
 } from '$lib/shared/contracts';
 
 import type {
+  EditMoleculeFileInput,
+  EditMoleculeInput,
   MoleculeDataSource,
   SimulationDataSource,
   SolventDataSource,
@@ -169,6 +172,22 @@ export const staticMoleculeSource: MoleculeDataSource = {
       success: false,
       result: null,
       error: 'Uploading molecules is not supported in the static build.',
+    };
+  },
+
+  async editMoleculeFile(
+    _input: EditMoleculeFileInput,
+  ): Promise<MutationResult> {
+    return {
+      success: false,
+      error: 'Editing molecules is not supported in the static build.',
+    };
+  },
+
+  async editMolecule(_input: EditMoleculeInput): Promise<MutationResult> {
+    return {
+      success: false,
+      error: 'Editing molecules is not supported in the static build.',
     };
   },
 };

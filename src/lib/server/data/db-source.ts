@@ -4,7 +4,7 @@
  * This module implements the data source interfaces by querying the
  * Postgres database through the existing Drizzle setup.
  */
-import { DrizzleQueryError } from 'drizzle-orm';
+import { DrizzleQueryError, eq } from 'drizzle-orm';
 import Papa from 'papaparse';
 
 import { error } from '@sveltejs/kit';
@@ -24,6 +24,7 @@ import type {
   DebyeResult,
   MoleculeFileContent,
   MoleculeInfo,
+  MutationResult,
   SimRequest,
   SolventIQ,
   SolventInfo,
@@ -31,6 +32,8 @@ import type {
 } from '$lib/shared/contracts';
 
 import type {
+  EditMoleculeFileInput,
+  EditMoleculeInput,
   MoleculeDataSource,
   SimulationDataSource,
   SolventDataSource,
@@ -141,6 +144,44 @@ export const dbMoleculeSource: MoleculeDataSource = {
       }
       throw err;
     }
+  },
+
+  async editMoleculeFile(
+    input: EditMoleculeFileInput,
+  ): Promise<MutationResult> {
+    const updated = await db
+      .update(schema.moleculeFiles)
+      .set({
+        filename: input.filename,
+        description: input.description,
+        state: input.state,
+        reference: input.reference,
+      })
+      .where(eq(schema.moleculeFiles.id, input.id))
+      .returning({ id: schema.moleculeFiles.id });
+
+    if (updated.length === 0) {
+      return { success: false, error: 'Structure file not found.' };
+    }
+    return { success: true };
+  },
+
+  async editMolecule(input: EditMoleculeInput): Promise<MutationResult> {
+    // Header fields are shared by every structure file of the molecule, so
+    // update all rows carrying the original name in one statement.
+    const updated = await db
+      .update(schema.moleculeFiles)
+      .set({
+        moleculeName: input.moleculeName,
+        atomCount: input.atomCount,
+      })
+      .where(eq(schema.moleculeFiles.moleculeName, input.originalName))
+      .returning({ id: schema.moleculeFiles.id });
+
+    if (updated.length === 0) {
+      return { success: false, error: 'Molecule not found.' };
+    }
+    return { success: true };
   },
 };
 

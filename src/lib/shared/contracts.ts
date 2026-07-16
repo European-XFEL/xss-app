@@ -32,6 +32,11 @@ export type UploadMoleculeResult =
   | { success: true; result: MoleculeInfo; error?: undefined }
   | { success: false; result: null; error: string };
 
+/** Result of edit mutations (molecule header / structure file). */
+export type MutationResult =
+  | { success: true; error?: undefined }
+  | { success: false; error: string };
+
 /**
  * Upload limits enforced on both sides: client-side for a friendly error,
  * server-side as the authoritative check. The Debye computation is

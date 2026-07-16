@@ -10,6 +10,7 @@ import type {
   DebyeResult,
   MoleculeFileContent,
   MoleculeInfo,
+  MutationResult,
   SimRequest,
   SolventIQ,
   SolventInfo,
@@ -27,10 +28,27 @@ export interface UploadMoleculeInput {
   file: File;
 }
 
+export interface EditMoleculeFileInput {
+  id: string;
+  filename: string;
+  description: string;
+  state: number;
+  reference: string | null;
+}
+
+/** Header fields shared by all structure files of a molecule. */
+export interface EditMoleculeInput {
+  originalName: string;
+  moleculeName: string;
+  atomCount: number;
+}
+
 export interface MoleculeDataSource {
   listMolecules(): Promise<MoleculeInfo[]>;
   getMoleculeFileContent(id: string): Promise<MoleculeFileContent>;
   uploadMolecule(input: UploadMoleculeInput): Promise<UploadMoleculeResult>;
+  editMoleculeFile(input: EditMoleculeFileInput): Promise<MutationResult>;
+  editMolecule(input: EditMoleculeInput): Promise<MutationResult>;
 }
 
 // ─── Solvent types ──────────────────────────────────────────────────────────

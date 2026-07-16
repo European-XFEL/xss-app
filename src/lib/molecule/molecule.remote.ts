@@ -25,8 +25,16 @@ import { PUBLIC_TARGET } from '$app/env/public';
 import { form, prerender, query } from '$app/server';
 
 import { moleculeSource } from '$lib/server/data';
-import { idSchema, uploadMoleculeSchema } from '$lib/shared/api/validation';
-import type { UploadMoleculeResult } from '$lib/shared/contracts';
+import {
+  editMoleculeFileSchema,
+  editMoleculeSchema,
+  idSchema,
+  uploadMoleculeSchema,
+} from '$lib/shared/api/validation';
+import type {
+  MutationResult,
+  UploadMoleculeResult,
+} from '$lib/shared/contracts';
 
 const STATIC = PUBLIC_TARGET === 'static';
 
@@ -98,6 +106,52 @@ export const uploadMolecule = form(
       });
     }
 
+    return result;
+  },
+);
+
+export const editMoleculeFile = form(
+  editMoleculeFileSchema,
+  async (data): Promise<MutationResult> => {
+    if (STATIC) {
+      return {
+        success: false,
+        error: 'Editing molecules is not supported in the static build.',
+      };
+    }
+
+    const result = await moleculeSource.editMoleculeFile({
+      id: data.id,
+      filename: data.filename,
+      description: data.description,
+      state: data.state,
+      reference: data.reference?.trim() ? data.reference.trim() : null,
+    });
+
+    // Single-flight mutation, same rationale as uploadMolecule above.
+    if (result.success) void listMoleculesQuery().refresh();
+    return result;
+  },
+);
+
+export const editMolecule = form(
+  editMoleculeSchema,
+  async (data): Promise<MutationResult> => {
+    if (STATIC) {
+      return {
+        success: false,
+        error: 'Editing molecules is not supported in the static build.',
+      };
+    }
+
+    const result = await moleculeSource.editMolecule({
+      originalName: data.originalName,
+      moleculeName: data.moleculeName,
+      atomCount: data.atomCount,
+    });
+
+    // Single-flight mutation, same rationale as uploadMolecule above.
+    if (result.success) void listMoleculesQuery().refresh();
     return result;
   },
 );
