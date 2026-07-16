@@ -107,3 +107,19 @@ bd prime                # Refresh Beads context
 - Run `bd prime` when Beads context is missing or stale.
 - Keep persistent project memory in Beads via `bd remember`; do not create ad hoc memory files.
 <!-- END BEADS CODEX SETUP -->
+
+## Multi-agent orchestration
+
+When orchestrating subagents (Agent tool) across related beads:
+
+- Reuse an existing subagent (`SendMessage` to its name) for a related follow-on bead
+  instead of spawning a fresh one — it already carries relevant context. Spawn a new
+  agent only when the task needs different scope, or the existing agent's context is
+  getting full (~75%+).
+- Claim a bead before dispatching its agent (`bd update <id> --claim`), and set
+  `--assignee` to the subagent's name for traceability.
+- Use `needs-review` / `blocked` labels (`bd label`) rather than prose notes when a bead
+  needs human attention — queryable later via `bd list --label`.
+- `bd merge-slot acquire/release` serializes concurrent committers when multiple agents
+  commit independently. Not needed when a single orchestrator performs all commits on
+  the agents' behalf (no concurrent-writer race to arbitrate).
