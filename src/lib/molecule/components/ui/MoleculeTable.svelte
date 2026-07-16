@@ -1,12 +1,12 @@
 <script lang="ts">
   import type { Molecule, MoleculeDialogIntent, Molecules } from '../../types';
+  import MoleculeFormDialog from '../MoleculeFormDialog.svelte';
   import {
     type GroupRow,
     type MoleculeRow,
     type TableRow,
     createMoleculeColumns,
   } from '../columns';
-  import MoleculeFormDialog from '../MoleculeFormDialog.svelte';
   import {
     type ColumnFiltersState,
     type SortingState,
@@ -117,7 +117,8 @@
             moleculeName: group.moleculeName,
             atomCount: group.atomCount,
           }),
-        onAddFile: (moleculeName) => openDialog({ mode: 'create', moleculeName }),
+        onAddFile: (moleculeName) =>
+          openDialog({ mode: 'create', moleculeName }),
         onEditFile: (molecule) => openDialog({ mode: 'edit-file', molecule }),
       },
     }),

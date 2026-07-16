@@ -34,8 +34,7 @@ export type UploadMoleculeResult =
 
 /** Result of edit mutations (molecule header / structure file). */
 export type MutationResult =
-  | { success: true; error?: undefined }
-  | { success: false; error: string };
+  { success: true; error?: undefined } | { success: false; error: string };
 
 /**
  * Upload limits enforced on both sides: client-side for a friendly error,
