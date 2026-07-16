@@ -22,13 +22,17 @@
 import * as Sentry from '@sentry/sveltekit';
 
 import { PUBLIC_TARGET } from '$app/env/public';
-import { form, prerender, query } from '$app/server';
+import { command, form, prerender, query } from '$app/server';
 
 import { moleculeSource } from '$lib/server/data';
 import {
+  deleteMoleculeFileSchema,
+  deleteMoleculeSchema,
+  editMoleculeFileContentsSchema,
   editMoleculeFileSchema,
   editMoleculeSchema,
   idSchema,
+  replaceMoleculeFileSchema,
   uploadMoleculeSchema,
 } from '$lib/shared/api/validation';
 import type {
@@ -147,10 +151,79 @@ export const editMolecule = form(
     const result = await moleculeSource.editMolecule({
       originalName: data.originalName,
       moleculeName: data.moleculeName,
-      atomCount: data.atomCount,
     });
 
     // Single-flight mutation, same rationale as uploadMolecule above.
+    if (result.success) void listMoleculesQuery().refresh();
+    return result;
+  },
+);
+
+export const deleteMoleculeFile = command(
+  deleteMoleculeFileSchema,
+  async ({ id }): Promise<MutationResult> => {
+    if (STATIC) {
+      return {
+        success: false,
+        error: 'Deleting molecules is not supported in the static build.',
+      };
+    }
+
+    const result = await moleculeSource.deleteMoleculeFile(id);
+    if (result.success) void listMoleculesQuery().refresh();
+    return result;
+  },
+);
+
+export const deleteMolecule = command(
+  deleteMoleculeSchema,
+  async ({ originalName }): Promise<MutationResult> => {
+    if (STATIC) {
+      return {
+        success: false,
+        error: 'Deleting molecules is not supported in the static build.',
+      };
+    }
+
+    const result = await moleculeSource.deleteMolecule(originalName);
+    if (result.success) void listMoleculesQuery().refresh();
+    return result;
+  },
+);
+
+export const editMoleculeFileContents = command(
+  editMoleculeFileContentsSchema,
+  async ({ id, contents }): Promise<MutationResult> => {
+    if (STATIC) {
+      return {
+        success: false,
+        error: 'Editing molecules is not supported in the static build.',
+      };
+    }
+
+    const result = await moleculeSource.editMoleculeFileContents({
+      id,
+      contents,
+    });
+    if (result.success) void listMoleculesQuery().refresh();
+    return result;
+  },
+);
+
+export const replaceMoleculeFile = form(
+  replaceMoleculeFileSchema,
+  async (data): Promise<MutationResult> => {
+    if (STATIC) {
+      return {
+        success: false,
+        error: 'Editing molecules is not supported in the static build.',
+      };
+    }
+
+    const result = await moleculeSource.replaceMoleculeFile({
+      id: data.id,
+      file: data.file,
+    });
     if (result.success) void listMoleculesQuery().refresh();
     return result;
   },

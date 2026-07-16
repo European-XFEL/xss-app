@@ -32,9 +32,11 @@ import type {
 } from '$lib/shared/contracts';
 
 import type {
+  EditMoleculeFileContentsInput,
   EditMoleculeFileInput,
   EditMoleculeInput,
   MoleculeDataSource,
+  ReplaceMoleculeFileInput,
   SimulationDataSource,
   SolventDataSource,
   UploadMoleculeInput,
@@ -98,6 +100,9 @@ function toMoleculeInfo(record: MoleculeRecord): MoleculeInfo {
     state: record.state,
     reference: record.reference,
     atomCount: record.atomCount,
+    // The static build has no mutation path at all, so every demo record is
+    // read-only.
+    readOnly: true,
     createdAt: new Date(record.createdAt),
     updatedAt: parseDate(record.updatedAt),
   };
@@ -185,6 +190,38 @@ export const staticMoleculeSource: MoleculeDataSource = {
   },
 
   async editMolecule(_input: EditMoleculeInput): Promise<MutationResult> {
+    return {
+      success: false,
+      error: 'Editing molecules is not supported in the static build.',
+    };
+  },
+
+  async deleteMoleculeFile(_id: string): Promise<MutationResult> {
+    return {
+      success: false,
+      error: 'Deleting molecules is not supported in the static build.',
+    };
+  },
+
+  async deleteMolecule(_originalName: string): Promise<MutationResult> {
+    return {
+      success: false,
+      error: 'Deleting molecules is not supported in the static build.',
+    };
+  },
+
+  async editMoleculeFileContents(
+    _input: EditMoleculeFileContentsInput,
+  ): Promise<MutationResult> {
+    return {
+      success: false,
+      error: 'Editing molecules is not supported in the static build.',
+    };
+  },
+
+  async replaceMoleculeFile(
+    _input: ReplaceMoleculeFileInput,
+  ): Promise<MutationResult> {
     return {
       success: false,
       error: 'Editing molecules is not supported in the static build.',

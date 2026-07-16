@@ -4,7 +4,7 @@
  * This module implements the data source interfaces by querying the
  * Postgres database through the existing Drizzle setup.
  */
-import { DrizzleQueryError, eq } from 'drizzle-orm';
+import { DrizzleQueryError, eq, inArray } from 'drizzle-orm';
 import Papa from 'papaparse';
 
 import { error } from '@sveltejs/kit';
@@ -32,9 +32,11 @@ import type {
 } from '$lib/shared/contracts';
 
 import type {
+  EditMoleculeFileContentsInput,
   EditMoleculeFileInput,
   EditMoleculeInput,
   MoleculeDataSource,
+  ReplaceMoleculeFileInput,
   SimulationDataSource,
   SolventDataSource,
   UploadMoleculeInput,
@@ -73,6 +75,128 @@ function extractAtomCount(contents: string) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+/**
+ * Derive the atom count for new file contents, falling back to
+ * `fallback` (the client-declared value, upload only) when the first line
+ * can't be parsed. Shared by uploadMolecule and the contents-mutation
+ * methods below, which have no fallback and error instead.
+ */
+function deriveAtomCount(
+  contents: string,
+  fallback: number | null = null,
+): { ok: true; atomCount: number } | { ok: false; error: string } {
+  const resolved = extractAtomCount(contents) ?? fallback;
+  if (resolved === null) {
+    return {
+      ok: false,
+      error: 'Unable to read the atom count from this file.',
+    };
+  }
+  if (resolved > MAX_UPLOAD_ATOM_COUNT) {
+    return {
+      ok: false,
+      error: `Structure has too many atoms (${resolved}); the maximum is ${MAX_UPLOAD_ATOM_COUNT}.`,
+    };
+  }
+  return { ok: true, atomCount: resolved };
+}
+
+/** Reject edits/deletes of a read-only structure file, distinct from not-found. */
+async function checkFileEditable(
+  id: string,
+): Promise<{ ok: true } | { ok: false; result: MutationResult }> {
+  const row = await db.query.moleculeFiles.findFirst({
+    where: { id },
+    columns: { readOnly: true },
+  });
+  if (!row) {
+    return {
+      ok: false,
+      result: { success: false, error: 'Structure file not found.' },
+    };
+  }
+  if (row.readOnly) {
+    return {
+      ok: false,
+      result: {
+        success: false,
+        error: 'This structure file is read-only and cannot be modified.',
+      },
+    };
+  }
+  return { ok: true };
+}
+
+/** Same as `checkFileEditable`, for every file sharing a molecule name. */
+async function checkMoleculeEditable(
+  moleculeName: string,
+): Promise<
+  { ok: true; ids: string[] } | { ok: false; result: MutationResult }
+> {
+  const rows = await db.query.moleculeFiles.findMany({
+    where: { moleculeName },
+    columns: { id: true, readOnly: true },
+  });
+  if (rows.length === 0) {
+    return {
+      ok: false,
+      result: { success: false, error: 'Molecule not found.' },
+    };
+  }
+  if (rows.some((row) => row.readOnly)) {
+    return {
+      ok: false,
+      result: {
+        success: false,
+        error: 'This molecule is read-only and cannot be modified.',
+      },
+    };
+  }
+  return { ok: true, ids: rows.map((row) => row.id) };
+}
+
+/**
+ * Recompute sha/atomCount for new contents, write them (and `filename` when
+ * given), and drop the file's cached intensities — shared by
+ * editMoleculeFileContents and replaceMoleculeFile.
+ */
+async function updateFileContents(
+  id: string,
+  contents: string,
+  filename?: string,
+): Promise<MutationResult> {
+  const derived = deriveAtomCount(contents);
+  if (!derived.ok) {
+    return { success: false, error: derived.error };
+  }
+
+  const sha = await sha256HexFromText(contents);
+  try {
+    await db
+      .update(schema.moleculeFiles)
+      .set({
+        contents,
+        sha,
+        atomCount: derived.atomCount,
+        ...(filename ? { filename } : {}),
+      })
+      .where(eq(schema.moleculeFiles.id, id));
+  } catch (err) {
+    if (isUniqueViolation(err)) {
+      return {
+        success: false,
+        error: 'A structure file with identical contents already exists.',
+      };
+    }
+    throw err;
+  }
+
+  await db
+    .delete(schema.intensities)
+    .where(eq(schema.intensities.moleculeId, id));
+  return { success: true };
+}
+
 // ─── Molecule Data Source ───────────────────────────────────────────────────
 
 export const dbMoleculeSource: MoleculeDataSource = {
@@ -105,18 +229,13 @@ export const dbMoleculeSource: MoleculeDataSource = {
     input: UploadMoleculeInput,
   ): Promise<UploadMoleculeResult> {
     const contents = await input.file.text();
-    const derivedAtomCount = extractAtomCount(contents);
-    const resolvedAtomCount = derivedAtomCount ?? input.atomCount;
-
     // Authoritative cap on the count derived from the file itself — the
     // route-level check only sees the client-declared value.
-    if (resolvedAtomCount > MAX_UPLOAD_ATOM_COUNT) {
-      return {
-        success: false,
-        result: null,
-        error: `Structure has too many atoms (${resolvedAtomCount}); the maximum is ${MAX_UPLOAD_ATOM_COUNT}.`,
-      };
+    const derived = deriveAtomCount(contents, input.atomCount);
+    if (!derived.ok) {
+      return { success: false, result: null, error: derived.error };
     }
+    const resolvedAtomCount = derived.atomCount;
 
     const sha = await sha256HexFromText(contents);
 
@@ -155,7 +274,10 @@ export const dbMoleculeSource: MoleculeDataSource = {
   async editMoleculeFile(
     input: EditMoleculeFileInput,
   ): Promise<MutationResult> {
-    const updated = await db
+    const check = await checkFileEditable(input.id);
+    if (!check.ok) return check.result;
+
+    await db
       .update(schema.moleculeFiles)
       .set({
         filename: input.filename,
@@ -163,31 +285,66 @@ export const dbMoleculeSource: MoleculeDataSource = {
         state: input.state,
         reference: input.reference,
       })
-      .where(eq(schema.moleculeFiles.id, input.id))
-      .returning({ id: schema.moleculeFiles.id });
-
-    if (updated.length === 0) {
-      return { success: false, error: 'Structure file not found.' };
-    }
+      .where(eq(schema.moleculeFiles.id, input.id));
     return { success: true };
   },
 
   async editMolecule(input: EditMoleculeInput): Promise<MutationResult> {
+    const check = await checkMoleculeEditable(input.originalName);
+    if (!check.ok) return check.result;
+
     // Header fields are shared by every structure file of the molecule, so
     // update all rows carrying the original name in one statement.
-    const updated = await db
+    await db
       .update(schema.moleculeFiles)
-      .set({
-        moleculeName: input.moleculeName,
-        atomCount: input.atomCount,
-      })
-      .where(eq(schema.moleculeFiles.moleculeName, input.originalName))
-      .returning({ id: schema.moleculeFiles.id });
-
-    if (updated.length === 0) {
-      return { success: false, error: 'Molecule not found.' };
-    }
+      .set({ moleculeName: input.moleculeName })
+      .where(eq(schema.moleculeFiles.moleculeName, input.originalName));
     return { success: true };
+  },
+
+  async deleteMoleculeFile(id: string): Promise<MutationResult> {
+    const check = await checkFileEditable(id);
+    if (!check.ok) return check.result;
+
+    await db
+      .delete(schema.intensities)
+      .where(eq(schema.intensities.moleculeId, id));
+    await db
+      .delete(schema.moleculeFiles)
+      .where(eq(schema.moleculeFiles.id, id));
+    return { success: true };
+  },
+
+  async deleteMolecule(originalName: string): Promise<MutationResult> {
+    const check = await checkMoleculeEditable(originalName);
+    if (!check.ok) return check.result;
+
+    await db
+      .delete(schema.intensities)
+      .where(inArray(schema.intensities.moleculeId, check.ids));
+    await db
+      .delete(schema.moleculeFiles)
+      .where(eq(schema.moleculeFiles.moleculeName, originalName));
+    return { success: true };
+  },
+
+  async editMoleculeFileContents(
+    input: EditMoleculeFileContentsInput,
+  ): Promise<MutationResult> {
+    const check = await checkFileEditable(input.id);
+    if (!check.ok) return check.result;
+
+    return updateFileContents(input.id, input.contents);
+  },
+
+  async replaceMoleculeFile(
+    input: ReplaceMoleculeFileInput,
+  ): Promise<MutationResult> {
+    const check = await checkFileEditable(input.id);
+    if (!check.ok) return check.result;
+
+    const contents = await input.file.text();
+    return updateFileContents(input.id, contents, input.file.name);
   },
 };
 
