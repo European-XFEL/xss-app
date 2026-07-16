@@ -5,4 +5,7 @@ export { default as MoleculeCardSelection } from './components/MoleculeCardSelec
 export { default as MoleculeViz } from './components/ui/MoleculeViz.svelte';
 export { default as MoleculeTrajectoryViz } from './components/ui/MoleculeTrajectoryViz.svelte';
 
+// Client-facing molecule reads, target-switched (remote vs. local IndexedDB).
+export { listMolecules } from './molecule-source.svelte';
+
 export type * from './types.ts';
