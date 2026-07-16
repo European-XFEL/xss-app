@@ -110,6 +110,7 @@ async function seedMolecules(directory: string) {
             filename,
             contents,
             sha,
+            readOnly: true,
           })
           .onConflictDoUpdate({
             target: schema.moleculeFiles.sha,
@@ -120,6 +121,7 @@ async function seedMolecules(directory: string) {
               reference,
               state,
               filename,
+              readOnly: true,
             },
           });
       }),

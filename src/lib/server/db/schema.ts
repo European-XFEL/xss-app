@@ -1,6 +1,7 @@
 import { init } from '@paralleldrive/cuid2';
 import { getColumns } from 'drizzle-orm';
 import {
+  boolean,
   char,
   integer,
   numeric,
@@ -46,6 +47,10 @@ export const moleculeFiles = pgTable('moleculeFiles', {
   description: text().notNull(),
   state: integer().notNull(),
   reference: text(),
+  // Seed-provided example files; blocks every edit/delete/content mutation
+  // server-side (see $lib/server/data/db-source.ts) — never settable via a
+  // remote function.
+  readOnly: boolean().notNull().default(false),
   ...fileData,
   ...timestamps,
 });
