@@ -95,7 +95,15 @@ export const deleteMoleculeSchema = z.object({
 
 export const editMoleculeFileContentsSchema = z.object({
   id: idSchema,
-  contents: z.string().min(1, 'Contents are required'),
+  // Same cap as the upload/replace file paths — direct text edits must not
+  // be able to smuggle in an oversized payload.
+  contents: z
+    .string()
+    .min(1, 'Contents are required')
+    .max(
+      MAX_UPLOAD_FILE_BYTES,
+      `Contents are too large; the maximum is ${Math.floor(MAX_UPLOAD_FILE_BYTES / 1024)} kB`,
+    ),
 });
 
 export const replaceMoleculeFileSchema = z.object({

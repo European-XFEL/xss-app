@@ -10,13 +10,19 @@
   import * as Textarea from '$shadcn/ui/textarea/index.js';
 
   import {
+    deleteMolecule,
+    deleteMoleculeFile,
     editMolecule,
     editMoleculeFile,
+    editMoleculeFileContents,
+    getMoleculeFileContent,
+    replaceMoleculeFile,
     uploadMolecule,
   } from '$lib/molecule/molecule.remote';
   import {
     editMoleculeFileSchema,
     editMoleculeSchema,
+    replaceMoleculeFileSchema,
     uploadMoleculeSchema,
   } from '$lib/shared/api/validation';
   import {
@@ -42,6 +48,38 @@
   let fileReadToken = 0;
   let file = $state<File | null>(null);
 
+  // Delete flow (edit modes): a nested confirm dialog guards the command.
+  let confirmDeleteOpen = $state(false);
+  let deleting = $state(false);
+
+  // Contents preview / in-place editing (edit-file mode). `contents === null`
+  // means still loading; the token discards stale loads across reopens.
+  let contents = $state<string | null>(null);
+  let contentsError = $state<string | null>(null);
+  let contentsToken = 0;
+  let editingContents = $state(false);
+  let draftContents = $state('');
+  let savingContents = $state(false);
+  let replaceInput = $state<HTMLInputElement | null>(null);
+
+  // All structure files sharing the molecule name (edit-molecule mode only).
+  const groupFiles = $derived(
+    intent.mode === 'edit-molecule'
+      ? (molecules ?? []).filter((m) => m.moleculeName === intent.moleculeName)
+      : [],
+  );
+
+  // Viewer mode. The server rejects molecule-level mutations when ANY file
+  // is read-only (checkMoleculeEditable in db-source.ts), so mirror that
+  // here rather than requiring every file to be read-only.
+  const readOnly = $derived(
+    intent.mode === 'edit-file'
+      ? intent.molecule.readOnly
+      : intent.mode === 'edit-molecule'
+        ? groupFiles.some((m) => m.readOnly)
+        : false,
+  );
+
   // One dialog, three modes sharing chrome / footer / error handling. The
   // edit modes use `.for(...)` instances so drafts are isolated per entity.
   const fileForm = $derived(
@@ -54,11 +92,17 @@
       ? editMolecule.for(intent.moleculeName)
       : null,
   );
+  const replaceForm = $derived(
+    intent.mode === 'edit-file'
+      ? replaceMoleculeFile.for(intent.molecule.id)
+      : null,
+  );
 
   const submitting = $derived(
     uploadMolecule.pending > 0 ||
       (fileForm?.pending ?? 0) > 0 ||
-      (molForm?.pending ?? 0) > 0,
+      (molForm?.pending ?? 0) > 0 ||
+      (replaceForm?.pending ?? 0) > 0,
   );
 
   function reportResult(result: { success?: boolean; error?: string } | null) {
@@ -117,12 +161,85 @@
     });
   });
 
+  // The replace form is hidden and auto-submitted from the file input's
+  // onchange, so its validation issues surface via submitError instead of
+  // inline field errors.
+  const replaceFormProps = $derived.by(() => {
+    const form = replaceForm;
+    if (!form) return null;
+    return form.preflight(replaceMoleculeFileSchema).enhance(async (f) => {
+      submitError = null;
+      try {
+        if (!(await f.submit())) {
+          submitError =
+            form.fields.allIssues()?.[0]?.message ?? 'Invalid file.';
+          return;
+        }
+        // The replaced file's name/contents/atom count all changed; close so
+        // the reopened dialog snapshots fresh values from the table.
+        reportResult(form.result ?? null);
+      } catch (err) {
+        submitError = err instanceof Error ? err.message : 'Replace failed';
+      }
+    });
+  });
+
+  async function confirmDelete() {
+    deleting = true;
+    submitError = null;
+    try {
+      const result =
+        intent.mode === 'edit-file'
+          ? await deleteMoleculeFile({ id: intent.molecule.id })
+          : intent.mode === 'edit-molecule'
+            ? await deleteMolecule({ originalName: intent.moleculeName })
+            : null;
+      if (!result) return;
+      confirmDeleteOpen = false;
+      if (result.success) open = false;
+      else submitError = result.error;
+    } catch (err) {
+      confirmDeleteOpen = false;
+      submitError = err instanceof Error ? err.message : 'Delete failed';
+    } finally {
+      deleting = false;
+    }
+  }
+
+  async function saveContents() {
+    if (intent.mode !== 'edit-file') return;
+    if (draftContents.length > MAX_UPLOAD_FILE_BYTES) {
+      submitError = `Contents are too large; the maximum is ${Math.floor(MAX_UPLOAD_FILE_BYTES / 1024)} kB.`;
+      return;
+    }
+    savingContents = true;
+    submitError = null;
+    try {
+      const result = await editMoleculeFileContents({
+        id: intent.molecule.id,
+        contents: draftContents,
+      });
+      if (result.success) {
+        contents = draftContents;
+        editingContents = false;
+      } else {
+        submitError = result.error;
+      }
+    } catch (err) {
+      submitError = err instanceof Error ? err.message : 'Save failed';
+    } finally {
+      savingContents = false;
+    }
+  }
+
   // Draft semantics: each open starts from the current entity values, so a
   // cancelled edit (Esc / Cancel) is discarded rather than lingering.
   $effect(() => {
     if (!open) return;
     submitError = null;
     fileError = null;
+    confirmDeleteOpen = false;
+    editingContents = false;
     if (intent.mode === 'edit-file') {
       fileForm?.fields.set({
         id: intent.molecule.id,
@@ -131,6 +248,18 @@
         state: intent.molecule.state,
         reference: intent.molecule.reference ?? '',
       });
+      contents = null;
+      contentsError = null;
+      const token = ++contentsToken;
+      getMoleculeFileContent(intent.molecule.id).then(
+        (c) => {
+          if (token === contentsToken) contents = c.contents;
+        },
+        () => {
+          if (token === contentsToken)
+            contentsError = 'Unable to load the file contents.';
+        },
+      );
     } else if (intent.mode === 'edit-molecule') {
       molForm?.fields.set({
         originalName: intent.moleculeName,
@@ -143,9 +272,9 @@
 
   const title = $derived.by(() => {
     if (intent.mode === 'edit-file')
-      return `Edit Structure File — ${intent.molecule.filename}`;
+      return `${readOnly ? 'Structure File' : 'Edit Structure File'} — ${intent.molecule.filename}`;
     if (intent.mode === 'edit-molecule')
-      return `Edit Molecule — ${intent.moleculeName}`;
+      return `${readOnly ? 'Molecule' : 'Edit Molecule'} — ${intent.moleculeName}`;
     if (intent.moleculeName)
       return `Add Structure File — ${intent.moleculeName}`;
     return 'Upload Molecule File';
@@ -153,9 +282,13 @@
 
   const description = $derived.by(() => {
     if (intent.mode === 'edit-file')
-      return 'Update the metadata of this structure file.';
+      return readOnly
+        ? 'This structure file is read-only.'
+        : 'Update the metadata or contents of this structure file.';
     if (intent.mode === 'edit-molecule')
-      return "Update the fields shared by all of this molecule's structure files.";
+      return readOnly
+        ? 'This molecule is read-only.'
+        : "Update the fields shared by all of this molecule's structure files.";
     return 'Upload an XYZ file containing molecular structure data.';
   });
 
@@ -238,16 +371,31 @@
   }
 </script>
 
-{#snippet formFooter(submitLabel: string)}
+{#snippet formFooter(submitLabel: string, formId?: string)}
   {#if submitError}
     <div class="text-sm text-destructive">{submitError}</div>
   {/if}
 
   <Dialog.Footer>
+    {#if intent.mode === 'edit-file' || intent.mode === 'edit-molecule'}
+      <Button.Root
+        type="button"
+        variant="destructive"
+        class="mr-auto"
+        disabled={readOnly || deleting || submitting}
+        onclick={() => (confirmDeleteOpen = true)}
+      >
+        {intent.mode === 'edit-file' ? 'Delete file' : 'Delete molecule'}
+      </Button.Root>
+    {/if}
     <Dialog.Close class={buttonVariants({ variant: 'outline' })}>
-      Cancel
+      {readOnly ? 'Close' : 'Cancel'}
     </Dialog.Close>
-    <Button.Root type="submit" disabled={submitting || nameConflict}>
+    <Button.Root
+      type="submit"
+      form={formId}
+      disabled={submitting || nameConflict || readOnly}
+    >
       {#if submitting}
         <Spinner class="mr-2 h-4 w-4 animate-spin" />
       {/if}
@@ -384,7 +532,15 @@
       </form>
     {:else if intent.mode === 'edit-file' && fileForm && fileFormProps}
       {@const fields = fileForm.fields}
-      <form {...fileFormProps} class="grid gap-6">
+      <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        <span>{intent.molecule.atomCount} atoms</span>
+        <span>Created {intent.molecule.createdAt.toLocaleString()}</span>
+        {#if intent.molecule.updatedAt}
+          <span>Updated {intent.molecule.updatedAt.toLocaleString()}</span>
+        {/if}
+      </div>
+
+      <form {...fileFormProps} id="edit-file-metadata-form" class="grid gap-6">
         <input {...fields.id.as('hidden', intent.molecule.id)} />
         <Field.Group class="grid gap-4">
           <Field.Field
@@ -392,7 +548,7 @@
           >
             <Field.FieldLabel>Filename</Field.FieldLabel>
             <Field.Content>
-              <Input {...fields.filename.as('text')} />
+              <Input {...fields.filename.as('text')} disabled={readOnly} />
             </Field.Content>
             {#each fields.filename.issues() ?? [] as issue (issue.message)}
               <Field.Error>{issue.message}</Field.Error>
@@ -408,6 +564,7 @@
                 {...fields.description.as('text')}
                 rows={3}
                 placeholder="Describe this structure"
+                disabled={readOnly}
               />
             </Field.Content>
             {#each fields.description.issues() ?? [] as issue (issue.message)}
@@ -418,7 +575,12 @@
           <Field.Field data-invalid={fields.state.issues() ? true : undefined}>
             <Field.FieldLabel>State</Field.FieldLabel>
             <Field.Content>
-              <Input {...fields.state.as('number')} min="0" step="1" />
+              <Input
+                {...fields.state.as('number')}
+                min="0"
+                step="1"
+                disabled={readOnly}
+              />
             </Field.Content>
             <Field.Description
               >Use 0 for ground and 1 for excited.</Field.Description
@@ -436,6 +598,7 @@
               <Input
                 {...fields.reference.as('text')}
                 placeholder="DOI or citation (optional)"
+                disabled={readOnly}
               />
             </Field.Content>
             {#each fields.reference.issues() ?? [] as issue (issue.message)}
@@ -443,13 +606,103 @@
             {/each}
           </Field.Field>
         </Field.Group>
-
-        {@render formFooter('Save changes')}
       </form>
+
+      <Field.Set>
+        <Field.Legend>Contents</Field.Legend>
+        {#if editingContents}
+          <Textarea.Root
+            bind:value={draftContents}
+            rows={10}
+            class="font-mono text-xs"
+          />
+          <div class="flex gap-2">
+            <Button.Root
+              type="button"
+              size="sm"
+              disabled={savingContents}
+              onclick={saveContents}
+            >
+              {#if savingContents}
+                <Spinner class="mr-2 h-4 w-4 animate-spin" />
+              {/if}
+              Save contents
+            </Button.Root>
+            <Button.Root
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={savingContents}
+              onclick={() => (editingContents = false)}
+            >
+              Cancel
+            </Button.Root>
+          </div>
+        {:else}
+          {#if contentsError}
+            <div class="text-sm text-destructive">{contentsError}</div>
+          {:else if contents === null}
+            <Spinner class="h-4 w-4 animate-spin" />
+          {:else}
+            <pre
+              class="max-h-56 overflow-auto rounded-md bg-inset p-3 font-mono text-xs">{contents}</pre>
+          {/if}
+          {#if !readOnly}
+            <div class="flex gap-2">
+              <Button.Root
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={contents === null || submitting}
+                onclick={() => {
+                  draftContents = contents ?? '';
+                  editingContents = true;
+                }}
+              >
+                Edit
+              </Button.Root>
+              <Button.Root
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={submitting}
+                onclick={() => replaceInput?.click()}
+              >
+                Replace file…
+              </Button.Root>
+            </div>
+          {/if}
+        {/if}
+      </Field.Set>
+
+      {#if replaceForm && replaceFormProps}
+        {@const replaceFileProps = replaceForm.fields.file.as('file')}
+        <form
+          {...replaceFormProps}
+          enctype="multipart/form-data"
+          class="hidden"
+        >
+          <input {...replaceForm.fields.id.as('hidden', intent.molecule.id)} />
+          <input
+            bind:this={replaceInput}
+            {...replaceFileProps}
+            files={replaceFileProps.files ?? undefined}
+            accept=".xyz"
+            onchange={(e) => e.currentTarget.form?.requestSubmit()}
+          />
+        </form>
+      {/if}
+
+      {@render formFooter('Save changes', 'edit-file-metadata-form')}
     {:else if intent.mode === 'edit-molecule' && molForm && molFormProps}
       {@const fields = molForm.fields}
       <form {...molFormProps} class="grid gap-6">
         <input {...fields.originalName.as('hidden', intent.moleculeName)} />
+        <div class="text-xs text-muted-foreground">
+          {intent.atomCount} atoms · {groupFiles.length} structure
+          {groupFiles.length === 1 ? 'file' : 'files'} (derived from the files, not
+          editable)
+        </div>
         <Field.Group class="grid gap-4">
           <Field.Field
             data-invalid={nameConflict || fields.moleculeName.issues()
@@ -458,7 +711,7 @@
           >
             <Field.FieldLabel>Molecule Name</Field.FieldLabel>
             <Field.Content>
-              <Input {...fields.moleculeName.as('text')} />
+              <Input {...fields.moleculeName.as('text')} disabled={readOnly} />
             </Field.Content>
             {#if nameConflict}
               <Field.Error
@@ -474,5 +727,45 @@
         {@render formFooter('Save changes')}
       </form>
     {/if}
+  </Dialog.Content>
+</Dialog.Root>
+
+<!-- Delete confirmation, guarding the deleteMoleculeFile/deleteMolecule
+     commands (both cascade to cached simulation results server-side). -->
+<Dialog.Root bind:open={confirmDeleteOpen}>
+  <Dialog.Content class="sm:max-w-100">
+    <Dialog.Header>
+      <Dialog.Title>
+        {intent.mode === 'edit-file'
+          ? 'Delete structure file?'
+          : 'Delete molecule?'}
+      </Dialog.Title>
+      <Dialog.Description>
+        {#if intent.mode === 'edit-file'}
+          This deletes “{intent.molecule.filename}” and clears any cached
+          simulation results for it. This cannot be undone.
+        {:else if intent.mode === 'edit-molecule'}
+          This deletes “{intent.moleculeName}” and all {groupFiles.length} of its
+          structure {groupFiles.length === 1 ? 'file' : 'files'}, including any
+          cached simulation results. This cannot be undone.
+        {/if}
+      </Dialog.Description>
+    </Dialog.Header>
+    <Dialog.Footer>
+      <Dialog.Close class={buttonVariants({ variant: 'outline' })}>
+        Cancel
+      </Dialog.Close>
+      <Button.Root
+        type="button"
+        variant="destructive"
+        disabled={deleting}
+        onclick={confirmDelete}
+      >
+        {#if deleting}
+          <Spinner class="mr-2 h-4 w-4 animate-spin" />
+        {/if}
+        Delete
+      </Button.Root>
+    </Dialog.Footer>
   </Dialog.Content>
 </Dialog.Root>
