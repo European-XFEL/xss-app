@@ -26,6 +26,9 @@ importers:
       drizzle-orm:
         specifier: 1.0.0-beta.9-e89174b
         version: 1.0.0-beta.9-e89174b(@opentelemetry/api@1.9.1)(@types/mssql@9.1.10)(mssql@11.0.1)(postgres@3.4.9)
+      mode-watcher:
+        specifier: ^1.1.0
+        version: 1.1.0(svelte@5.56.4(@typescript-eslint/types@8.63.0))
       papaparse:
         specifier: ^5.5.4
         version: 5.5.4
@@ -3233,6 +3236,11 @@ packages:
     resolution: {integrity: sha512-tEBHqDnIoM/1rXME1zgka9g6Q2lcoCkxHLuc7ODJ5BxbP5d4c2Z5cGgtXAku59200Cx7diuHTOYfSBD8n6mm8A==}
     engines: {node: '>=16 || 14 >=14.17'}
 
+  mode-watcher@1.1.0:
+    resolution: {integrity: sha512-mUT9RRGPDYenk59qJauN1rhsIMKBmWA3xMF+uRwE8MW/tjhaDSCCARqkSuDTq8vr4/2KcAxIGVjACxTjdk5C3g==}
+    peerDependencies:
+      svelte: ^5.27.0
+
   module-details-from-path@1.0.4:
     resolution: {integrity: sha512-EGWKgxALGMgzvxYF1UyGTy0HXX/2vHLkw6+NvDKW2jypWbHpjQuj4UMcqQWXHERJhVGKikolT06G3bcKe4fi7w==}
 
@@ -3575,6 +3583,11 @@ packages:
     peerDependencies:
       svelte: ^5.7.0
 
+  runed@0.25.0:
+    resolution: {integrity: sha512-7+ma4AG9FT2sWQEA0Egf6mb7PBT2vHyuHail1ie8ropfSjvZGtEAx8YTmUjv/APCsdRRxEVvArNjALk9zFSOrg==}
+    peerDependencies:
+      svelte: ^5.7.0
+
   runed@0.29.2:
     resolution: {integrity: sha512-0cq6cA6sYGZwl/FvVqjx9YN+1xEBu9sDDyuWdDW1yWX7JF2wmvmVKfH+hVCZs+csW+P3ARH92MjI3H9QTagOQA==}
     peerDependencies:
@@ -3764,6 +3777,12 @@ packages:
     engines: {node: '>=18', pnpm: '>=8.7.0'}
     peerDependencies:
       svelte: ^5.30.2
+
+  svelte-toolbelt@0.7.1:
+    resolution: {integrity: sha512-HcBOcR17Vx9bjaOceUvxkY3nGmbBmCBBbuWLLEWO6jtmWH8f/QoWmbyUfQZrpDINH39en1b8mptfPQT9VKQ1xQ==}
+    engines: {node: '>=18', pnpm: '>=8.7.0'}
+    peerDependencies:
+      svelte: ^5.0.0
 
   svelte-toolbelt@0.9.3:
     resolution: {integrity: sha512-HCSWxCtVmv+c6g1ACb8LTwHVbDqLKJvHpo6J8TaqwUme2hj9ATJCpjCPNISR1OCq2Q4U1KT41if9ON0isINQZw==}
@@ -6940,6 +6959,12 @@ snapshots:
 
   minipass@7.1.3: {}
 
+  mode-watcher@1.1.0(svelte@5.56.4(@typescript-eslint/types@8.63.0)):
+    dependencies:
+      runed: 0.25.0(svelte@5.56.4(@typescript-eslint/types@8.63.0))
+      svelte: 5.56.4(@typescript-eslint/types@8.63.0)
+      svelte-toolbelt: 0.7.1(svelte@5.56.4(@typescript-eslint/types@8.63.0))
+
   module-details-from-path@1.0.4: {}
 
   mri@1.2.0: {}
@@ -7256,6 +7281,11 @@ snapshots:
       esm-env: 1.2.2
       svelte: 5.56.4(@typescript-eslint/types@8.63.0)
 
+  runed@0.25.0(svelte@5.56.4(@typescript-eslint/types@8.63.0)):
+    dependencies:
+      esm-env: 1.2.2
+      svelte: 5.56.4(@typescript-eslint/types@8.63.0)
+
   runed@0.29.2(svelte@5.56.4(@typescript-eslint/types@8.63.0)):
     dependencies:
       esm-env: 1.2.2
@@ -7441,6 +7471,13 @@ snapshots:
       svelte: 5.56.4(@typescript-eslint/types@8.63.0)
     transitivePeerDependencies:
       - '@sveltejs/kit'
+
+  svelte-toolbelt@0.7.1(svelte@5.56.4(@typescript-eslint/types@8.63.0)):
+    dependencies:
+      clsx: 2.1.1
+      runed: 0.23.4(svelte@5.56.4(@typescript-eslint/types@8.63.0))
+      style-to-object: 1.0.14
+      svelte: 5.56.4(@typescript-eslint/types@8.63.0)
 
   svelte-toolbelt@0.9.3(svelte@5.56.4(@typescript-eslint/types@8.63.0)):
     dependencies:

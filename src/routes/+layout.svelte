@@ -1,5 +1,6 @@
 <script lang="ts">
   import '$css';
+  import { ModeWatcher } from 'mode-watcher';
 
   import { untrack } from 'svelte';
 
@@ -65,6 +66,8 @@
     {katexCss.default}
   {/await}
 </svelte:head>
+
+<ModeWatcher />
 
 <Sidebar.Provider style="--sidebar-width: 190px">
   {@render children()}
