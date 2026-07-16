@@ -6,6 +6,7 @@
   import * as Sidebar from '$shadcn/ui/sidebar/index.js';
 
   import { FeedbackButton } from '$lib/widgets/feedback';
+  import { SettingsButton } from '$lib/widgets/settings';
 </script>
 
 <Sidebar.Footer class="gap-[3px] p-0 pt-1.5">
@@ -21,5 +22,6 @@
         {/snippet}
       </Sidebar.MenuButton>
     </Sidebar.MenuItem>
+    <SettingsButton />
   </Sidebar.Menu>
 </Sidebar.Footer>
