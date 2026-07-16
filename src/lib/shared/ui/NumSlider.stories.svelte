@@ -18,4 +18,7 @@
 
 <Story name="Default" />
 
-<Story name="With Decimal Step" args={{ label: 'Wavelength', value: 1.5, min: 0, max: 5, step: 0.1 }} />
+<Story
+  name="With Decimal Step"
+  args={{ label: 'Wavelength', value: 1.5, min: 0, max: 5, step: 0.1 }}
+/>

@@ -18,7 +18,11 @@
 
 <Story name="Card">
   {#snippet template(args)}
-    <ChannelPanel {...args}>
+    <ChannelPanel
+      label={args.label}
+      description={args.description}
+      variant={args.variant}
+    >
       <p class="py-4 text-sm text-muted-foreground">Panel content goes here.</p>
     </ChannelPanel>
   {/snippet}
@@ -26,7 +30,11 @@
 
 <Story name="Flat" args={{ variant: 'flat' }}>
   {#snippet template(args)}
-    <ChannelPanel {...args}>
+    <ChannelPanel
+      label={args.label}
+      description={args.description}
+      variant={args.variant}
+    >
       <p class="py-4 text-sm text-muted-foreground">Panel content goes here.</p>
     </ChannelPanel>
   {/snippet}
