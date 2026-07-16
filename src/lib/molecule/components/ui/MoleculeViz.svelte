@@ -1,9 +1,10 @@
 <script lang="ts">
+  import { getMoleculeFileContent } from '../../molecule-source.svelte';
+
   import { fade } from 'svelte/transition';
 
   import * as Field from '$shadcn/ui/field/index.js';
 
-  import { getMoleculeFileContent } from '$lib/molecule/molecule.remote';
   import type { Sample } from '$lib/sample';
   import { Placeholder } from '$lib/shared/ui';
 

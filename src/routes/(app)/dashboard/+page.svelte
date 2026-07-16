@@ -6,7 +6,7 @@
   import * as Tabs from '$shadcn/ui/tabs/index.js';
 
   import { useSimulationState } from '$lib/app/simulation-context.svelte';
-  import { listMolecules } from '$lib/molecule/molecule.remote';
+  import { listMolecules } from '$lib/molecule';
   import { listSolvents } from '$lib/sample/solvent.remote';
   import {
     computeDeltaS,

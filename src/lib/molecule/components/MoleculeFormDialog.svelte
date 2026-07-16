@@ -1,5 +1,18 @@
 <script lang="ts">
+  // Reads + non-form mutations go through the facade so local (IndexedDB) and
+  // node/static (remote) resolve at build time. The form() objects above stay
+  // on molecule.remote: their field/validation machinery is client-side, and in
+  // local mode only the submit action is swapped (see the enhance callbacks).
+  import {
+    deleteMolecule,
+    deleteMoleculeFile,
+    editMoleculeFileContents,
+    getMoleculeFileContent,
+    localWrites,
+  } from '../molecule-source.svelte';
   import type { MoleculeDialogIntent } from '../types';
+
+  import { PUBLIC_TARGET } from '$app/env/public';
 
   import * as Button from '$shadcn/ui/button/index.js';
   import { buttonVariants } from '$shadcn/ui/button/index.js';
@@ -10,12 +23,8 @@
   import * as Textarea from '$shadcn/ui/textarea/index.js';
 
   import {
-    deleteMolecule,
-    deleteMoleculeFile,
     editMolecule,
     editMoleculeFile,
-    editMoleculeFileContents,
-    getMoleculeFileContent,
     replaceMoleculeFile,
     uploadMolecule,
   } from '$lib/molecule/molecule.remote';
@@ -43,7 +52,16 @@
 
   let { open = $bindable(false), intent, molecules }: Props = $props();
 
+  // Local-only build: mutations are written to IndexedDB client-side instead of
+  // POSTed to the server, so the form submit path is swapped (the template and
+  // field/validation machinery are shared with node/static). Derived from the
+  // inlined `PUBLIC_TARGET` so the local branches tree-shake out of other builds.
+  const LOCAL = PUBLIC_TARGET === 'local';
+
   let submitError = $state<string | null>(null);
+  // Drives the busy state for local (IndexedDB) submits, which don't go through
+  // the form's server `.pending`.
+  let localSubmitting = $state(false);
   // Errors from reading/parsing the selected file (schema covers the rest).
   let fileError = $state<string | null>(null);
   let fileReadToken = 0;
@@ -62,12 +80,65 @@
   let pendingUpload: (() => void) | null = null;
 
   function requireUploadAck(action: () => void) {
-    if (settings.get('uploadAcknowledged')) {
+    // The no-auth notice warns that uploads are publicly visible. In the
+    // local-only build data never leaves the browser (IndexedDB), so the notice
+    // would be false — skip it.
+    if (LOCAL || settings.get('uploadAcknowledged')) {
       action();
       return;
     }
     pendingUpload = action;
     ackOpen = true;
+  }
+
+  /**
+   * Client-only form submission for the local build: run the preflight schema
+   * offline (no server round-trip), and if it passes, hand the current field
+   * values to `write`. Returns whether the write ran.
+   */
+  async function submitLocal(
+    form: {
+      validate: (opts: {
+        includeUntouched: boolean;
+        preflightOnly: boolean;
+      }) => Promise<unknown>;
+      fields: { allIssues: () => { message: string }[] | undefined };
+    },
+    write: () => Promise<{ success?: boolean; error?: string }>,
+  ): Promise<void> {
+    await form.validate({ includeUntouched: true, preflightOnly: true });
+    if (form.fields.allIssues()?.length) return; // issues render inline
+    localSubmitting = true;
+    try {
+      reportResult(await write());
+    } finally {
+      localSubmitting = false;
+    }
+  }
+
+  // The replace form is hidden, so its issues surface via `submitError` rather
+  // than inline; the file comes from the bound input, not a form field.
+  async function submitLocalReplace(
+    form: NonNullable<typeof replaceForm>,
+  ): Promise<void> {
+    await form.validate({ includeUntouched: true, preflightOnly: true });
+    const issue = form.fields.allIssues()?.[0]?.message;
+    const selected = replaceInput?.files?.[0];
+    if (issue || !selected || !localWrites) {
+      submitError = issue ?? 'Select a file.';
+      return;
+    }
+    localSubmitting = true;
+    try {
+      reportResult(
+        await localWrites.replaceFile({
+          id: form.fields.id.value() ?? '',
+          file: selected,
+        }),
+      );
+    } finally {
+      localSubmitting = false;
+    }
   }
 
   function confirmUploadAck() {
@@ -131,7 +202,8 @@
   );
 
   const submitting = $derived(
-    uploadMolecule.pending > 0 ||
+    localSubmitting ||
+      uploadMolecule.pending > 0 ||
       (fileForm?.pending ?? 0) > 0 ||
       (molForm?.pending ?? 0) > 0 ||
       (replaceForm?.pending ?? 0) > 0,
@@ -153,6 +225,26 @@
     .enhance(async (f) => {
       submitError = null;
       try {
+        if (LOCAL) {
+          await submitLocal(uploadMolecule, async () => {
+            if (!localWrites) return { error: 'Local storage unavailable.' };
+            if (!file) return { error: 'Select a file to upload.' };
+            const fields = uploadMolecule.fields;
+            const reference = fields.reference.value();
+            const result = await localWrites.upload({
+              file,
+              moleculeName: fields.moleculeName.value() ?? '',
+              description: fields.description.value() ?? '',
+              state: Number(fields.state.value()),
+              atomCount: Number(fields.atomCount.value()),
+              reference: reference?.trim() ? reference.trim() : null,
+            });
+            return result.success && result.result
+              ? { success: true }
+              : { error: result.error ?? 'Unable to upload molecule.' };
+          });
+          return;
+        }
         if (!(await f.submit())) return; // validation issues render inline
         const result = uploadMolecule.result;
         reportResult(
@@ -171,6 +263,21 @@
     return form.preflight(editMoleculeFileSchema).enhance(async (f) => {
       submitError = null;
       try {
+        if (LOCAL) {
+          await submitLocal(form, () => {
+            if (!localWrites) return Promise.resolve({ success: false });
+            const fields = form.fields;
+            const reference = fields.reference.value();
+            return localWrites.editFile({
+              id: fields.id.value() ?? '',
+              filename: fields.filename.value() ?? '',
+              description: fields.description.value() ?? '',
+              state: Number(fields.state.value()),
+              reference: reference?.trim() ? reference.trim() : null,
+            });
+          });
+          return;
+        }
         if (!(await f.submit())) return;
         reportResult(form.result ?? null);
       } catch (err) {
@@ -185,6 +292,17 @@
     return form.preflight(editMoleculeSchema).enhance(async (f) => {
       submitError = null;
       try {
+        if (LOCAL) {
+          await submitLocal(form, () =>
+            localWrites
+              ? localWrites.editMolecule({
+                  originalName: form.fields.originalName.value() ?? '',
+                  moleculeName: form.fields.moleculeName.value() ?? '',
+                })
+              : Promise.resolve({ success: false }),
+          );
+          return;
+        }
         if (!(await f.submit())) return;
         reportResult(form.result ?? null);
       } catch (err) {
@@ -202,6 +320,10 @@
     return form.preflight(replaceMoleculeFileSchema).enhance(async (f) => {
       submitError = null;
       try {
+        if (LOCAL) {
+          await submitLocalReplace(form);
+          return;
+        }
         if (!(await f.submit())) {
           submitError =
             form.fields.allIssues()?.[0]?.message ?? 'Invalid file.';
@@ -824,9 +946,9 @@
     <Dialog.Header>
       <Dialog.Title>This app has no authentication</Dialog.Title>
       <Dialog.Description>
-        Anything you upload — the file and its metadata — is visible to
-        anyone who can reach this site. Don't upload anything you wouldn't
-        want publicly accessible.
+        Anything you upload — the file and its metadata — is visible to anyone
+        who can reach this site. Don't upload anything you wouldn't want
+        publicly accessible.
       </Dialog.Description>
     </Dialog.Header>
     <Dialog.Footer>

@@ -135,15 +135,11 @@ export async function getCapabilities(
   fetcher: typeof fetch = fetch,
 ): Promise<Capabilities> {
   if (PUBLIC_TARGET === 'local') {
-    // Local-only build: simulation runs client-side (kernel + IndexedDB), so
-    // it's available with no backend. Client-side molecule upload/edit is not
-    // wired yet (bead ej2.9), so `upload` stays unavailable — no health probe
-    // is needed since neither depends on a server.
+    // Local-only build: both simulation (kernel + IndexedDB) and molecule
+    // upload/edit (IndexedDB store) run client-side, so both are available with
+    // no backend. No health probe is needed since neither depends on a server.
     return {
-      upload: {
-        available: false,
-        reason: 'Client-side molecule editing is not available in this build',
-      },
+      upload: { available: true },
       simulation: { available: true },
     };
   }
