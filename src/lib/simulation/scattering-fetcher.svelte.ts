@@ -24,6 +24,9 @@ export type ScatteringResource<T> = {
   refetch: () => Promise<void>;
 };
 
+// Cohesive closure: fetch, effect, and getters all share `state`/`requestId`;
+// the overage is mostly the reactivity comments, which are worth their lines.
+// eslint-disable-next-line max-lines-per-function
 export function createScatteringResource<T>(
   fetcher: () => Promise<T>,
   ready: () => boolean,
