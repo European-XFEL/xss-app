@@ -21,6 +21,9 @@ export interface DragState {
  * Creates a reusable drag behavior for SVG elements.
  * Handles mouse events and coordinate transformation from screen to SVG space.
  */
+// Cohesive closure: the event handlers must share isDragging/dragOffset;
+// splitting would mean threading that state through parameters.
+// eslint-disable-next-line max-lines-per-function
 export function useDrag(options: DragOptions): DragState {
   const { getSvgElement, onDrag, getOffset } = options;
 
