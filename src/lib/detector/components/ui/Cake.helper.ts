@@ -209,9 +209,9 @@ export function generateCakedGridLines(
   viewShape: Shape,
   twoThetaRange: RangeTuple = [0, 90],
   chiRange: RangeTuple = [-Math.PI, Math.PI],
-  twoThetaStepDegrees = 5,
-  chiStepDegrees = 45,
+  steps: { twoThetaStepDegrees?: number; chiStepDegrees?: number } = {},
 ): { twoThetaLines: number[]; chiLines: number[] } {
+  const { twoThetaStepDegrees = 5, chiStepDegrees = 45 } = steps;
   const [twoThetaMin, twoThetaMax] = twoThetaRange;
   const [chiMin, chiMax] = chiRange;
 

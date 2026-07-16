@@ -53,13 +53,10 @@
   );
 
   let gridLines = $derived(
-    generateCakedGridLines(
-      panelShape,
-      twoThetaRange,
-      chiRange,
+    generateCakedGridLines(panelShape, twoThetaRange, chiRange, {
       twoThetaStepDegrees,
       chiStepDegrees,
-    ),
+    }),
   );
 
   let transformedPaths = $derived(
