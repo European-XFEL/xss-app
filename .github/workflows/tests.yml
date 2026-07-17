@@ -1,0 +1,121 @@
+# Frontend test layers (bead initial-dev-r1z.3):
+#   checks         - svelte-check + prettier/eslint (no env needed)
+#   unit-component - vitest node + browser projects (chromium, no DB)
+#   e2e            - Playwright node-target flows (postgres service + .env)
+#   e2e-static     - Playwright smoke against the static build (caddy, no DB)
+#
+# dotenv-cli tolerates a missing .env (verified: it runs the command with
+# vars unset), so only the e2e job creates one — to supply the DB values
+# that e2e/db.ts and drizzle-kit require. Both Playwright configs already
+# disable reuseExistingServer when CI is set (GitHub sets CI=true).
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm lint
+
+  unit-component:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      # Known cold-run flake (bead initial-dev-r1z.3 notes): the browser
+      # project's FIRST run after a fresh install can flake while vite
+      # optimizes deps and chromium cold-starts. One throwaway warm run;
+      # the scored run below is warm. Deliberately not a global retry.
+      - name: Warm browser project
+        run: pnpm exec vitest run --project=browser
+        continue-on-error: true
+      - run: pnpm test
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: xss-app
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      # Throwaway credentials matching the service container above. The
+      # suite itself only ever touches the isolated xss-app-e2e database
+      # (created by e2e/global-setup.ts).
+      - name: Create .env
+        run: |
+          cat > .env <<'EOF'
+          PUBLIC_TARGET=node
+          DB_USER=postgres
+          DB_PASSWORD=postgres
+          DB_HOST=localhost
+          DB_NAME=xss-app
+          EOF
+      - run: pnpm e2e
+
+  e2e-static:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: sudo apt-get update && sudo apt-get install -y caddy
+      # No .env: the static target needs no values (PUBLIC_* come from the
+      # build:static script itself; verified to build without a .env file).
+      - run: pnpm e2e:static
