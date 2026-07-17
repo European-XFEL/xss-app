@@ -1,5 +1,8 @@
 <script lang="ts">
   import { getMoleculeFileContent } from '../../molecule-source.svelte';
+  // Type-only import — erased at compile time, so it doesn't pull matterviz
+  // into the client-side bundle ahead of the dynamic import below.
+  import type { TrajectoryType } from 'matterviz/trajectory';
 
   import { fade } from 'svelte/transition';
 
@@ -40,12 +43,21 @@
   let loading = $state(false);
   let loadError = $state(false);
 
+  // Bound to `<Trajectory>`'s own `trajectory` prop. matterviz's Trajectory
+  // only (re)loads `data_url` while its internal `trajectory` is unset — once
+  // populated, it ignores further `data_url` changes on the same mounted
+  // instance. Clearing it here whenever we're about to hand over a new
+  // `dataUrl` is what makes molecule switches take effect in place, instead
+  // of only on the next full remount.
+  let trajectory = $state<TrajectoryType | undefined>(undefined);
+
   $effect(() => {
     const groundId = ground?.id;
     const excitedId = excited?.id;
 
     if (!groundId || !excitedId) {
       dataUrl = null;
+      trajectory = undefined;
       loading = false;
       loadError = false;
       return;
@@ -55,6 +67,7 @@
     loading = true;
     loadError = false;
     dataUrl = null;
+    trajectory = undefined;
 
     Promise.all([
       getMoleculeFileContent(groundId),
@@ -112,6 +125,7 @@
       {#if Trajectory && dataUrl}
         <div class="absolute inset-0" transition:fade>
           <Trajectory
+            bind:trajectory
             data_url={dataUrl}
             auto_play={false}
             fps={10}
