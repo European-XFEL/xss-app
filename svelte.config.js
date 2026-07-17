@@ -6,12 +6,10 @@ import adapter_static from '@sveltejs/adapter-static';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 const TARGET = process.env.PUBLIC_TARGET;
+// Two targets: `static` (backendless — client-side Debye compute + IndexedDB
+// storage, prerendered via adapter-static) and `node` (SSR server; storage is a
+// runtime Postgres/IndexedDB toggle). Only `node` runs a server.
 const STATIC = TARGET === 'static';
-const LOCAL = TARGET === 'local';
-// Both the static demo (`static`) and the backendless client-side build
-// (`local`) ship as prerendered static sites via adapter-static; only `node`
-// runs a server.
-const PRERENDERED = STATIC || LOCAL;
 
 function gitVersion() {
   try {
@@ -62,11 +60,7 @@ const config = {
       // Requires compilerOptions.experimental.async below.
       remoteFunctions: true,
     },
-    outDir: LOCAL
-      ? '.svelte-kit-local'
-      : STATIC
-        ? '.svelte-kit-static'
-        : '.svelte-kit',
+    outDir: STATIC ? '.svelte-kit-static' : '.svelte-kit',
   },
   extensions: ['.svelte', '.svx'],
 };
@@ -87,7 +81,7 @@ const config_static = {
   kit: {
     ...config.kit,
     adapter: adapter_static({
-      pages: LOCAL ? 'build-local' : 'build-static',
+      pages: 'build-static',
       strict: false,
     }),
   },
@@ -95,9 +89,9 @@ const config_static = {
 
 /**
  * Export the selected config. Defaults to `config_node` when nothing is set.
- * Both prerendered targets (`static`, `local`) use the adapter-static config.
+ * The `static` target uses adapter-static; `node` runs a server.
  */
-const selectedConfig = PRERENDERED ? config_static : config_node;
+const selectedConfig = STATIC ? config_static : config_node;
 
 console.log(`Target: ${TARGET}, Version: ${VERSION}`);
 

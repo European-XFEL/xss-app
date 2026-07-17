@@ -27,8 +27,8 @@ export const variables = defineEnvVars({
     static: true,
     schema: optional,
     description:
-      'Build target: "node" (server), "static" (demo, GitHub Pages), or ' +
-      '"local" (backendless client-side build)',
+      'Build target: "node" (SSR server; runtime storage toggle) or ' +
+      '"static" (backendless client-side build, GitHub Pages)',
   },
   PUBLIC_SENTRY_DSN: {
     public: true,

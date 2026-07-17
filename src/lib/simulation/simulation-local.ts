@@ -1,7 +1,7 @@
 /**
- * Client-side Debye simulation for the local-only build (`PUBLIC_TARGET=local`).
+ * Client-side Debye simulation for the backendless (`static`) build.
  *
- * The local build ships no backend, so this runs entirely in the browser: it
+ * The static build ships no backend, so this runs entirely in the browser: it
  * resolves the structure file contents (uploaded molecules from the IndexedDB
  * store, falling back to the prerendered demo set via the read remote / Cache
  * API), parses the `.xyz`, computes I(Q) with the in-process kernel, and caches

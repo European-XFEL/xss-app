@@ -2,12 +2,13 @@
  * Data source factory.
  *
  * Selects the appropriate data source implementation based on PUBLIC_TARGET.
- * - `node` (production): uses Postgres/Drizzle via db-source.ts
- * - `static` (demo) / `local` (client-side): use the committed demo JSON via
- *   static-source.ts. Both are serverless `adapter-static` builds with no DB;
- *   these sources run at build time to prerender the demo dataset. The `local`
- *   build additionally computes simulation client-side (see
- *   `$lib/simulation/simulation-source`), bypassing `simulationSource` entirely.
+ * - `node` (SSR): uses Postgres/Drizzle via db-source.ts. (When the runtime
+ *   backendless-storage toggle is on, uploads/sim stay client-side and this
+ *   server source only serves read-only public data — see the molecule facade.)
+ * - `static` (backendless): uses the committed demo JSON via static-source.ts.
+ *   A serverless `adapter-static` build with no DB; these sources run at build
+ *   time to prerender the demo dataset, and simulation is computed client-side
+ *   (see `$lib/simulation/simulation-source`), bypassing `simulationSource`.
  */
 import { PUBLIC_TARGET } from '$app/env/public';
 
@@ -27,7 +28,7 @@ import type {
   SolventDataSource,
 } from './types';
 
-const STATIC = PUBLIC_TARGET === 'static' || PUBLIC_TARGET === 'local';
+const STATIC = PUBLIC_TARGET === 'static';
 
 export const moleculeSource: MoleculeDataSource = STATIC
   ? staticMoleculeSource

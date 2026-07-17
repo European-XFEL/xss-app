@@ -4,6 +4,7 @@
 //
 // Cookies (not localStorage) so a future server-side read (e.g. during SSR)
 // can see the same value; see initial-dev-95a / initial-dev-2qo.
+import { PUBLIC_TARGET } from '$app/env/public';
 
 export interface SettingDef {
   id: string;
@@ -27,6 +28,20 @@ export const SETTINGS_SCHEMA: SettingDef[] = [
       'This app has no authentication — any molecule file or metadata you upload is visible to anyone who visits the site. Acknowledged once, on your first upload attempt.',
     default: false,
   },
+  // Node build only: the storage backend is a runtime choice. The static build
+  // is always backendless, so the toggle would be an inert no-op there — omit it
+  // (PUBLIC_TARGET is inlined, so this const-folds the entry out per target).
+  ...(PUBLIC_TARGET === 'static'
+    ? []
+    : [
+        {
+          id: 'clientStorage',
+          label: 'Backendless (local) storage',
+          description:
+            'Store molecules and simulation results in your browser (IndexedDB) instead of the shared database. Existing public data stays visible (read-only); nothing you add is sent to the server. Takes effect on reload.',
+          default: false,
+        },
+      ]),
 ];
 
 const COOKIE_PREFIX = 'settings.';
@@ -38,9 +53,7 @@ function cookieName(id: string) {
 
 function readCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
-  const match = document.cookie.match(
-    new RegExp(`(?:^|; )${name}=([^;]*)`),
-  );
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
   return match ? decodeURIComponent(match[1]) : null;
 }
 
@@ -59,7 +72,9 @@ function initialValue(def: SettingDef): boolean {
 // to initialise Sentry's replay integration at all.
 export function readSetting(id: string): boolean {
   const def = SETTINGS_SCHEMA.find((s) => s.id === id);
-  return initialValue(def ?? { id, label: '', description: '', default: false });
+  return initialValue(
+    def ?? { id, label: '', description: '', default: false },
+  );
 }
 
 // Tracks whether the user has ever opened the Settings popover, independent
@@ -79,7 +94,9 @@ export function markSettingsSeen() {
 
 class SettingsStore {
   values = $state<Record<string, boolean>>(
-    Object.fromEntries(SETTINGS_SCHEMA.map((def) => [def.id, initialValue(def)])),
+    Object.fromEntries(
+      SETTINGS_SCHEMA.map((def) => [def.id, initialValue(def)]),
+    ),
   );
 
   get(id: string): boolean {

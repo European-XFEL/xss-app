@@ -133,11 +133,12 @@ function capability(available: boolean, reason: string): Capability {
 
 export async function getCapabilities(
   fetcher: typeof fetch = fetch,
+  clientStorage = false,
 ): Promise<Capabilities> {
-  if (PUBLIC_TARGET === 'local') {
-    // Local-only build: both simulation (kernel + IndexedDB) and molecule
-    // upload/edit (IndexedDB store) run client-side, so both are available with
-    // no backend. No health probe is needed since neither depends on a server.
+  if (PUBLIC_TARGET === 'static') {
+    // Static (backendless) build: molecule upload/edit (IndexedDB store) and
+    // simulation (kernel + IndexedDB) both run client-side, so both are
+    // available with no backend — no health probe needed.
     return {
       upload: { available: true },
       simulation: { available: true },
@@ -145,21 +146,13 @@ export async function getCapabilities(
   }
 
   const health = await getHealth(fetcher);
-
-  const res: Capabilities = {
-    upload: capability(health.db.healthy, DB_UNAVAILABLE_REASON),
+  return {
+    // Node build. Uploads go to client IndexedDB when the backendless-storage
+    // toggle is on (available regardless of DB health); otherwise Postgres.
+    // Simulation still uses the gRPC backend (bd-5 moves it client-side).
+    upload: clientStorage
+      ? { available: true }
+      : capability(health.db.healthy, DB_UNAVAILABLE_REASON),
     simulation: capability(health.backend.healthy, BACKEND_UNAVAILABLE_REASON),
   };
-
-  if (PUBLIC_TARGET === 'static') {
-    // Set all capabilities to unavailable in static mode
-    for (const key in res) {
-      res[key as keyof Capabilities] = {
-        available: false,
-        reason: 'Static build - no backend connectivity',
-      };
-    }
-  }
-
-  return res;
 }

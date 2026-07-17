@@ -1,22 +1,21 @@
 /**
- * Client-facing molecule data-access facade, build-time switched on
- * `PUBLIC_TARGET`.
+ * Client-facing molecule data-access facade.
  *
- * - `node` / `static`: delegate to the `molecule.remote` functions (server /
- *   prerender), the existing behavior.
- * - `local`: reads MERGE the prerendered demo set (canonical, read-only) with
- *   the user's IndexedDB uploads (`$lib/shared/molecule-store`); writes go to
- *   IndexedDB only. Demo molecules are never mutated.
+ * Two storage backends, chosen per call:
+ * - Postgres (remote functions in `molecule.remote`) — the `node` default.
+ * - client IndexedDB (`$lib/shared/molecule-store`) merged with the read-only
+ *   public/demo set — the `static` build always, and the `node` build when the
+ *   backendless-storage Settings toggle is on (`useClientStorage`).
  *
- * `listMolecules()` returns a reactive object matching the shape the dashboard
- * and samples pages consume from the remote query (`current` / `loading` /
- * `error` / `refresh`). In local mode it re-reads after every mutation so
- * uploads/edits/deletes reflect live, which the prerender-only remote cannot do.
+ * The `static` build is decided at build time: `STATIC` is a constant (inlined
+ * `PUBLIC_TARGET`), so its guard const-folds and the Postgres/remote-write
+ * branches dead-code-eliminate out of the static bundle. The `node` build keeps
+ * both paths and picks at runtime.
  *
- * The form-backed mutations (upload/edit-file/edit-molecule/replace) are exposed
- * via `localWrites` for the dialog's client-only submit path; the dialog keeps
- * using the real `form()` objects from `molecule.remote` for field state and
- * validation (both work client-side) and only swaps the submit action.
+ * In client-storage mode, reads MERGE the read-only public molecules (Postgres
+ * on node, prerendered demo on static — both via `molecule.remote`) with the
+ * user's IndexedDB uploads; writes go to IndexedDB only. Public molecules are
+ * never mutated, and nothing is ever written to Postgres.
  */
 import { PUBLIC_TARGET } from '$app/env/public';
 
@@ -45,10 +44,13 @@ import {
   updateStoredContents,
   uploadStoredMolecule,
 } from '$lib/shared/molecule-store';
+import { useClientStorage } from '$lib/shared/storage-mode';
 
-const LOCAL = PUBLIC_TARGET === 'local';
+// `true` on the static build — a build-time constant, so the `else` (remote)
+// branch of every `if (STATIC)` below tree-shakes out of the static bundle.
+const STATIC = PUBLIC_TARGET === 'static';
 
-// ─── Reactive merged list (local mode) ──────────────────────────────────────
+// ─── Reactive merged list (client-storage mode) ─────────────────────────────
 
 type MoleculesQuery = {
   readonly current: MoleculeInfo[];
@@ -57,23 +59,24 @@ type MoleculesQuery = {
   refresh: () => Promise<void>;
 };
 
-// Lazily-created singleton. Kept out of module scope (no top-level `$state`)
-// so this whole module — and its `molecule-store` import — tree-shakes out of
-// the node/static bundles where `LOCAL` is false.
-let query: MoleculesQuery | null = null;
+// Single reactive store for client-storage mode, created on first read. Kept as
+// a module singleton so the write helpers below can refresh the same instance
+// the dashboard/samples pages are rendering.
+let clientQuery: MoleculesQuery | null = null;
 
-function createQuery(): MoleculesQuery {
+function createClientQuery(): MoleculesQuery {
   let entries = $state<MoleculeInfo[]>([]);
   let loading = $state(true);
   let loadError = $state<Error | null>(null);
-  let demoCache: MoleculeInfo[] | null = null;
 
   const reload = async (): Promise<void> => {
     loading = true;
     try {
-      demoCache ??= await remoteListMolecules();
-      const uploaded = await listStoredMolecules();
-      entries = [...demoCache, ...uploaded];
+      const [publicMolecules, uploaded] = await Promise.all([
+        remoteListMolecules(), // read-only public set (Postgres / prerendered demo)
+        listStoredMolecules(), // user IndexedDB uploads
+      ]);
+      entries = [...publicMolecules, ...uploaded];
       loadError = null;
     } catch (err) {
       loadError =
@@ -99,86 +102,95 @@ function createQuery(): MoleculesQuery {
   };
 }
 
-function localMoleculesQuery(): MoleculesQuery {
-  query ??= createQuery();
-  return query;
+function clientMoleculesQuery(): MoleculesQuery {
+  return (clientQuery ??= createClientQuery());
 }
 
-/** Refresh the reactive list after a local mutation (no-op before first read). */
-async function refreshList(): Promise<void> {
-  await query?.refresh();
-}
-
-// ─── Local implementations ──────────────────────────────────────────────────
-//
-// Every store reference is reached ONLY through a `LOCAL ? … : …` assignment
-// below. Rollup constant-folds that ternary (LOCAL is derived from the inlined
-// PUBLIC_TARGET), so in node/static builds these functions are unreferenced and
-// the whole `molecule-store` import tree-shakes out. A store call placed inside
-// an `if (LOCAL)` function body would NOT fold and would leak the store into
-// every bundle — hence this structure.
-
-/** Run a store mutation, then refresh the reactive list on success. */
+/** Run a client-store mutation, then refresh the reactive list on success. */
 async function withRefresh<R extends MutationResult | UploadMoleculeResult>(
   op: Promise<R>,
 ): Promise<R> {
   const result = await op;
-  if (result.success) await refreshList();
+  if (result.success) await clientQuery?.refresh();
   return result;
 }
 
-async function localGetMoleculeFileContent(
+async function clientGetMoleculeFileContent(
   id: string,
 ): Promise<MoleculeFileContent> {
   const stored = await getStoredMoleculeContent(id);
   if (stored !== null) return { contents: stored };
-  return remoteGetMoleculeFileContent(id); // prerendered demo file
+  return remoteGetMoleculeFileContent(id); // read-only public file
 }
 
 // ─── Public facade ──────────────────────────────────────────────────────────
+//
+// Each function routes to the client store when storage is client-side
+// (`STATIC` at build time, or the runtime toggle on node) and to the Postgres
+// remote otherwise. The leading `if (STATIC)` const-folds so the remote branch
+// tree-shakes from the static bundle (see bd-3 spike).
 
-export const listMolecules = LOCAL ? localMoleculesQuery : remoteListMolecules;
+// Return type inferred as the union of the client store and the remote query
+// resource; both expose `current`/`loading`/`error`/`refresh`, which is all the
+// dashboard/samples pages read (they already tolerate `current` being undefined
+// before the first load).
+export function listMolecules() {
+  if (STATIC) return clientMoleculesQuery();
+  return useClientStorage() ? clientMoleculesQuery() : remoteListMolecules();
+}
 
-export const getMoleculeFileContent = LOCAL
-  ? localGetMoleculeFileContent
-  : remoteGetMoleculeFileContent;
+export function getMoleculeFileContent(
+  id: string,
+): Promise<MoleculeFileContent> {
+  if (STATIC) return clientGetMoleculeFileContent(id);
+  return useClientStorage()
+    ? clientGetMoleculeFileContent(id)
+    : remoteGetMoleculeFileContent(id);
+}
 
-export const deleteMoleculeFile = LOCAL
-  ? (input: { id: string }) => withRefresh(deleteStoredFile(input.id))
-  : remoteDeleteMoleculeFile;
+export function deleteMoleculeFile(input: {
+  id: string;
+}): Promise<MutationResult> {
+  if (STATIC) return withRefresh(deleteStoredFile(input.id));
+  return useClientStorage()
+    ? withRefresh(deleteStoredFile(input.id))
+    : remoteDeleteMoleculeFile(input);
+}
 
-export const deleteMolecule = LOCAL
-  ? (input: { originalName: string }) =>
-      withRefresh(deleteStoredMolecule(input.originalName))
-  : remoteDeleteMolecule;
+export function deleteMolecule(input: {
+  originalName: string;
+}): Promise<MutationResult> {
+  if (STATIC) return withRefresh(deleteStoredMolecule(input.originalName));
+  return useClientStorage()
+    ? withRefresh(deleteStoredMolecule(input.originalName))
+    : remoteDeleteMolecule(input);
+}
 
-export const editMoleculeFileContents = LOCAL
-  ? (input: { id: string; contents: string }) =>
-      withRefresh(updateStoredContents(input.id, input.contents))
-  : remoteEditMoleculeFileContents;
+export function editMoleculeFileContents(input: {
+  id: string;
+  contents: string;
+}): Promise<MutationResult> {
+  if (STATIC)
+    return withRefresh(updateStoredContents(input.id, input.contents));
+  return useClientStorage()
+    ? withRefresh(updateStoredContents(input.id, input.contents))
+    : remoteEditMoleculeFileContents(input);
+}
 
 /**
- * Local-only form-submit writes for the dialog. Bundled behind the `LOCAL`
- * ternary and null in other builds, so the store references tree-shake out even
- * though the dialog statically imports this binding.
+ * Client-store form-submit writes, used by the dialog when `useClientStorage()`
+ * is true. On node with Postgres storage the dialog uses the `molecule.remote`
+ * forms directly instead; bd-7 unifies the two submit paths behind one seam.
+ * (Named `localWrites` for continuity with the dialog's current import.)
  */
-export const localWrites = LOCAL
-  ? {
-      upload: (input: UploadStoredMoleculeInput) =>
-        withRefresh(uploadStoredMolecule(input)),
-      editFile: (input: EditStoredFileInput) =>
-        withRefresh(editStoredFile(input)),
-      editMolecule: (input: { originalName: string; moleculeName: string }) =>
-        withRefresh(
-          renameStoredMolecule(input.originalName, input.moleculeName),
-        ),
-      replaceFile: async (input: { id: string; file: File }) =>
-        withRefresh(
-          updateStoredContents(
-            input.id,
-            await input.file.text(),
-            input.file.name,
-          ),
-        ),
-    }
-  : null;
+export const localWrites = {
+  upload: (input: UploadStoredMoleculeInput) =>
+    withRefresh(uploadStoredMolecule(input)),
+  editFile: (input: EditStoredFileInput) => withRefresh(editStoredFile(input)),
+  editMolecule: (input: { originalName: string; moleculeName: string }) =>
+    withRefresh(renameStoredMolecule(input.originalName, input.moleculeName)),
+  replaceFile: async (input: { id: string; file: File }) =>
+    withRefresh(
+      updateStoredContents(input.id, await input.file.text(), input.file.name),
+    ),
+};

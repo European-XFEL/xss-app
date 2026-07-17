@@ -44,14 +44,13 @@ import type {
 } from '$lib/shared/contracts';
 
 const STATIC = PUBLIC_TARGET === 'static';
-// Reads are prerendered for both serverless adapter-static builds: `static`
-// (demo) and `local` (client-side). A `query` cannot run on a fully
-// prerendered, backendless deploy, so the demo dataset is baked in at build
-// time and served from the browser Cache API. Runtime mutations remain gated on
-// `STATIC` alone (unchanged); in `local` they're unreachable because the upload
-// capability is reported unavailable (see `getCapabilities`) until bead ej2.9
-// wires client-side CRUD.
-const PRERENDERED = STATIC || PUBLIC_TARGET === 'local';
+// On the `static` (backendless) build reads are prerendered: a `query` cannot
+// run on a fully prerendered, backendless deploy, so the demo dataset is baked
+// in at build time and served from the browser Cache API. On `node` reads stay
+// a `query` (fresh, refreshable). Runtime mutations are gated on `STATIC`: the
+// static build never calls them (writes go to client IndexedDB via the molecule
+// facade); node uses them for Postgres storage.
+const PRERENDERED = STATIC;
 
 const listMoleculesQuery = query(async () => {
   return await moleculeSource.listMolecules();

@@ -47,9 +47,12 @@ const appHandle: Handle = async ({ event, resolve }) => {
     event.setHeaders({ 'Document-Policy': 'js-profiling' });
   }
 
+  // Backendless-storage toggle (node build): when set, uploads go to the
+  // client's IndexedDB, so upload stays available regardless of DB health.
+  const clientStorage = event.cookies.get('settings.clientStorage') === 'true';
   const [health, capabilities] = await Promise.all([
     getHealth(event.fetch),
-    getCapabilities(event.fetch),
+    getCapabilities(event.fetch, clientStorage),
   ]);
 
   event.locals.health = health;

@@ -12,8 +12,6 @@
   } from '../molecule-source.svelte';
   import type { MoleculeDialogIntent } from '../types';
 
-  import { PUBLIC_TARGET } from '$app/env/public';
-
   import * as Button from '$shadcn/ui/button/index.js';
   import { buttonVariants } from '$shadcn/ui/button/index.js';
   import * as Dialog from '$shadcn/ui/dialog/index.js';
@@ -39,6 +37,7 @@
     MAX_UPLOAD_FILE_BYTES,
   } from '$lib/shared/contracts';
   import type { MoleculeInfo } from '$lib/shared/contracts';
+  import { useClientStorage } from '$lib/shared/storage-mode';
   import { settings } from '$lib/widgets/settings';
 
   interface Props {
@@ -52,11 +51,12 @@
 
   let { open = $bindable(false), intent, molecules }: Props = $props();
 
-  // Local-only build: mutations are written to IndexedDB client-side instead of
-  // POSTed to the server, so the form submit path is swapped (the template and
-  // field/validation machinery are shared with node/static). Derived from the
-  // inlined `PUBLIC_TARGET` so the local branches tree-shake out of other builds.
-  const LOCAL = PUBLIC_TARGET === 'local';
+  // Client-storage mode: mutations are written to IndexedDB client-side instead
+  // of POSTed to the server, so the form submit path is swapped (the template
+  // and field/validation machinery are shared). True on the static build and on
+  // node when the backendless-storage toggle is on. Read once at open; a runtime
+  // flip takes effect on the next open. (bd-7 unifies these two submit paths.)
+  const LOCAL = useClientStorage();
 
   let submitError = $state<string | null>(null);
   // Drives the busy state for local (IndexedDB) submits, which don't go through

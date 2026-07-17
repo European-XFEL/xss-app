@@ -1,5 +1,6 @@
 /**
- * Client-side molecule store for the local-only build (`PUBLIC_TARGET=local`).
+ * Client-side molecule store for backendless (client) storage: the `static`
+ * build always, and the `node` build when the backendless-storage toggle is on.
  *
  * A backendless IndexedDB store (via idb-keyval) that holds user-uploaded
  * structure files and their metadata, mirroring the CRUD semantics of
