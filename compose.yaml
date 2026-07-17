@@ -1,5 +1,4 @@
 x-common-env: &common-env
-  BACKEND_URL: 'http://backend:50051'
   PUBLIC_SENTRY_DSN: '${PUBLIC_SENTRY_DSN:-}'
   DB_USER: '${DB_USER:?error}'
   DB_PASSWORD: '${DB_PASSWORD:?error}'
@@ -18,14 +17,6 @@ services:
       - pgdata:/var/lib/postgresql
     restart: 'unless-stopped'
 
-  backend:
-    build: ./backend
-    environment:
-      SENTRY_DSN: '${SENTRY_DSN:-}'
-      SENTRY_ENVIRONMENT: '${SENTRY_ENVIRONMENT:-production}'
-    ports:
-      - 50051:50051
-
   web-dev:
     profiles: ['dev']
     environment:
@@ -38,7 +29,6 @@ services:
       - '5173:5173'
     depends_on:
       - db
-      - backend
     develop:
       watch:
         - action: sync
