@@ -27,7 +27,8 @@
     "db:studio": "drizzle-kit studio",
     "storybook": "storybook dev -p 6006",
     "storybook:build": "storybook build",
-    "e2e": "dotenv -e .env -- playwright test"
+    "e2e": "dotenv -e .env -- playwright test",
+    "e2e:static": "playwright test --config playwright.static.config.ts"
   },
   "dependencies": {
     "@bufbuild/protobuf": "^2.12.1",

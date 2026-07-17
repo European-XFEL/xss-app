@@ -11,6 +11,9 @@ const DB_NAME = 'xss-app-e2e';
 
 export default defineConfig({
   testDir: 'e2e',
+  // static.spec.ts belongs to the static-artifact smoke suite
+  // (playwright.static.config.ts, `pnpm e2e:static`) — different webServer.
+  testIgnore: '**/static.spec.ts',
   // Every spec shares the one `xss-app-e2e` database (upload/edit/delete,
   // share-URL restore against server-stored state) — sequential is the lazy
   // answer that's also correct here, per the research: no fixture isolation

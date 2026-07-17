@@ -95,3 +95,50 @@ export function writeUniqueFixture(): { path: string; filename: string } {
   );
   return { path, filename };
 }
+
+/** Read uploaded molecules' filenames straight out of idb-keyval's default
+ * IndexedDB (`keyval-store` / `keyval`, see `$lib/shared/molecule-store.ts`)
+ * — the same store the app itself reads/writes in client-storage mode. */
+export async function storedMoleculeFilenames(page: Page): Promise<string[]> {
+  return page.evaluate(
+    () =>
+      new Promise<string[]>((resolve, reject) => {
+        const open = indexedDB.open('keyval-store');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const db = open.result;
+          if (!db.objectStoreNames.contains('keyval')) {
+            resolve([]);
+            return;
+          }
+          const store = db
+            .transaction('keyval', 'readonly')
+            .objectStore('keyval');
+          const keysReq = store.getAllKeys();
+          keysReq.onerror = () => reject(keysReq.error);
+          keysReq.onsuccess = () => {
+            const molKeys = (keysReq.result as string[]).filter((k) =>
+              k.startsWith('mol:'),
+            );
+            if (molKeys.length === 0) {
+              resolve([]);
+              return;
+            }
+            const names: string[] = [];
+            let remaining = molKeys.length;
+            const done = () => {
+              if (--remaining === 0) resolve(names);
+            };
+            for (const key of molKeys) {
+              const getReq = store.get(key);
+              getReq.onsuccess = () => {
+                if (getReq.result?.filename) names.push(getReq.result.filename);
+                done();
+              };
+              getReq.onerror = done;
+            }
+          };
+        };
+      }),
+  );
+}
