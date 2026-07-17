@@ -4,11 +4,11 @@
   // on molecule.remote: their field/validation machinery is client-side, and in
   // local mode only the submit action is swapped (see the enhance callbacks).
   import {
+    clientWrites,
     deleteMolecule,
     deleteMoleculeFile,
     editMoleculeFileContents,
     getMoleculeFileContent,
-    localWrites,
   } from '../molecule-source.svelte';
   import type { MoleculeDialogIntent } from '../types';
 
@@ -51,13 +51,6 @@
 
   let { open = $bindable(false), intent, molecules }: Props = $props();
 
-  // Client-storage mode: mutations are written to IndexedDB client-side instead
-  // of POSTed to the server, so the form submit path is swapped (the template
-  // and field/validation machinery are shared). True on the static build and on
-  // node when the backendless-storage toggle is on. Read once at open; a runtime
-  // flip takes effect on the next open. (bd-7 unifies these two submit paths.)
-  const LOCAL = useClientStorage();
-
   let submitError = $state<string | null>(null);
   // Drives the busy state for local (IndexedDB) submits, which don't go through
   // the form's server `.pending`.
@@ -80,10 +73,10 @@
   let pendingUpload: (() => void) | null = null;
 
   function requireUploadAck(action: () => void) {
-    // The no-auth notice warns that uploads are publicly visible. In the
-    // local-only build data never leaves the browser (IndexedDB), so the notice
-    // would be false — skip it.
-    if (LOCAL || settings.get('uploadAcknowledged')) {
+    // The no-auth notice warns that uploads are publicly visible. In
+    // client-storage mode data never leaves the browser (IndexedDB), so the
+    // notice would be false — skip it.
+    if (useClientStorage() || settings.get('uploadAcknowledged')) {
       action();
       return;
     }
@@ -91,23 +84,41 @@
     ackOpen = true;
   }
 
+  // Shape shared by every remote form used below (upload/edit/replace): just
+  // enough for submitLocal/makeEnhance to preflight-validate and read back a
+  // server-shaped result.
+  interface EnhanceForm {
+    result?: { success?: boolean; error?: string } | null;
+    fields: { allIssues: () => { message: string }[] | undefined };
+    // `preflightOnly` is type-exposed by the remote form but undocumented
+    // (experimental) — used here to validate offline without submitting.
+    validate: (opts: {
+      includeUntouched: boolean;
+      preflightOnly: boolean;
+    }) => Promise<unknown>;
+  }
+
   /**
-   * Client-only form submission for the local build: run the preflight schema
-   * offline (no server round-trip), and if it passes, hand the current field
-   * values to `write`. Returns whether the write ran.
+   * Client-storage submission: run the preflight schema offline (no server
+   * round-trip), then hand the current field values to `write`. `extraCheck`
+   * covers validation the schema can't (the hidden replace form's file input
+   * isn't a form field); `onIssue`, left unset, means issues render inline via
+   * the field machinery — the right default for every form except replace.
    */
   async function submitLocal(
-    form: {
-      validate: (opts: {
-        includeUntouched: boolean;
-        preflightOnly: boolean;
-      }) => Promise<unknown>;
-      fields: { allIssues: () => { message: string }[] | undefined };
-    },
+    form: EnhanceForm,
     write: () => Promise<{ success?: boolean; error?: string }>,
+    opts: {
+      extraCheck?: () => string | null;
+      onIssue?: (message: string) => void;
+    } = {},
   ): Promise<void> {
     await form.validate({ includeUntouched: true, preflightOnly: true });
-    if (form.fields.allIssues()?.length) return; // issues render inline
+    const issue = form.fields.allIssues()?.[0]?.message ?? opts.extraCheck?.();
+    if (issue) {
+      opts.onIssue?.(issue);
+      return;
+    }
     localSubmitting = true;
     try {
       reportResult(await write());
@@ -116,29 +127,42 @@
     }
   }
 
-  // The replace form is hidden, so its issues surface via `submitError` rather
-  // than inline; the file comes from the bound input, not a form field.
-  async function submitLocalReplace(
-    form: NonNullable<typeof replaceForm>,
-  ): Promise<void> {
-    await form.validate({ includeUntouched: true, preflightOnly: true });
-    const issue = form.fields.allIssues()?.[0]?.message;
-    const selected = replaceInput?.files?.[0];
-    if (issue || !selected || !localWrites) {
-      submitError = issue ?? 'Select a file.';
-      return;
-    }
-    localSubmitting = true;
-    try {
-      reportResult(
-        await localWrites.replaceFile({
-          id: form.fields.id.value() ?? '',
-          file: selected,
-        }),
-      );
-    } finally {
-      localSubmitting = false;
-    }
+  /**
+   * Single `.enhance()` seam for all four forms below: in client-storage mode
+   * (`useClientStorage()`, checked at submit time) it writes via `write`
+   * through submitLocal; otherwise it runs the form's normal server submit.
+   * `catchMsg` is the fallback message for an unexpected (non-Error) throw.
+   * `local` forwards submitLocal's options and also covers the remote-submit
+   * failure path — only the hidden replace form sets it, since its issues
+   * surface via `submitError` instead of inline field rendering.
+   */
+  function makeEnhance(
+    form: EnhanceForm,
+    write: () => Promise<{ success?: boolean; error?: string }>,
+    catchMsg: string,
+    local: {
+      extraCheck?: () => string | null;
+      onIssue?: (message: string) => void;
+    } = {},
+  ) {
+    return async (f: { submit: () => Promise<boolean> }) => {
+      submitError = null;
+      try {
+        if (useClientStorage()) {
+          await submitLocal(form, write, local);
+          return;
+        }
+        if (!(await f.submit())) {
+          local.onIssue?.(
+            form.fields.allIssues()?.[0]?.message ?? 'Invalid file.',
+          );
+          return;
+        }
+        reportResult(form.result ?? null);
+      } catch (err) {
+        submitError = err instanceof Error ? err.message : catchMsg;
+      }
+    };
   }
 
   function confirmUploadAck() {
@@ -220,122 +244,91 @@
 
   // Computed once / cached by $derived: re-evaluating preflight()/enhance()
   // inside the template spread would produce a fresh attachment every render.
-  const uploadProps = uploadMolecule
-    .preflight(uploadMoleculeSchema)
-    .enhance(async (f) => {
-      submitError = null;
-      try {
-        if (LOCAL) {
-          await submitLocal(uploadMolecule, async () => {
-            if (!localWrites) return { error: 'Local storage unavailable.' };
-            if (!file) return { error: 'Select a file to upload.' };
-            const fields = uploadMolecule.fields;
-            const reference = fields.reference.value();
-            const result = await localWrites.upload({
-              file,
-              moleculeName: fields.moleculeName.value() ?? '',
-              description: fields.description.value() ?? '',
-              state: Number(fields.state.value()),
-              atomCount: Number(fields.atomCount.value()),
-              reference: reference?.trim() ? reference.trim() : null,
-            });
-            return result.success && result.result
-              ? { success: true }
-              : { error: result.error ?? 'Unable to upload molecule.' };
-          });
-          return;
-        }
-        if (!(await f.submit())) return; // validation issues render inline
-        const result = uploadMolecule.result;
-        reportResult(
-          result?.success && result.result
-            ? { success: true }
-            : { error: result?.error ?? 'Unable to upload molecule.' },
-        );
-      } catch (err) {
-        submitError = err instanceof Error ? err.message : 'Upload failed';
-      }
-    });
+  const uploadProps = uploadMolecule.preflight(uploadMoleculeSchema).enhance(
+    makeEnhance(
+      uploadMolecule,
+      async () => {
+        if (!file) return { error: 'Select a file to upload.' };
+        const fields = uploadMolecule.fields;
+        const reference = fields.reference.value();
+        return clientWrites.upload({
+          file,
+          moleculeName: fields.moleculeName.value() ?? '',
+          description: fields.description.value() ?? '',
+          state: Number(fields.state.value()),
+          atomCount: Number(fields.atomCount.value()),
+          reference: reference?.trim() ? reference.trim() : null,
+        });
+      },
+      'Upload failed',
+    ),
+  );
 
   const fileFormProps = $derived.by(() => {
     const form = fileForm;
     if (!form) return null;
-    return form.preflight(editMoleculeFileSchema).enhance(async (f) => {
-      submitError = null;
-      try {
-        if (LOCAL) {
-          await submitLocal(form, () => {
-            if (!localWrites) return Promise.resolve({ success: false });
-            const fields = form.fields;
-            const reference = fields.reference.value();
-            return localWrites.editFile({
-              id: fields.id.value() ?? '',
-              filename: fields.filename.value() ?? '',
-              description: fields.description.value() ?? '',
-              state: Number(fields.state.value()),
-              reference: reference?.trim() ? reference.trim() : null,
-            });
+    return form.preflight(editMoleculeFileSchema).enhance(
+      makeEnhance(
+        form,
+        () => {
+          const fields = form.fields;
+          const reference = fields.reference.value();
+          return clientWrites.editFile({
+            id: fields.id.value() ?? '',
+            filename: fields.filename.value() ?? '',
+            description: fields.description.value() ?? '',
+            state: Number(fields.state.value()),
+            reference: reference?.trim() ? reference.trim() : null,
           });
-          return;
-        }
-        if (!(await f.submit())) return;
-        reportResult(form.result ?? null);
-      } catch (err) {
-        submitError = err instanceof Error ? err.message : 'Save failed';
-      }
-    });
+        },
+        'Save failed',
+      ),
+    );
   });
 
   const molFormProps = $derived.by(() => {
     const form = molForm;
     if (!form) return null;
-    return form.preflight(editMoleculeSchema).enhance(async (f) => {
-      submitError = null;
-      try {
-        if (LOCAL) {
-          await submitLocal(form, () =>
-            localWrites
-              ? localWrites.editMolecule({
-                  originalName: form.fields.originalName.value() ?? '',
-                  moleculeName: form.fields.moleculeName.value() ?? '',
-                })
-              : Promise.resolve({ success: false }),
-          );
-          return;
-        }
-        if (!(await f.submit())) return;
-        reportResult(form.result ?? null);
-      } catch (err) {
-        submitError = err instanceof Error ? err.message : 'Save failed';
-      }
-    });
+    return form.preflight(editMoleculeSchema).enhance(
+      makeEnhance(
+        form,
+        () =>
+          clientWrites.editMolecule({
+            originalName: form.fields.originalName.value() ?? '',
+            moleculeName: form.fields.moleculeName.value() ?? '',
+          }),
+        'Save failed',
+      ),
+    );
   });
 
   // The replace form is hidden and auto-submitted from the file input's
   // onchange, so its validation issues surface via submitError instead of
-  // inline field errors.
+  // inline field errors (the `onIssue` option below). The replaced file's
+  // name/contents/atom count all change on success; `reportResult` (via
+  // makeEnhance) closes the dialog so the reopened one snapshots fresh values
+  // from the table.
   const replaceFormProps = $derived.by(() => {
     const form = replaceForm;
     if (!form) return null;
-    return form.preflight(replaceMoleculeFileSchema).enhance(async (f) => {
-      submitError = null;
-      try {
-        if (LOCAL) {
-          await submitLocalReplace(form);
-          return;
-        }
-        if (!(await f.submit())) {
-          submitError =
-            form.fields.allIssues()?.[0]?.message ?? 'Invalid file.';
-          return;
-        }
-        // The replaced file's name/contents/atom count all changed; close so
-        // the reopened dialog snapshots fresh values from the table.
-        reportResult(form.result ?? null);
-      } catch (err) {
-        submitError = err instanceof Error ? err.message : 'Replace failed';
-      }
-    });
+    return form.preflight(replaceMoleculeFileSchema).enhance(
+      makeEnhance(
+        form,
+        () =>
+          clientWrites.replaceFile({
+            id: form.fields.id.value() ?? '',
+            file: replaceInput!.files![0],
+          }),
+        'Replace failed',
+        {
+          extraCheck: () =>
+            replaceInput?.files?.[0] ? null : 'Select a file.',
+          onIssue: (message) => {
+            submitError = message;
+          },
+        },
+      ),
+    );
   });
 
   async function confirmDelete() {
@@ -557,7 +550,7 @@
       onclick={requiresUploadAck && !settings.get('uploadAcknowledged')
         ? (event) => {
             event.preventDefault();
-            const form = event.currentTarget.form;
+            const form = (event.currentTarget as HTMLButtonElement).form;
             requireUploadAck(() => form?.requestSubmit());
           }
         : undefined}

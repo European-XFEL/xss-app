@@ -150,6 +150,17 @@ export default defineConfig(
                 ],
               },
             },
+            // The molecule dialog reads/writes the no-auth upload-ack flag
+            // through the settings widget's single reactive store (moving it
+            // to shared would fork the state the settings popover also reads
+            // from). Scoped to molecule → settings only, and via its public
+            // index.ts (the entry-point rule below still applies).
+            {
+              from: { type: 'feature', captured: { feature: 'molecule' } },
+              allow: {
+                to: { type: 'widget', captured: { widget: 'settings' } },
+              },
+            },
             // Remote function files run on the server (clients only see the
             // generated fetch wrappers), so they may reach into lib/server.
             {

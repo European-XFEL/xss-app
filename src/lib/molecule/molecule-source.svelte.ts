@@ -180,10 +180,10 @@ export function editMoleculeFileContents(input: {
 /**
  * Client-store form-submit writes, used by the dialog when `useClientStorage()`
  * is true. On node with Postgres storage the dialog uses the `molecule.remote`
- * forms directly instead; bd-7 unifies the two submit paths behind one seam.
- * (Named `localWrites` for continuity with the dialog's current import.)
+ * forms directly instead; both paths share one `.enhance()` seam (see
+ * `makeEnhance` in MoleculeFormDialog.svelte).
  */
-export const localWrites = {
+export const clientWrites = {
   upload: (input: UploadStoredMoleculeInput) =>
     withRefresh(uploadStoredMolecule(input)),
   editFile: (input: EditStoredFileInput) => withRefresh(editStoredFile(input)),
