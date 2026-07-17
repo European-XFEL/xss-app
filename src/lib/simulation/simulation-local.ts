@@ -19,12 +19,64 @@
  */
 import { get, set } from 'idb-keyval';
 
+import { browser } from '$app/environment';
+
 import { getMoleculeFileContent } from '$lib/molecule/molecule.remote';
 import type { DebyeResult, SimRequest } from '$lib/shared/contracts';
 import { getStoredMoleculeContent } from '$lib/shared/molecule-store';
 
+import type { DebyeWorkerRequest, DebyeWorkerResponse } from './debye.worker';
 import { computeDebyeIq } from './kernel/debye';
 import { parseXyz } from './kernel/xyz-parser';
+
+// ─── Web Worker dispatch ──────────────────────────────────────────────────────
+// The O(N²·|Q|) kernel runs in a worker so large structures don't jank the UI
+// thread (bd-8). One worker is shared across calls; requests are correlated by
+// an incrementing id. Constructed lazily and only in the browser — SSR / the
+// node build must never `new Worker(...)` (guarded by `browser` below).
+
+let worker: Worker | undefined;
+let seq = 0;
+const pending = new Map<
+  number,
+  { resolve: (r: DebyeResult) => void; reject: (e: Error) => void }
+>();
+
+function getWorker(): Worker {
+  if (!worker) {
+    worker = new Worker(new URL('./debye.worker.ts', import.meta.url), {
+      type: 'module',
+    });
+    worker.onmessage = ({ data }: MessageEvent<DebyeWorkerResponse>) => {
+      const p = pending.get(data.id);
+      if (!p) return;
+      pending.delete(data.id);
+      if (data.ok) p.resolve(data.result);
+      else p.reject(new Error(data.error));
+    };
+    // A worker-level crash rejects everything in flight rather than hanging.
+    worker.onerror = (event) => {
+      const err = new Error(event.message || 'Debye worker error');
+      for (const p of pending.values()) p.reject(err);
+      pending.clear();
+      worker = undefined;
+    };
+  }
+  return worker;
+}
+
+function computeInWorker(
+  elements: string[],
+  xyz: [number, number, number][],
+  qRange: SimRequest['qRange'],
+): Promise<DebyeResult> {
+  const id = (seq += 1);
+  const message: DebyeWorkerRequest = { id, elements, xyz, qRange };
+  return new Promise<DebyeResult>((resolve, reject) => {
+    pending.set(id, { resolve, reject });
+    getWorker().postMessage(message);
+  });
+}
 
 /**
  * IndexedDB key for a cached result, keyed by the same four fields the DB cache
@@ -49,7 +101,11 @@ export async function computeDebyeClient(
     (await getStoredMoleculeContent(request.fileId)) ??
     (await getMoleculeFileContent(request.fileId)).contents;
   const { elements, xyz } = parseXyz(contents);
-  return computeDebyeIq(elements, xyz, request.qRange);
+  // Browser: offload the kernel to the worker. SSR / node build (no `Worker`):
+  // fall back to a synchronous in-process compute so the module stays isomorphic.
+  return browser
+    ? computeInWorker(elements, xyz, request.qRange)
+    : computeDebyeIq(elements, xyz, request.qRange);
 }
 
 /** IndexedDB cache read → client compute on miss → IndexedDB write-back. */
