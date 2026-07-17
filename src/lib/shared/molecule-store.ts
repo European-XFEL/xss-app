@@ -23,12 +23,13 @@
  */
 import { del, delMany, get, getMany, keys, set } from 'idb-keyval';
 
-import { MAX_UPLOAD_ATOM_COUNT } from './contracts';
+import { deriveAtomCount } from './atom-count';
 import type {
   MoleculeInfo,
   MutationResult,
   UploadMoleculeResult,
 } from './contracts';
+import { sha256Hex } from './sha256';
 
 const INDEX_KEY = 'molidx';
 const infoKey = (id: string) => `mol:${id}`;
@@ -58,46 +59,6 @@ export interface EditStoredFileInput {
   description: string;
   state: number;
   reference: string | null;
-}
-
-const atomCountLine = /^(\s*\d+)/;
-
-/**
- * Derive the atom count from an .xyz file's first line, mirroring
- * `extractAtomCount` in db-source.ts. Falls back to `fallback` (the
- * client-declared count) when the header can't be parsed, matching the DB
- * upload path.
- */
-function deriveAtomCount(
-  contents: string,
-  fallback: number | null = null,
-): { ok: true; atomCount: number } | { ok: false; error: string } {
-  const firstLine = contents.split(/\r?\n/, 1)[0]?.trim();
-  const match = firstLine ? atomCountLine.exec(firstLine) : null;
-  const parsed = match ? Number.parseInt(match[1], 10) : Number.NaN;
-  const resolved = Number.isFinite(parsed) ? parsed : fallback;
-
-  if (resolved === null) {
-    return {
-      ok: false,
-      error: 'Unable to read the atom count from this file.',
-    };
-  }
-  if (resolved > MAX_UPLOAD_ATOM_COUNT) {
-    return {
-      ok: false,
-      error: `Structure has too many atoms (${resolved}); the maximum is ${MAX_UPLOAD_ATOM_COUNT}.`,
-    };
-  }
-  return { ok: true, atomCount: resolved };
-}
-
-async function sha256Hex(text: string): Promise<string> {
-  const bytes = new TextEncoder().encode(text);
-  const digest = await crypto.subtle.digest('SHA-256', bytes);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
 }
 
 async function readIndex(): Promise<string[]> {

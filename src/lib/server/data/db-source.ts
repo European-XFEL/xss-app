@@ -13,13 +13,12 @@ import { BACKEND_URL as BACKEND_URL_ENV } from '$app/env/private';
 
 import { db } from '$lib/server/db';
 import * as schema from '$lib/server/db/schema';
-import { sha256HexFromText } from '$lib/server/db/util';
 import {
   SimulationService,
   createClient,
   createConnectTransport,
 } from '$lib/server/grpc';
-import { MAX_UPLOAD_ATOM_COUNT } from '$lib/shared/contracts';
+import { deriveAtomCount } from '$lib/shared/atom-count';
 import type {
   DebyeResult,
   MoleculeFileContent,
@@ -30,6 +29,7 @@ import type {
   SolventInfo,
   UploadMoleculeResult,
 } from '$lib/shared/contracts';
+import { sha256Hex } from '$lib/shared/sha256';
 import { computeDebyeIq, parseXyz } from '$lib/simulation';
 
 import type {
@@ -58,48 +58,11 @@ type SolventDifferentials = {
   dSdRho: number;
 };
 
-const atomCountLine = /^(\s*\d+)/;
-
 /** Postgres unique-constraint violation (SQLSTATE 23505). */
 function isUniqueViolation(err: unknown): boolean {
   if (!(err instanceof DrizzleQueryError)) return false;
   const cause = err.cause as { code?: string } | undefined;
   return cause?.code === '23505';
-}
-
-function extractAtomCount(contents: string) {
-  const firstLine = contents.split(/\r?\n/, 1)[0]?.trim();
-  if (!firstLine) return null;
-  const match = atomCountLine.exec(firstLine);
-  if (!match) return null;
-  const parsed = Number.parseInt(match[1], 10);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
-/**
- * Derive the atom count for new file contents, falling back to
- * `fallback` (the client-declared value, upload only) when the first line
- * can't be parsed. Shared by uploadMolecule and the contents-mutation
- * methods below, which have no fallback and error instead.
- */
-function deriveAtomCount(
-  contents: string,
-  fallback: number | null = null,
-): { ok: true; atomCount: number } | { ok: false; error: string } {
-  const resolved = extractAtomCount(contents) ?? fallback;
-  if (resolved === null) {
-    return {
-      ok: false,
-      error: 'Unable to read the atom count from this file.',
-    };
-  }
-  if (resolved > MAX_UPLOAD_ATOM_COUNT) {
-    return {
-      ok: false,
-      error: `Structure has too many atoms (${resolved}); the maximum is ${MAX_UPLOAD_ATOM_COUNT}.`,
-    };
-  }
-  return { ok: true, atomCount: resolved };
 }
 
 /** Reject edits/deletes of a read-only structure file, distinct from not-found. */
@@ -171,7 +134,7 @@ async function updateFileContents(
     return { success: false, error: derived.error };
   }
 
-  const sha = await sha256HexFromText(contents);
+  const sha = await sha256Hex(contents);
   try {
     await db
       .update(schema.moleculeFiles)
@@ -238,7 +201,7 @@ export const dbMoleculeSource: MoleculeDataSource = {
     }
     const resolvedAtomCount = derived.atomCount;
 
-    const sha = await sha256HexFromText(contents);
+    const sha = await sha256Hex(contents);
 
     try {
       const result = await db

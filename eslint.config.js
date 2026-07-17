@@ -75,10 +75,12 @@ export default defineConfig(
         // from feature/widget boundaries: they may import sample/seed data
         // from anywhere to demo a component.
         { type: 'stories', pattern: 'src/**/*.stories.svelte', mode: 'full' },
-        // contracts = the sanctioned client/server type-crossing surface.
+        // contracts = the sanctioned client/server crossing surface: shared
+        // types/constants plus pure helpers (atom-count, sha256) both the
+        // client store and the server data source derive identically.
         {
           type: 'contracts',
-          pattern: 'src/lib/shared/(contracts|health).ts',
+          pattern: 'src/lib/shared/(contracts|health|atom-count|sha256).ts',
           mode: 'full',
         },
         // SvelteKit remote functions: server-side handlers that compile to
@@ -122,10 +124,16 @@ export default defineConfig(
           default: 'disallow',
           rules: [
             // contracts is the single sanctioned crossing point for
-            // proto-derived types: it may type-import from the server tree.
+            // proto-derived types: it may type-import from the server tree,
+            // and its files may share constants with each other (e.g.
+            // atom-count reading MAX_UPLOAD_ATOM_COUNT from contracts).
             {
               from: { type: 'contracts' },
               allow: { to: { type: ['server'] }, dependency: { kind: 'type' } },
+            },
+            {
+              from: { type: 'contracts' },
+              allow: { to: { type: ['contracts'] } },
             },
             {
               from: { type: 'shared' },
