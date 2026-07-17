@@ -4,8 +4,9 @@ Two implementations of the Debye scattering I(q) computation exist in this repo.
 
 ## Why two
 
-- **Python/gRPC backend** (`backend/src/simex_debye_grpc/`) — the original, torch-backed
-  via `debyecalculator`. Reference implementation and parity ground truth.
+- **Python calculator** (`backend/calculator.py`) — the original, torch-backed via
+  `debyecalculator`. Parity ground truth and fixture/table codegen oracle only; it has
+  **no runtime role** (the gRPC serving layer was retired in `initial-dev-u44`).
 - **TS kernel** (`debye.ts`) — a pure-TypeScript port of exactly what
   `calculator.py::calc_debye` exercises (xray, `biso=0.3`, `include_self_scattering=True`,
   `(elements, xyz)` structure source; no CIF/ASE, batching, or UI paths).
@@ -22,11 +23,12 @@ profiling proves otherwise. Full rationale lives in the epic's design notes.
 
 ## Which the app uses
 
-As of `initial-dev-ej2.6`, the **TS kernel is the primary compute path**. On a cache miss,
-`dbSimulationSource.getDebyeResult` (`src/lib/server/data/db-source.ts`) parses the .xyz and
-runs `computeDebyeIq`; on **any** parse/kernel failure (e.g. an element absent from
-`FORM_FACTOR_COEFFICIENTS`) it falls back to the Python gRPC backend. Python used to be the
-only path — the surprise is intentional.
+The **TS kernel is the only compute path**, and it runs **client-side**: on a cache miss
+`computeDebyeClient` (`src/lib/simulation/simulation-local.ts`) parses the .xyz and runs
+`computeDebyeIq` in the browser (results cached in IndexedDB, or written back to the shared
+Postgres cache on the node build). There is **no gRPC fallback** any more (removed in
+`initial-dev-pbx`/`initial-dev-u44`), so a parse/kernel failure — e.g. an element absent from
+`FORM_FACTOR_COEFFICIENTS` — now propagates to the caller instead of falling back to Python.
 
 ## Parity workflow
 

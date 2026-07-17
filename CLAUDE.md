@@ -53,9 +53,10 @@ shared-store hazard. Because the modules are real (not symlinked out of the main
 `/chrome` browser verification works without any Vite `server.fs.allow` workaround.
 
 - Shared Postgres: one Postgres serves every worktree; your worktree runs ONLY its own Vite
-  dev server against it — do not start your own DB. Debye compute runs in-process (the TS
-  kernel is the default path); the Python gRPC backend is only an optional fallback for
-  elements missing from the kernel's coefficient table and is NOT required for normal dev.
+  dev server against it — do not start your own DB. Debye compute runs entirely client-side
+  in the browser (the TS kernel). The Python calculator (`backend/calculator.py`) is a
+  parity/codegen oracle ONLY — it has no runtime role (the gRPC serving layer was retired) and
+  is never needed for normal dev.
 - Start the dev server with `pnpm dev`. The `dev` / `build*` / `preview*` scripts already wrap
   `dotenv -e .env`, so `process.env` is populated and DB routes work — no manual `dotenv`
   invocation needed.
