@@ -19,6 +19,7 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "bench": "tsx src/lib/simulation/kernel/debye.bench.ts",
     "db:start": "docker compose up",
     "db:push": "drizzle-kit push",
     "db:seed": "dotenv -e .env -- tsx ./scripts/seed.ts",
