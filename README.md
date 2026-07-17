@@ -47,8 +47,9 @@ pnpm build:static      # static target
 pnpm preview:static
 ```
 
-All scripts read `.env` via dotenv; the `:static` variants pin
-`PUBLIC_TARGET=static` inline, so no separate env file is needed.
+All scripts read `.env` via dotenv; the `:static` variants pin the static
+target, the `/xss-app` base path, and full prerendering
+(`PUBLIC_PRERENDER_ALL=true`) inline, so no separate env file is needed.
 
 ## Serve / deploy
 
@@ -64,7 +65,7 @@ docker compose --profile dev up    # containerised dev server (:5173, file sync)
 docker compose --profile preview up
 ```
 
-**Static target** — the `build-static/` output is plain files; host them
-anywhere. `pnpm serve:static` serves it locally with Caddy on :8080 under the
-`/xss-app` base path (`scripts/static.Caddyfile`); for that to resolve assets
-correctly, build with `PUBLIC_BASE_PATH=/xss-app` set in `.env`.
+**Static target** — the `build-static/` output is plain files built under the
+`/xss-app` base path; host them anywhere that serves that prefix.
+`pnpm serve:static` serves it locally with Caddy on :8080
+(`scripts/static.Caddyfile`).
