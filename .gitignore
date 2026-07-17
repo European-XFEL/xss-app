@@ -44,3 +44,4 @@ storybook-static
 # Playwright
 test-results
 playwright-report
+__screenshots__/

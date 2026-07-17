@@ -12,7 +12,12 @@
       ? 'setup incomplete'
       : sample.computing
         ? 'recomputing…'
-        : 'simulation up to date',
+        : sample.computeError
+          ? 'compute failed'
+          : 'simulation up to date',
+  );
+  const failed = $derived(
+    isSetupComplete(sample) && !sample.computing && !!sample.computeError,
   );
 </script>
 
@@ -44,9 +49,15 @@
 
   <span class="ml-auto flex items-center gap-2">
     <span
-      class="flex size-4 items-center justify-center rounded-full bg-[rgba(47,163,122,.16)]"
+      class="flex size-4 items-center justify-center rounded-full {failed
+        ? 'bg-destructive/15'
+        : 'bg-[rgba(47,163,122,.16)]'}"
     >
-      <span class="size-1.5 rounded-full bg-status-ok-dot"></span>
+      <span
+        class="size-1.5 rounded-full {failed
+          ? 'bg-destructive'
+          : 'bg-status-ok-dot'}"
+      ></span>
     </span>
     <span class="text-status-value">{simStateText}</span>
   </span>

@@ -12,6 +12,8 @@ export interface NavSample {
   concentrationSoluteMolar: number | undefined | null;
   /** True while the simulation is being recomputed. */
   computing?: boolean;
+  /** True when the last scattering fetch/compute failed. */
+  computeError?: boolean;
 }
 
 /** Strips a file extension, e.g. "LS.xyz" -> "LS". */

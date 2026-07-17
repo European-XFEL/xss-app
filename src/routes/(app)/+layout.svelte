@@ -18,6 +18,7 @@
     solventName: simulation.sample.solvent?.name,
     concentrationSoluteMolar: simulation.sample.concentrationSoluteMolar,
     computing: simulation.computing,
+    computeError: simulation.computeError,
   });
 
   // Only ever invoked from the Share button's click handler (never at

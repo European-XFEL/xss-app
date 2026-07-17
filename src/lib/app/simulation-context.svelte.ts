@@ -64,6 +64,11 @@ export class SimulationState {
   // completeness.
   computing = $state(false);
 
+  // Set alongside `computing`: true when the scattering fetch/compute
+  // failed, so the shell's status pill doesn't claim "up to date" while
+  // the dashboard shows an error banner.
+  computeError = $state(false);
+
   constructor(init?: SimulationStateInit) {
     if (init?.qRange) this.qRange = structuredClone(init.qRange);
     applyDefined(this.pump, init?.pump);

@@ -140,6 +140,7 @@
 
   $effect(() => {
     simulation.computing = isFetching;
+    simulation.computeError = !!fetchError;
   });
 
   function retryFetches() {
