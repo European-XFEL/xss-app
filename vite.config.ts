@@ -57,7 +57,7 @@ export default defineConfig({
         extends: true,
         test: {
           name: 'browser',
-          setupFiles: ['vitest-browser-svelte'],
+          setupFiles: ['./vitest-setup.browser.ts', 'vitest-browser-svelte'],
           include: ['src/**/*.browser.test.ts'],
           browser: {
             enabled: true,
