@@ -9,9 +9,11 @@
  */
 import { expect, test } from './fixtures';
 import {
+  DSS_SERIES_TOKENS,
   fieldControl,
   metricValue,
   selectTrigger,
+  seriesPath,
   storedMoleculeFilenames,
   waitUntilInteractive,
   writeUniqueFixture,
@@ -48,9 +50,22 @@ test('boots under the base path and computes ΔS(Q) client-side', async ({
   await expect(metricValue(page, 'ΔT')).not.toContainText('—', {
     timeout: 30_000,
   });
-  const plotPath = page.locator('svg path').first();
-  await expect(plotPath).toBeVisible();
-  expect((await plotPath.getAttribute('d'))?.length ?? 0).toBeGreaterThan(0);
+  // Every ΔS series drew its own line, not just the legend (renders
+  // unconditionally) and not just "some" path (the two solvent curves alone
+  // used to satisfy that while Total/Solute silently failed). Checking this
+  // before the banner also gives a fetch failure (below) time to have
+  // surfaced — ΔT settles independently of the solute/solvent fetches.
+  for (const token of DSS_SERIES_TOKENS) {
+    const path = seriesPath(page, token);
+    await expect(path).toBeVisible();
+    expect((await path.getAttribute('d'))?.length ?? 0).toBeGreaterThan(100);
+  }
+
+  // No compute-error banner once compute settles — same DataCloneError-class
+  // failure this suite used to miss (bd initial-dev-zct), and the same fix
+  // (simulation-local.ts's computeInWorker) applies to this target too since
+  // the static build's worker path is shared with the node build's.
+  await expect(page.getByRole('alert')).toHaveCount(0);
 
   expect(escapedRequests).toEqual([]);
 });

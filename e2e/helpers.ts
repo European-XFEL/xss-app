@@ -50,6 +50,32 @@ export function metricValue(scope: Page, label: string): Locator {
 }
 
 /**
+ * The DSSPlot's four ΔS series, keyed by the CSS custom property
+ * DSSPlot.svelte assigns each series' `line_style.stroke` (`--data-total` /
+ * `--data-solute` / `--data-solvent` / `--data-permol` — the app's own design
+ * tokens, see src/app.css). matterviz's ScatterPlot only draws a `<path>`
+ * for a series that actually has data: the legend's 4 items render
+ * unconditionally regardless, so a broken solute compute (bd
+ * initial-dev-zct — the worker threw DataCloneError, only the two solvent
+ * curves plotted) still shows a full legend and a non-empty first `<path>`.
+ * Checking each series' own stroke-tagged path is what actually proves its
+ * data reached the DOM.
+ */
+export const DSS_SERIES_TOKENS = [
+  'total',
+  'solute',
+  'solvent',
+  'permol',
+] as const;
+
+export function seriesPath(
+  page: Page,
+  token: (typeof DSS_SERIES_TOKENS)[number],
+): Locator {
+  return page.locator(`svg path[stroke="var(--data-${token})"]`);
+}
+
+/**
  * Wait until the page is genuinely interactive, not just rendered.
  *
  * Every Playwright test gets a fresh, cache-less browser context, so the
