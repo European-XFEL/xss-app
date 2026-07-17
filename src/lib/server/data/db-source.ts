@@ -9,15 +9,8 @@ import Papa from 'papaparse';
 
 import { error } from '@sveltejs/kit';
 
-import { BACKEND_URL as BACKEND_URL_ENV } from '$app/env/private';
-
 import { db } from '$lib/server/db';
 import * as schema from '$lib/server/db/schema';
-import {
-  SimulationService,
-  createClient,
-  createConnectTransport,
-} from '$lib/server/grpc';
 import { deriveAtomCount } from '$lib/shared/atom-count';
 import type {
   DebyeResult,
@@ -30,7 +23,6 @@ import type {
   UploadMoleculeResult,
 } from '$lib/shared/contracts';
 import { sha256Hex } from '$lib/shared/sha256';
-import { computeDebyeIq, parseXyz } from '$lib/simulation';
 
 import type {
   EditMoleculeFileContentsInput,
@@ -42,15 +34,6 @@ import type {
   SolventDataSource,
   UploadMoleculeInput,
 } from './types';
-
-const BACKEND_URL = BACKEND_URL_ENV ?? 'http://localhost:50051';
-
-const transport = createConnectTransport({
-  baseUrl: `${BACKEND_URL}`,
-  httpVersion: '1.1',
-});
-
-const simClient = createClient(SimulationService, transport);
 
 type SolventDifferentials = {
   Q: number;
@@ -363,51 +346,14 @@ export const dbSolventSource: SolventDataSource = {
 };
 
 // ─── Simulation Data Source ─────────────────────────────────────────────────
-
-/**
- * Compute Debye I(Q) for a structure file, preferring the in-process
- * TypeScript kernel and falling back to the Python gRPC backend.
- *
- * The kernel is the proven-parity primary path (see
- * `src/lib/simulation/kernel/debye.parity.test.ts`). Any failure parsing the
- * file or evaluating the kernel — e.g. an element symbol absent from
- * `FORM_FACTOR_COEFFICIENTS`, or malformed contents — is caught and the gRPC
- * backend is used instead, so a kernel gap never breaks simulation for users.
- */
-async function computeDebye(
-  file: { filename: string; contents: string },
-  request: SimRequest,
-): Promise<DebyeResult> {
-  try {
-    const { elements, xyz } = parseXyz(file.contents);
-    return computeDebyeIq(elements, xyz, request.qRange);
-  } catch (err) {
-    console.warn(
-      'TS Debye kernel failed; falling back to gRPC backend:',
-      err instanceof Error ? err.message : err,
-    );
-  }
-
-  const requestBody = {
-    structure: {
-      filename: file.filename,
-      contents: new TextEncoder().encode(file.contents),
-    },
-    qRange: {
-      min: request.qRange.min,
-      max: request.qRange.max,
-      step: request.qRange.step,
-    },
-  };
-
-  return simClient.calcDebye(requestBody);
-}
+//
+// Debye I(Q) is computed client-side by the in-process TS kernel (see
+// `$lib/simulation/simulation-local`); the server no longer computes. This
+// source is only the shared Postgres cache: a read (miss → client computes) and
+// a write-back invoked by the `cacheDebyeResult` command.
 
 export const dbSimulationSource: SimulationDataSource = {
-  // Cache-lookup → compute (see computeDebye for the TS-primary/gRPC-fallback
-  // ordering) → best-effort cache write. The cache write is agnostic to which
-  // path produced the result.
-  async getDebyeResult(request: SimRequest): Promise<DebyeResult> {
+  async getDebyeResult(request: SimRequest): Promise<DebyeResult | null> {
     const fetched = await db.query.intensities.findFirst({
       where: {
         moleculeId: request.fileId,
@@ -423,33 +369,29 @@ export const dbSimulationSource: SimulationDataSource = {
         i: fetched.intensity.map((v) => Number(v)),
       };
     }
+    return null;
+  },
 
-    const file = await db.query.moleculeFiles.findFirst({
-      where: { id: request.fileId },
-    });
-
-    if (!file) {
-      throw error(404, 'Molecule not found');
-    }
-
-    const result = await computeDebye(file, request);
-
-    // Best-effort cache write
+  async cacheDebyeResult(
+    request: SimRequest,
+    result: DebyeResult,
+  ): Promise<void> {
+    // Best-effort: a concurrent writer may have cached this key first
+    // (onConflictDoNothing), and a caching failure must not fail the request.
     try {
-      await db.insert(schema.intensities).values({
-        moleculeId: request.fileId,
-        qMin: request.qRange.min,
-        qMax: request.qRange.max,
-        qStep: request.qRange.step,
-        intensity: result.i.map(String),
-        q: result.q.map(String),
-      });
+      await db
+        .insert(schema.intensities)
+        .values({
+          moleculeId: request.fileId,
+          qMin: request.qRange.min,
+          qMax: request.qRange.max,
+          qStep: request.qRange.step,
+          intensity: result.i.map(String),
+          q: result.q.map(String),
+        })
+        .onConflictDoNothing();
     } catch (err) {
-      if (!isUniqueViolation(err)) {
-        console.error('Failed to cache intensity result:', err);
-      }
+      console.error('Failed to cache intensity result:', err);
     }
-
-    return result;
   },
 };

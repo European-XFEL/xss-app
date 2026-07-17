@@ -1,46 +1,34 @@
 /**
- * Remote function for the Debye scattering computation
- * (https://svelte.dev/docs/kit/remote-functions#query).
+ * Remote functions for the shared Postgres Debye cache (node build only).
  *
- * Replaces POST /api/simulation. A plain `query` (not `prerender`): the
- * q-range argument is a continuous float range, so results are not
- * enumerable at build time, and the computation needs the live gRPC
- * backend anyway. On the static target that backend does not exist and the
- * dashboard's simulation capability is reported unavailable — a call there
- * fails exactly like the previous client-side fetch('/api/simulation') did
- * (see initial-dev-4dy), so no STATIC guard is added.
+ * Debye I(Q) is computed client-side by the TS kernel (see `simulation-local`);
+ * the server no longer computes. These two functions are just the shared cache:
+ * - `getCachedDebyeResult` (query): read a cached result, or `null` on a miss.
+ * - `cacheDebyeResult` (command): persist a client-computed result for everyone.
+ *
+ * The facade (`simulation-source`) only reaches these on node-Postgres storage;
+ * on the static build (and node with the backendless-storage toggle) it uses
+ * the IndexedDB path instead, so this module tree-shakes out of those bundles.
  */
-import * as Sentry from '@sentry/sveltekit';
-
-import { query } from '$app/server';
+import { command, query } from '$app/server';
 
 import { simulationSource } from '$lib/server/data';
-import { simulationSchema } from '$lib/shared/api/validation';
+import {
+  cacheDebyeResultSchema,
+  simulationSchema,
+} from '$lib/shared/api/validation';
+import type { DebyeResult } from '$lib/shared/contracts';
 
-export const getDebyeResult = query(simulationSchema, async (request) => {
-  const start = Date.now();
-  try {
-    const result = await simulationSource.getDebyeResult(request);
-    Sentry.metrics.count('simulation.runs', 1, {
-      attributes: { status: 'ok' },
-    });
-    Sentry.metrics.distribution('simulation.duration', Date.now() - start, {
-      unit: 'millisecond',
-    });
-    Sentry.logger.info('Debye simulation completed', {
-      fileId: request.fileId,
-      qPoints: result.q.length,
-      durationMs: Date.now() - start,
-    });
-    return result;
-  } catch (err) {
-    Sentry.metrics.count('simulation.runs', 1, {
-      attributes: { status: 'error' },
-    });
-    Sentry.logger.error('Debye simulation failed', {
-      fileId: request.fileId,
-      error: err instanceof Error ? err.message : String(err),
-    });
-    throw err;
-  }
-});
+export const getCachedDebyeResult = query(
+  simulationSchema,
+  async (request): Promise<DebyeResult | null> => {
+    return simulationSource.getDebyeResult(request);
+  },
+);
+
+export const cacheDebyeResult = command(
+  cacheDebyeResultSchema,
+  async ({ request, result }): Promise<void> => {
+    await simulationSource.cacheDebyeResult(request, result);
+  },
+);

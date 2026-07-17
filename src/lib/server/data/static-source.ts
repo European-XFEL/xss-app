@@ -272,11 +272,12 @@ export const staticSolventSource: SolventDataSource = {
 
 // ─── Simulation Data Source ─────────────────────────────────────────────────
 
+// The static build computes Debye client-side and caches in IndexedDB
+// (`$lib/simulation/simulation-local`), so this server source is never invoked
+// — inert implementations satisfy the interface.
 export const staticSimulationSource: SimulationDataSource = {
-  async getDebyeResult(_request: SimRequest): Promise<DebyeResult> {
-    throw error(
-      501,
-      'Simulation is not supported in the static build. Use the production build with a database.',
-    );
+  async getDebyeResult(_request: SimRequest): Promise<DebyeResult | null> {
+    return null;
   },
+  async cacheDebyeResult(): Promise<void> {},
 };

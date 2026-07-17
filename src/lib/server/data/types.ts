@@ -80,5 +80,8 @@ export interface SolventDataSource {
 // ─── Simulation types ───────────────────────────────────────────────────────
 
 export interface SimulationDataSource {
-  getDebyeResult(request: SimRequest): Promise<DebyeResult>;
+  /** Read the shared Debye cache. `null` on a miss — the client computes. */
+  getDebyeResult(request: SimRequest): Promise<DebyeResult | null>;
+  /** Persist a client-computed result into the shared cache. */
+  cacheDebyeResult(request: SimRequest, result: DebyeResult): Promise<void>;
 }

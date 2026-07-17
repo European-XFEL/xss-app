@@ -1,6 +1,7 @@
 import z from 'zod';
 
 import {
+  type DebyeResult,
   MAX_UPLOAD_ATOM_COUNT,
   MAX_UPLOAD_FILE_BYTES,
   type SimRequest,
@@ -111,14 +112,83 @@ export const replaceMoleculeFileSchema = z.object({
   file: fileSchema,
 });
 
+// Hard cap on q-grid points: a degenerate tiny step can't request a giant
+// array (DoS). Real grids are low thousands; 100k is comfortably above.
+// ponytail: single consumer (this module) — move to contracts if the client
+// pre-checks grid size too.
+const MAX_Q_POINTS = 100_000;
+
+/**
+ * Q-grid point count for a qRange, matching the kernel's `torch.arange`
+ * semantics (`createArangeQGrid` in `simulation/kernel/debye.ts`). Replicated,
+ * not imported: `$lib/shared` importing the simulation feature would violate the
+ * boundary rules. Keep in sync with that one-liner.
+ */
+function qGridCount(qRange: SimRequest['qRange']): number {
+  return Math.max(0, Math.ceil((qRange.max - qRange.min) / qRange.step));
+}
+
 // Pinned to the `SimRequest` contract (the boundaries rules let server code
 // import only $lib/shared/contracts, so the interface lives there and this
 // schema is type-checked against it instead of being the type's source).
-export const simulationSchema = z.object({
-  fileId: z.string(),
-  qRange: z.object({
-    min: z.number(),
-    max: z.number(),
-    step: z.number(),
-  }),
-}) satisfies z.ZodType<SimRequest>;
+export const simulationSchema = z
+  .object({
+    fileId: z.string(),
+    qRange: z.object({
+      min: z.number().finite(),
+      max: z.number().finite(),
+      step: z.number().finite(),
+    }),
+  })
+  .refine((r) => r.qRange.step > 0, {
+    message: 'qRange.step must be > 0',
+    path: ['qRange', 'step'],
+  })
+  .refine((r) => r.qRange.max >= r.qRange.min, {
+    message: 'qRange.max must be >= qRange.min',
+    path: ['qRange', 'max'],
+  })
+  .refine((r) => qGridCount(r.qRange) <= MAX_Q_POINTS, {
+    message: `qRange implies more than ${MAX_Q_POINTS} q-points`,
+    path: ['qRange'],
+  }) satisfies z.ZodType<SimRequest>;
+
+// Write-back for the shared Postgres Debye cache (node build): a client-computed
+// result persisted for every user. The app is no-auth (like uploads), so the
+// server can't recompute to verify the intensities without the very backend this
+// bead removed. It CAN, however, reject anything malformed or inconsistent with
+// the request: finite numbers, equal-length arrays, a length matching the
+// requested q-grid, and q values on that grid. ponytail: this bounds the shape
+// and ties the result to its key; a hostile client can still cache physically
+// wrong `i` for a real fileId — re-add server recompute only if this stops being
+// a trusted-user demo. (No non-negativity check: Debye I(Q) is ~0 / slightly
+// negative near minima.)
+export const cacheDebyeResultSchema = z
+  .object({
+    request: simulationSchema,
+    result: z.object({
+      q: z.array(z.number().finite()).max(MAX_Q_POINTS),
+      i: z.array(z.number().finite()).max(MAX_Q_POINTS),
+    }),
+  })
+  .refine((v) => v.result.q.length === v.result.i.length, {
+    message: 'result.q and result.i must have equal length',
+    path: ['result'],
+  })
+  .refine((v) => v.result.q.length === qGridCount(v.request.qRange), {
+    message: 'result length must match the requested q-grid',
+    path: ['result', 'q'],
+  })
+  .refine(
+    (v) =>
+      v.result.q.every((qk, k) => {
+        const expected = v.request.qRange.min + k * v.request.qRange.step;
+        return (
+          Math.abs(qk - expected) <= 1e-6 * Math.max(1, Math.abs(expected))
+        );
+      }),
+    {
+      message: 'result.q must equal qRange.min + k*step',
+      path: ['result', 'q'],
+    },
+  ) satisfies z.ZodType<{ request: SimRequest; result: DebyeResult }>;
