@@ -71,7 +71,14 @@ function computeInWorker(
   qRange: SimRequest['qRange'],
 ): Promise<DebyeResult> {
   const id = (seq += 1);
-  const message: DebyeWorkerRequest = { id, elements, xyz, qRange };
+  // Plain copies: callers hand us reactive ($state) arrays/objects, and
+  // postMessage's structured clone rejects proxies (DataCloneError).
+  const message: DebyeWorkerRequest = {
+    id,
+    elements: Array.from(elements),
+    xyz: xyz.map(([x, y, z]) => [x, y, z]),
+    qRange: { min: qRange.min, max: qRange.max, step: qRange.step },
+  };
   return new Promise<DebyeResult>((resolve, reject) => {
     pending.set(id, { resolve, reject });
     getWorker().postMessage(message);
