@@ -24,6 +24,12 @@ export type ScatteringResource<T> = {
   refetch: () => Promise<void>;
 };
 
+// Slider drags fire a reactive change per pixel; debounce so we dispatch one
+// compute after the input settles instead of a burst that the worker then has
+// to churn through. Stale results are dropped regardless (requestId below), so
+// this is purely about not starting work we'd immediately discard.
+const RECOMPUTE_DEBOUNCE_MS = 150;
+
 // Cohesive closure: fetch, effect, and getters all share `state`/`requestId`;
 // the overage is mostly the reactivity comments, which are worth their lines.
 // eslint-disable-next-line max-lines-per-function
@@ -35,10 +41,9 @@ export function createScatteringResource<T>(
   let requestId = 0;
 
   const runFetch = async () => {
-    // Reading `ready()` synchronously (before any await) is what registers the
-    // resource's reactive dependencies, so callers must read every input they
-    // depend on inside `ready` for the fetch to re-run when they change.
     if (!ready()) {
+      // Invalidate any in-flight fetch so its late result is dropped, not applied.
+      requestId += 1;
       state = { status: 'idle' };
       return;
     }
@@ -71,7 +76,18 @@ export function createScatteringResource<T>(
   };
 
   $effect(() => {
-    void runFetch();
+    // Read the inputs synchronously here (via `ready()`) so this effect — not
+    // the debounced/awaited `runFetch` — is what registers the reactive
+    // dependencies. Callers must therefore read every input `fetcher` depends
+    // on inside `ready`, so a change to any of them re-runs this effect.
+    if (!ready()) {
+      void runFetch(); // resets to idle + drops any in-flight result
+      return;
+    }
+    // Debounce: the teardown cancels a still-pending timer whenever an input
+    // changes again before it fires, collapsing a drag into a single dispatch.
+    const timer = setTimeout(() => void runFetch(), RECOMPUTE_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
   });
 
   return {
