@@ -11,9 +11,9 @@
   import { cn } from '$lib/shadcn/utils.js';
 
   import {
+    SETTINGS_SCHEMA,
     hasSeenSettings,
     markSettingsSeen,
-    SETTINGS_SCHEMA,
     settings,
   } from './settings.svelte';
 

@@ -81,11 +81,9 @@
     type="single"
     value={logMode ? logSliderValue : sliderValue}
     onValueChange={logMode ? undefined : (next) => (value = next)}
-    onValueCommit={
-      logMode
-        ? (next) => (value = Number((10 ** next).toPrecision(3)))
-        : undefined
-    }
+    onValueCommit={logMode
+      ? (next) => (value = Number((10 ** next).toPrecision(3)))
+      : undefined}
     min={logMode ? logMin : numMin}
     max={logMode ? logMax : numMax}
     step={logMode ? logStep : numStep}
