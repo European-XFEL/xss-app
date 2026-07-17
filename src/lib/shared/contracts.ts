@@ -45,6 +45,14 @@ export type MutationResult =
 export const MAX_UPLOAD_ATOM_COUNT = 1000;
 export const MAX_UPLOAD_FILE_BYTES = 1024 * 1024; // 1 MiB
 
+/**
+ * Soft warning threshold (not a hard limit). The client-side Debye kernel runs
+ * O(N²) in the browser and starts to feel slow past ~300 atoms (bench
+ * initial-dev-ej2.5). Above this the upload flow warns that computation may be
+ * slow but still lets the user continue; the hard cap above still applies.
+ */
+export const SOFT_ATOM_CAP = 300;
+
 // ─── Solvent ────────────────────────────────────────────────────────────────
 
 export interface SolventInfo {

@@ -35,6 +35,7 @@
   import {
     MAX_UPLOAD_ATOM_COUNT,
     MAX_UPLOAD_FILE_BYTES,
+    SOFT_ATOM_CAP,
   } from '$lib/shared/contracts';
   import type { MoleculeInfo } from '$lib/shared/contracts';
   import { useClientStorage } from '$lib/shared/storage-mode';
@@ -57,6 +58,10 @@
   let localSubmitting = $state(false);
   // Errors from reading/parsing the selected file (schema covers the rest).
   let fileError = $state<string | null>(null);
+  // Non-blocking soft-cap notice: large structures are allowed but the
+  // client-side kernel will be slow (SOFT_ATOM_CAP). Distinct from fileError so
+  // it warns without blocking submit — the user continues by clicking upload.
+  let fileWarning = $state<string | null>(null);
   let fileReadToken = 0;
   let file = $state<File | null>(null);
 
@@ -385,6 +390,7 @@
     if (!open) return;
     submitError = null;
     fileError = null;
+    fileWarning = null;
     confirmDeleteOpen = false;
     ackOpen = false;
     editingContents = false;
@@ -476,6 +482,7 @@
     uploadMolecule.element?.reset();
     file = null;
     fileError = null;
+    fileWarning = null;
     submitError = null;
   }
 
@@ -484,6 +491,7 @@
     const selected = target?.files?.[0] ?? null;
     file = selected;
     fileError = null;
+    fileWarning = null;
 
     if (!selected) return;
 
@@ -509,6 +517,9 @@
         if (count > MAX_UPLOAD_ATOM_COUNT) {
           fileError = `Structure has too many atoms (${count}); the maximum is ${MAX_UPLOAD_ATOM_COUNT}.`;
           return;
+        }
+        if (count > SOFT_ATOM_CAP) {
+          fileWarning = `Large structure (${count} atoms): scattering is computed in your browser and may be slow above ${SOFT_ATOM_CAP} atoms. You can still continue.`;
         }
         uploadMolecule.fields.atomCount.set(count);
       })
@@ -595,6 +606,11 @@
             {/each}
             {#if fileError}
               <Field.Error>{fileError}</Field.Error>
+            {/if}
+            {#if fileWarning}
+              <Field.Description class="text-amber-600 dark:text-amber-500">
+                {fileWarning}
+              </Field.Description>
             {/if}
           </Field.Field>
         </Field.Set>
