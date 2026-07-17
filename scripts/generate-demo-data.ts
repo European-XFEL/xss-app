@@ -14,7 +14,7 @@ import process from 'node:process';
 import { relations } from '../src/lib/server/db/relations.ts';
 import * as schema from '../src/lib/server/db/schema.ts';
 import { getDbUrl } from '../src/lib/server/db/url.ts';
-import { sha256HexFromText } from '../src/lib/server/db/util.ts';
+import { sha256Hex } from '../src/lib/shared/sha256.ts';
 import { drizzle } from 'drizzle-orm/postgres-js';
 
 const DATABASE_URL = getDbUrl();
@@ -113,7 +113,7 @@ async function buildMoleculeFileMap(): Promise<Map<string, string>> {
     for (const file of files) {
       const filePath = join(moleculeDir, file);
       const contents = readFileSync(filePath, 'utf-8');
-      const sha = await sha256HexFromText(contents);
+      const sha = await sha256Hex(contents);
       map.set(sha, filePath);
     }
   }
@@ -139,7 +139,7 @@ async function buildSolventFileMap(): Promise<Map<string, string>> {
   for (const file of files) {
     const filePath = join(SOLVENTS_DIR, file);
     const contents = readFileSync(filePath, 'utf-8');
-    const sha = await sha256HexFromText(contents);
+    const sha = await sha256Hex(contents);
     map.set(sha, filePath);
   }
 
