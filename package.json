@@ -26,7 +26,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "storybook": "storybook dev -p 6006",
-    "storybook:build": "storybook build"
+    "storybook:build": "storybook build",
+    "e2e": "dotenv -e .env -- playwright test"
   },
   "dependencies": {
     "@bufbuild/protobuf": "^2.12.1",
@@ -50,6 +51,7 @@
     "@hugeicons/svelte": "^1.1.4",
     "@internationalized/date": "^3.12.2",
     "@lucide/svelte": "^1.23.0",
+    "@playwright/test": "^1.60.0",
     "@storybook/addon-svelte-csf": "^5.1.2",
     "@storybook/sveltekit": "^10.5.0",
     "@sveltejs/adapter-node": "^5.5.7",
