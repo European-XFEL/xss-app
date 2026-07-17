@@ -3,8 +3,7 @@
     "commit": ""
   },
   "worktree": {
-    "baseRef": "head",
-    "symlinkDirectories": ["node_modules"]
+    "baseRef": "head"
   },
   "permissions": {
     "deny": [
@@ -13,6 +12,7 @@
     ],
     "allow": [
       "Bash(pnpm install)",
+      "Bash(pnpm dev)",
       "Bash(pnpm lint)",
       "Bash(pnpm check:*)",
       "Bash(pnpm test:*)",

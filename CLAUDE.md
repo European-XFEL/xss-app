@@ -45,16 +45,20 @@ element in question, as with the sidebar's outer wrapper above.
 
 ## Dev workflow (git worktrees)
 
-Worktree setup is automated by `.claude/settings.json` (`worktree`) + `.worktreeinclude`:
-new worktrees branch from your current HEAD, symlink `node_modules`, and receive a copy of
-`.env` — so no per-worktree `pnpm install` or env-copying is needed. The orchestrator only
-needs to tell you whether the shared services are already running.
+Worktree setup is partly automated by `.claude/settings.json` (`worktree`) + `.worktreeinclude`:
+new worktrees branch from your current HEAD and receive a copy of `.env`. Each worktree gets
+its OWN independent `node_modules` (they are no longer symlinked to a shared store), so run
+`pnpm install` once after entering a fresh worktree — it takes a few seconds and carries no
+shared-store hazard. Because the modules are real (not symlinked out of the main checkout),
+`/chrome` browser verification works without any Vite `server.fs.allow` workaround.
 
-- Shared singletons: one Postgres and one gRPC backend serve every worktree. Your worktree
-  runs ONLY its own Vite dev server against them — do not start your own DB/backend.
-- Start the dev server with the app env loaded (bare `vite dev` does not populate
-  `process.env`, so SvelteKit's `$env/dynamic/private` 500s on DB routes):
-  `pnpm exec dotenv -e .env -- vite dev`
+- Shared Postgres: one Postgres serves every worktree; your worktree runs ONLY its own Vite
+  dev server against it — do not start your own DB. Debye compute runs in-process (the TS
+  kernel is the default path); the Python gRPC backend is only an optional fallback for
+  elements missing from the kernel's coefficient table and is NOT required for normal dev.
+- Start the dev server with `pnpm dev`. The `dev` / `build*` / `preview*` scripts already wrap
+  `dotenv -e .env`, so `process.env` is populated and DB routes work — no manual `dotenv`
+  invocation needed.
 - Vite auto-selects a free port (5173+). Read the printed port — that is your URL.
 - Readiness: `curl -sf localhost:$PORT/health` returns 200 once the server + DB init are OK.
 - View changes with /chrome at `http://localhost:$PORT` (each agent gets its own tab group).
