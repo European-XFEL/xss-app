@@ -37,4 +37,15 @@ export default async function globalSetup(): Promise<void> {
   // and seed.ts upserts (onConflictDoUpdate) — safe to rerun every suite run.
   run('pnpm', ['exec', 'drizzle-kit', 'push', '--force']);
   run('pnpm', ['exec', 'tsx', './scripts/seed.ts']);
+
+  // Clear cached solute results so the dashboard spec exercises the worker
+  // compute path every run — a warm intensities cache serves results without
+  // ever invoking the worker, silently masking compute regressions (the
+  // per-series assertions would pass against stale cached data).
+  const sql = connect(E2E_DB_NAME);
+  try {
+    await sql`DELETE FROM intensities`;
+  } finally {
+    await sql.end();
+  }
 }
