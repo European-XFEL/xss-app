@@ -81,8 +81,4 @@ export const variables = defineEnvVars({
     description: 'PostgreSQL host, optionally host:port',
   },
   DB_NAME: { schema: optional, description: 'PostgreSQL database name' },
-  BACKEND_URL: {
-    schema: optional,
-    description: 'URL of the Python gRPC backend service',
-  },
 });

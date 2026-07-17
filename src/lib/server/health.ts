@@ -1,24 +1,16 @@
 import { sql } from 'drizzle-orm';
 
-import { BACKEND_URL, DB_HOST, DB_PASSWORD, DB_USER } from '$app/env/private';
+import { DB_HOST, DB_PASSWORD, DB_USER } from '$app/env/private';
 import { PUBLIC_TARGET } from '$app/env/public';
 
 import { db } from './db';
-import type {
-  BackendHealth,
-  Capabilities,
-  Capability,
-  DbHealth,
-  Health,
-} from './types';
+import type { Capabilities, Capability, DbHealth, Health } from './types';
 
 const HEALTH_TTL_MS = 10_000;
-const BACKEND_TIMEOUT_MS = 300;
 let healthCache: { value: Health; expiresAt: number } | null = null;
 let healthInFlight: Promise<Health> | null = null;
 
 const DB_CONFIGURED = Boolean(DB_HOST && DB_USER && DB_PASSWORD);
-const BACKEND_CONFIGURED = Boolean(BACKEND_URL);
 
 function normalizeErrorDetail(err: unknown): string {
   if (err instanceof Error) {
@@ -54,56 +46,11 @@ async function checkDbHealth(): Promise<DbHealth> {
   }
 }
 
-async function checkBackendHealth(
-  fetcher: typeof fetch,
-): Promise<BackendHealth> {
-  if (!BACKEND_CONFIGURED) {
-    return { configured: false, healthy: false, reason: 'NOT_CONFIGURED' };
-  }
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), BACKEND_TIMEOUT_MS);
-
-  try {
-    const res = await fetcher(`${BACKEND_URL}/healthz`, {
-      signal: controller.signal,
-    });
-    if (res.ok) {
-      return { configured: true, healthy: true };
-    }
-    return {
-      configured: true,
-      healthy: false,
-      reason: 'STATUS',
-      detail: String(res.status),
-    };
-  } catch (err) {
-    console.error('Backend health check failed', err);
-    if (err instanceof DOMException && err.name === 'AbortError') {
-      return { configured: true, healthy: false, reason: 'TIMEOUT' };
-    }
-    return {
-      configured: true,
-      healthy: false,
-      reason: 'UNREACHABLE',
-      detail: normalizeErrorDetail(err),
-    };
-  } finally {
-    clearTimeout(timeout);
-  }
+async function computeHealthFlags(): Promise<Health> {
+  return { db: await checkDbHealth() };
 }
 
-async function computeHealthFlags(fetcher: typeof fetch): Promise<Health> {
-  const [db, backend] = await Promise.all([
-    checkDbHealth(),
-    checkBackendHealth(fetcher),
-  ]);
-  return { db, backend };
-}
-
-export async function getHealth(
-  fetcher: typeof fetch = fetch,
-): Promise<Health> {
+export async function getHealth(): Promise<Health> {
   const now = Date.now();
   if (healthCache && healthCache.expiresAt > now) {
     return healthCache.value;
@@ -112,7 +59,7 @@ export async function getHealth(
   if (!healthInFlight) {
     healthInFlight = (async () => {
       try {
-        const value = await computeHealthFlags(fetcher);
+        const value = await computeHealthFlags();
         healthCache = { value, expiresAt: Date.now() + HEALTH_TTL_MS };
         return value;
       } finally {
@@ -125,34 +72,29 @@ export async function getHealth(
 }
 
 const DB_UNAVAILABLE_REASON = 'Database connection unavailable';
-const BACKEND_UNAVAILABLE_REASON = 'Backend service unavailable';
 
 function capability(available: boolean, reason: string): Capability {
   return available ? { available: true } : { available: false, reason };
 }
 
 export async function getCapabilities(
-  fetcher: typeof fetch = fetch,
   clientStorage = false,
 ): Promise<Capabilities> {
-  if (PUBLIC_TARGET === 'static') {
-    // Static (backendless) build: molecule upload/edit (IndexedDB store) and
-    // simulation (kernel + IndexedDB) both run client-side, so both are
-    // available with no backend — no health probe needed.
-    return {
-      upload: { available: true },
-      simulation: { available: true },
-    };
+  // Simulation always runs client-side now (TS kernel; the gRPC backend was
+  // retired in bd-6), so it's available on every build. Upload depends on the
+  // storage backend: client IndexedDB (always available) vs Postgres.
+  const simulation: Capability = { available: true };
+
+  // Static (backendless) build, or node with the backendless-storage toggle:
+  // upload goes to client IndexedDB, available with no server.
+  if (PUBLIC_TARGET === 'static' || clientStorage) {
+    return { upload: { available: true }, simulation };
   }
 
-  const health = await getHealth(fetcher);
+  // Node with Postgres storage: upload depends on DB health.
+  const health = await getHealth();
   return {
-    // Node build. Uploads go to client IndexedDB when the backendless-storage
-    // toggle is on (available regardless of DB health); otherwise Postgres.
-    // Simulation still uses the gRPC backend (bd-5 moves it client-side).
-    upload: clientStorage
-      ? { available: true }
-      : capability(health.db.healthy, DB_UNAVAILABLE_REASON),
-    simulation: capability(health.backend.healthy, BACKEND_UNAVAILABLE_REASON),
+    upload: capability(health.db.healthy, DB_UNAVAILABLE_REASON),
+    simulation,
   };
 }

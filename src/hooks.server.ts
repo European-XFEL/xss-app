@@ -51,8 +51,8 @@ const appHandle: Handle = async ({ event, resolve }) => {
   // client's IndexedDB, so upload stays available regardless of DB health.
   const clientStorage = event.cookies.get('settings.clientStorage') === 'true';
   const [health, capabilities] = await Promise.all([
-    getHealth(event.fetch),
-    getCapabilities(event.fetch, clientStorage),
+    getHealth(),
+    getCapabilities(clientStorage),
   ]);
 
   event.locals.health = health;
