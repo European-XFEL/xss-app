@@ -31,13 +31,17 @@ them straight into the port as the structure source.
 
 ## Cases
 
-Three structures × two q-ranges (6 files):
+Three structures, one q-range each (3 files), q-range 0.5–3.0 step 0.1:
 
-| structure   | source                                    | atoms | narrow (0.5–3.0, step 0.1) | readme (0.01–9.0, step 0.01) |
-| ----------- | ----------------------------------------- | ----- | -------------------------- | ---------------------------- |
-| ptpop-gs    | `data/molecules/PtPOP/PtPOP_GS-0.xyz`     | 38    | `ptpop-gs-narrow.json`     | `ptpop-gs-readme-range.json` |
-| feterpy2-ls | `data/molecules/FeTerpy2/FeTerpy2_LS-0.xyz` | 59  | `feterpy2-ls-narrow.json`  | `feterpy2-ls-readme-range.json` |
-| febpy3-hs   | `data/molecules/FeBpy3/FeBpy3_HS-1.xyz`   | 61    | `febpy3-hs-narrow.json`    | `febpy3-hs-readme-range.json` |
+| structure   | source                                      | atoms | fixture                   |
+| ----------- | ------------------------------------------- | ----- | ------------------------- |
+| ptpop-gs    | `data/molecules/PtPOP/PtPOP_GS-0.xyz`       | 38    | `ptpop-gs-narrow.json`    |
+| feterpy2-ls | `data/molecules/FeTerpy2/FeTerpy2_LS-0.xyz` | 59    | `feterpy2-ls-narrow.json` |
+| febpy3-hs   | `data/molecules/FeBpy3/FeBpy3_HS-1.xyz`     | 61    | `febpy3-hs-narrow.json`   |
+
+A wider "readme-range" q-range (0.01–9.0, step 0.01) was previously generated
+per structure too, but was redundant with these narrow fixtures plus the
+half-open-endpoint unit test in `debye.parity.test.ts`, so it was dropped.
 
 ## Precision note
 

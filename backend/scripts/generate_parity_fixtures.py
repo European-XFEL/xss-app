@@ -55,9 +55,11 @@ STRUCTURES = [
 ]
 
 # (suffix, qmin, qmax, qstep)
+# Only "narrow" is kept: the wider "readme-range" q-range fixtures were
+# redundant with narrow + the half-open-endpoint unit test in
+# debye.parity.test.ts and were dropped (~6.4k lines) to trim fixture size.
 Q_RANGES = [
     ("narrow", 0.5, 3.0, 0.1),
-    ("readme-range", 0.01, 9.0, 0.01),
 ]
 
 

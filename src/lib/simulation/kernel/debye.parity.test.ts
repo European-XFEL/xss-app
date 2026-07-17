@@ -70,7 +70,7 @@ const fixtures: ParityFixture[] = readdirSync(FIXTURE_DIR)
 describe('computeDebyeIq parity vs Python reference fixtures', () => {
   it('discovered all fixture files', () => {
     // Guard against a silent empty glob masking every parity assertion.
-    expect(fixtures.length).toBeGreaterThanOrEqual(6);
+    expect(fixtures.length).toBeGreaterThanOrEqual(3);
   });
 
   for (const fx of fixtures) {
