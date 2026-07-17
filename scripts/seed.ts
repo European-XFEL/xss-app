@@ -6,26 +6,13 @@ import solvents_data from '../data/solvents.json' with { type: 'json' };
 import { relations } from '../src/lib/server/db/relations.ts';
 import * as schema from '../src/lib/server/db/schema.ts';
 import { getDbUrl } from '../src/lib/server/db/url.ts';
-import { sha256HexFromText } from '../src/lib/server/db/util.ts';
-import {
-  SimulationService,
-  createClient,
-  createConnectTransport,
-} from '../src/lib/server/grpc/index.ts';
+import { sha256Hex } from '../src/lib/shared/sha256.ts';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import Papa from 'papaparse';
 
 const DATABASE_URL = getDbUrl();
-const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:50051';
 
 const db = drizzle(DATABASE_URL, { schema, relations });
-
-const transport = createConnectTransport({
-  baseUrl: BACKEND_URL,
-  httpVersion: '1.1',
-});
-
-const simClient = createClient(SimulationService, transport);
 
 /**
  * Bootstrap the database with initial molecule and solvent data from files.
@@ -86,7 +73,7 @@ async function seedMolecules(directory: string) {
         const contents = await readFile(filePath, 'utf-8');
         const contentsLines = contents.split('\n');
 
-        const sha = await sha256HexFromText(contents);
+        const sha = await sha256Hex(contents);
 
         const atomCount = Number(contentsLines[0]);
         const description = (contentsLines[1] || '').replace(/^#\s*/, '');
@@ -168,7 +155,7 @@ async function seedSolvents(directory: string) {
     const contents = await readFile(filePath, 'utf-8');
     const fileName = path.parse(filename).name;
     const name = solvent_name_map[fileName] || fileName;
-    const sha = await sha256HexFromText(contents);
+    const sha = await sha256Hex(contents);
 
     let rhom = undefined;
     let cpm = undefined;
@@ -199,9 +186,12 @@ async function seedSolvents(directory: string) {
       rhom = parseFloat(saved_solvent_data.rhom);
       cpm = parseFloat(saved_solvent_data.cpm);
     } else {
-      const response = await simClient.getSolventInfo({ name });
-      rhom = response.rhom;
-      cpm = response.cpm;
+      // The gRPC backend that used to compute this as a fallback was retired
+      // (bd-6); every solvent this repo ships has a cached entry in
+      // data/solvents.json, so this path is unreachable for known data.
+      throw new Error(
+        `No cached rhom/cpm for solvent "${name}" (${filename}) — add an entry to data/solvents.json.`,
+      );
     }
 
     return {
