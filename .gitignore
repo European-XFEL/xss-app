@@ -1,6 +1,5 @@
 node_modules
 .deno-deploy
-.gh-pages
 .svelte-kit-static
 .svelte-kit-local
 
