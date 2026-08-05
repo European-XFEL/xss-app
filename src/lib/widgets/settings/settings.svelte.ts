@@ -21,13 +21,21 @@ export const SETTINGS_SCHEMA: SettingDef[] = [
       'Let Sentry record anonymized session replays (DOM + interactions) to help diagnose bugs. Off by default — this is the only telemetry category that captures user activity, so it needs your consent.',
     default: false,
   },
-  {
-    id: 'uploadAcknowledged',
-    label: 'No-auth upload notice acknowledged',
-    description:
-      'This app has no authentication — any molecule file or metadata you upload is visible to anyone who visits the site. Acknowledged once, on your first upload attempt.',
-    default: false,
-  },
+  // Node build only, below the static check: the static build always stores
+  // uploads client-side (IndexedDB), so nothing uploaded is ever publicly
+  // visible there — the notice would be false. (PUBLIC_TARGET is inlined, so
+  // this const-folds the entry out per target, same as `clientStorage` below.)
+  ...(PUBLIC_TARGET === 'static'
+    ? []
+    : [
+        {
+          id: 'uploadAcknowledged',
+          label: 'No-auth upload notice acknowledged',
+          description:
+            'This app has no authentication — any molecule file or metadata you upload is visible to anyone who visits the site. Acknowledged once, on your first upload attempt.',
+          default: false,
+        },
+      ]),
   // Node build only: the storage backend is a runtime choice. The static build
   // is always backendless, so the toggle would be an inert no-op there — omit it
   // (PUBLIC_TARGET is inlined, so this const-folds the entry out per target).
