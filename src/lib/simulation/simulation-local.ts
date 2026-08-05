@@ -19,7 +19,7 @@
  */
 import { get, set } from 'idb-keyval';
 
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 
 import { getMoleculeFileContent } from '$lib/molecule/molecule.remote';
 import type { DebyeResult, SimRequest } from '$lib/shared/contracts';
