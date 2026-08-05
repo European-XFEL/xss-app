@@ -12,6 +12,8 @@
 
   import { type Snippet, onDestroy } from 'svelte';
 
+  import { page } from '$app/state';
+
   import * as DropdownMenu from '$shadcn/ui/dropdown-menu/index.js';
   import * as Tooltip from '$shadcn/ui/tooltip/index.js';
 
@@ -30,6 +32,12 @@
 
   const setupComplete = $derived(sample ? isSetupComplete(sample) : false);
   const runTitle = $derived(sample ? getRunTitle(sample) : '');
+
+  // Share links encode molecule/solvent ids that only resolve against the
+  // shared backend — unavailable in local browser storage mode (static
+  // target, or node's backendless-storage toggle), where they'd only ever
+  // resolve on the same browser that made them (initial-dev-i38).
+  const shareCapability = $derived(page.data.capabilities.share);
 
   type ShareStatus = 'idle' | 'copied' | 'failed';
   let shareStatus: ShareStatus = $state('idle');
@@ -110,13 +118,32 @@
       {@render actions()}
     {:else}
       {#if onShare}
-        <button
-          type="button"
-          onclick={handleShareClick}
-          class="rounded-[7px] border border-[rgba(255,255,255,.18)] px-2.5 py-1.5 text-sm font-medium text-chrome-btn"
-        >
-          {SHARE_LABEL[shareStatus]}
-        </button>
+        {#if shareCapability.available}
+          <button
+            type="button"
+            onclick={handleShareClick}
+            class="rounded-[7px] border border-[rgba(255,255,255,.18)] px-2.5 py-1.5 text-sm font-medium text-chrome-btn"
+          >
+            {SHARE_LABEL[shareStatus]}
+          </button>
+        {:else}
+          <Tooltip.Root>
+            <Tooltip.Trigger>
+              {#snippet child({ props: { type: _type, ...props } })}
+                <span {...props} class="inline-flex">
+                  <button
+                    type="button"
+                    disabled
+                    class="rounded-[7px] border border-[rgba(255,255,255,.18)] px-2.5 py-1.5 text-sm font-medium text-chrome-btn disabled:pointer-events-none disabled:opacity-50"
+                  >
+                    Share
+                  </button>
+                </span>
+              {/snippet}
+            </Tooltip.Trigger>
+            <Tooltip.Content>{shareCapability.reason}</Tooltip.Content>
+          </Tooltip.Root>
+        {/if}
       {/if}
 
       <Tooltip.Root>

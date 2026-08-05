@@ -72,6 +72,8 @@ export async function getHealth(): Promise<Health> {
 }
 
 const DB_UNAVAILABLE_REASON = 'Database connection unavailable';
+const SHARE_UNAVAILABLE_REASON =
+  'Sharing needs the shared backend — links made in local browser storage mode cannot be resolved by anyone else';
 
 function capability(available: boolean, reason: string): Capability {
   return available ? { available: true } : { available: false, reason };
@@ -86,15 +88,23 @@ export async function getCapabilities(
   const simulation: Capability = { available: true };
 
   // Static (backendless) build, or node with the backendless-storage toggle:
-  // upload goes to client IndexedDB, available with no server.
+  // upload goes to client IndexedDB, available with no server. Share links
+  // encode molecule/solvent ids that only resolve against a shared backend
+  // (see +layout.server.ts's load), so it's unavailable in either case —
+  // independent of DB health, unlike upload above (initial-dev-i38).
   if (PUBLIC_TARGET === 'static' || clientStorage) {
-    return { upload: { available: true }, simulation };
+    return {
+      upload: { available: true },
+      simulation,
+      share: { available: false, reason: SHARE_UNAVAILABLE_REASON },
+    };
   }
 
-  // Node with Postgres storage: upload depends on DB health.
+  // Node with Postgres storage: upload depends on DB health, share works.
   const health = await getHealth();
   return {
     upload: capability(health.db.healthy, DB_UNAVAILABLE_REASON),
     simulation,
+    share: { available: true },
   };
 }

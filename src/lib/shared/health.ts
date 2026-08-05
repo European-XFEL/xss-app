@@ -36,4 +36,5 @@ export type Capability =
 export type Capabilities = {
   upload: Capability;
   simulation: Capability;
+  share: Capability;
 };
