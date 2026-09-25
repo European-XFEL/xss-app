@@ -140,7 +140,7 @@ const solvent_name_map: { [key: string]: string } = {
   CH2Cl2: 'Dichloromethane',
   EtOH: 'Ethanol',
   MeOH: 'Methanol',
-  'KMnO4-H2O': 'Water (w/ Potassium permanganate)',
+  'KMnO4-H2O': 'Water',
 };
 
 /**
