@@ -85,6 +85,15 @@
     );
   }
 
+  // Padding gives the legend empty margin to grab: matterviz starts a drag only
+  // from non-item area, stays inside the plot, and swallows that mousedown so
+  // zoom/pan is unaffected.
+  const LEGEND = {
+    layout: 'horizontal',
+    draggable: true,
+    style: 'padding: 6px;',
+  } as const;
+
   const refLines = $derived.by(() => {
     if (!detectorQRange) return [];
     return [
@@ -156,7 +165,7 @@
       x_axis={{ label: 'q (Å⁻¹)', range: xRange }}
       y_axis={{ label: 'ΔS (a.u.)' }}
       style="height: 320px; --scatter-grid-stroke: var(--plot-grid); --plot-zero-line-color: var(--plot-zero-line); --text-color: var(--muted-foreground); --plot-legend-item-color: var(--muted-foreground); font-family: var(--font-mono);"
-      legend={{ layout: 'horizontal' }}
+      legend={LEGEND}
       bind:wrapper
     />
   {/await}
