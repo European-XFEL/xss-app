@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { PHOTON_ENERGY_MAX_EV, photonEnergyFloorEv } from '../photon-energy';
+
   import * as Field from '$shadcn/ui/field';
   import * as Tabs from '$shadcn/ui/tabs';
 
@@ -11,8 +13,6 @@
 
   let { pump = $bindable() }: Props = $props();
 
-  const PHOTON_ENERGY_MIN_EV = 1.0;
-  const PHOTON_ENERGY_MAX_EV = 5.0;
   const EXCITED_STATE_ENERGY_MIN_EV = 0.1;
   const EXCITED_STATE_ENERGY_MAX_EV = 2;
 
@@ -61,6 +61,12 @@
     pump.excitedStateEnergyEv = next;
     if (inputMode === 'direct') {
       pump.photonEnergyEv = next + deltaEeV;
+    } else {
+      // Keep the photon slider's (moving) minimum valid.
+      pump.photonEnergyEv = Math.max(
+        pump.photonEnergyEv,
+        photonEnergyFloorEv(next),
+      );
     }
   }
 
@@ -108,7 +114,7 @@
         <NumSlider
           label="Photon Energy (eV)"
           bind:value={pump.photonEnergyEv}
-          min={PHOTON_ENERGY_MIN_EV}
+          min={photonEnergyFloorEv(pump.excitedStateEnergyEv)}
           max={PHOTON_ENERGY_MAX_EV}
           step={0.1}
           aria-invalid={photonEnergyInvalid}
