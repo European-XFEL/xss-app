@@ -1,8 +1,9 @@
 <script lang="ts">
+  import { kevToWavelength, wavelengthToKev } from '../energy';
+
   import * as Field from '$shadcn/ui/field';
 
-  import { formatSigFigs } from '$lib/shared/format';
-  import { NumSlider, RevealableValue } from '$lib/shared/ui';
+  import { NumSlider } from '$lib/shared/ui';
 
   type Props = {
     probe: { wavelength: number };
@@ -10,9 +11,14 @@
 
   let { probe = $bindable() }: Props = $props();
 
-  // Display-only readout: E[keV] = 12.398 / wavelength[Å]. Not an editable
-  // field — a two-way keV<->Å control is a separate product decision.
-  let photonEnergyKev = $derived(12.398 / probe.wavelength);
+  // keV is a view of the stored wavelength (Å), which is what the URL carries.
+  // Display is rounded; empty/invalid input leaves the wavelength untouched.
+  function setEnergyKev(next: number | string | null) {
+    const kev = Number(next);
+    if (next !== '' && next != null && kev > 0) {
+      probe.wavelength = kevToWavelength(kev);
+    }
+  }
 </script>
 
 <Field.Set>
@@ -25,12 +31,18 @@
         max="2.0"
         step="0.01"
       />
-      <p class="text-xs text-muted-foreground">
-        ≈ <RevealableValue
-          display={formatSigFigs(photonEnergyKev)}
-          full={`${photonEnergyKev}`}
-        /> keV
-      </p>
+    </Field.Field>
+    <Field.Field orientation="responsive">
+      <NumSlider
+        label="X-Ray Energy (keV)"
+        bind:value={
+          () => +wavelengthToKev(probe.wavelength).toFixed(4), setEnergyKev
+        }
+        min={wavelengthToKev(2.0)}
+        max={wavelengthToKev(0.1)}
+        step="0.001"
+        logarithmic
+      />
     </Field.Field>
   </Field.Group>
 </Field.Set>
