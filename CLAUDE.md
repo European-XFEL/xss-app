@@ -66,6 +66,14 @@ shared-store hazard. Because the modules are real (not symlinked out of the main
 - Never `git stash` (shared across worktrees) and do not `git push` — both are also blocked
   by `.claude/settings.json`.
 
+## Initial development phase: no compatibility burden
+
+The app is in initial development. Do NOT preserve behaviour or backwards compatibility across
+changes: no migration shims, no legacy-format fallbacks, no keeping old share links, URL
+formats, stored data or persisted state decodable. Change formats freely (e.g. bump or replace
+the share payload in `simulation-url.ts`) and delete the old path instead of supporting both.
+Revisit this rule once the app has a first public release.
+
 ## Commits
 
 Single-line conventional commits, enforced by the `commit-msg` hook:
