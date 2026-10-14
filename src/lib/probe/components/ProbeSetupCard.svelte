@@ -13,6 +13,7 @@
 
 <ChannelPanel
   label="X-Ray Probe"
+  variant={short ? 'flat' : 'card'}
   description={short
     ? undefined
     : 'Configure the X-ray probe wavelength settings.'}

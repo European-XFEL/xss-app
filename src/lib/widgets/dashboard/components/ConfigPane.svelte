@@ -10,6 +10,7 @@
   // eslint-disable-next-line boundaries/dependencies
   import { useSimulationState } from '$lib/app/simulation-context.svelte';
   import { DetectorSetupCard } from '$lib/detector';
+  import { ProbeSetupCard } from '$lib/probe';
   import { PumpSetupCard } from '$lib/pump';
 
   import SampleCard from './SampleCard.svelte';
@@ -39,4 +40,5 @@
     {short}
   />
   <PumpSetupCard bind:pump={simulation.pump} {short} />
+  <ProbeSetupCard bind:probe={simulation.probe} {short} />
 </div>
