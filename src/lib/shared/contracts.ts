@@ -29,9 +29,18 @@ export interface MoleculeFileContent {
   contents: string;
 }
 
+/**
+ * The structure files uploaded together for one molecule, in form order;
+ * `state` is the value stored on each file. Extend to take more per upload.
+ */
+export const STRUCTURE_STATES = [
+  { state: 0, label: 'Ground' },
+  { state: 1, label: 'Excited' },
+] as const;
+
 export type UploadMoleculeResult =
-  | { success: true; result: MoleculeInfo; error?: undefined }
-  | { success: false; result: null; error: string };
+  | { success: true; results: MoleculeInfo[]; error?: undefined }
+  | { success: false; results: null; error: string };
 
 /** Result of edit mutations (molecule header / structure file). */
 export type MutationResult =

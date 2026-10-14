@@ -4,6 +4,7 @@ import {
   type DebyeResult,
   MAX_UPLOAD_ATOM_COUNT,
   MAX_UPLOAD_FILE_BYTES,
+  STRUCTURE_STATES,
   type SimRequest,
 } from '$lib/shared/contracts';
 
@@ -51,12 +52,16 @@ const fileSchema = z
  * files, hence this module.
  */
 export const uploadMoleculeSchema = z.object({
-  file: fileSchema,
   moleculeName: moleculeNameSchema,
   description: descriptionSchema,
-  state: stateSchema,
-  atomCount: atomCountSchema,
   reference: referenceSchema,
+  // One entry per STRUCTURE_STATES item (index i is state STRUCTURE_STATES[i]).
+  structures: z
+    .array(z.object({ file: fileSchema, atomCount: atomCountSchema }))
+    .length(
+      STRUCTURE_STATES.length,
+      `Upload exactly ${STRUCTURE_STATES.length} structures`,
+    ),
 });
 
 export type UploadInput = z.infer<typeof uploadMoleculeSchema>;

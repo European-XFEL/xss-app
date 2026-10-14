@@ -38,6 +38,7 @@ import {
   replaceMoleculeFileSchema,
   uploadMoleculeSchema,
 } from '$lib/shared/api/validation';
+import { STRUCTURE_STATES } from '$lib/shared/contracts';
 import type {
   MutationResult,
   UploadMoleculeResult,
@@ -91,7 +92,7 @@ export const uploadMolecule = form(
     if (STATIC) {
       return {
         success: false,
-        result: null,
+        results: null,
         error: 'Uploading molecules is not supported in the static build.',
       };
     }
@@ -99,10 +100,11 @@ export const uploadMolecule = form(
     const result = await moleculeSource.uploadMolecule({
       moleculeName: data.moleculeName,
       description: data.description,
-      state: data.state,
       reference: data.reference?.trim() ? data.reference.trim() : null,
-      atomCount: data.atomCount,
-      file: data.file,
+      structures: data.structures.map((s, i) => ({
+        ...s,
+        state: STRUCTURE_STATES[i].state,
+      })),
     });
 
     Sentry.metrics.count('molecule.uploads', 1, {
@@ -111,7 +113,7 @@ export const uploadMolecule = form(
     if (result.success) {
       Sentry.logger.info('Molecule uploaded', {
         moleculeName: data.moleculeName,
-        atomCount: data.atomCount,
+        structures: data.structures.length,
       });
       // Single-flight mutation: send the refreshed molecule list back with
       // this response instead of letting the client invalidate every query

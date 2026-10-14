@@ -37,7 +37,6 @@ export type MoleculeSelection = {
 export type MoleculeTableEditing = {
   enabled: boolean;
   onEditMolecule: (group: GroupRow) => void;
-  onAddFile: (moleculeName: string) => void;
   onEditFile: (molecule: MoleculeRow) => void;
 };
 

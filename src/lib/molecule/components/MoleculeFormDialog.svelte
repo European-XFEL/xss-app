@@ -36,6 +36,7 @@
     MAX_UPLOAD_ATOM_COUNT,
     MAX_UPLOAD_FILE_BYTES,
     SOFT_ATOM_CAP,
+    STRUCTURE_STATES,
   } from '$lib/shared/contracts';
   import type { MoleculeInfo } from '$lib/shared/contracts';
   import { useClientStorage } from '$lib/shared/storage-mode';
@@ -56,14 +57,16 @@
   // Drives the busy state for local (IndexedDB) submits, which don't go through
   // the form's server `.pending`.
   let localSubmitting = $state(false);
-  // Errors from reading/parsing the selected file (schema covers the rest).
-  let fileError = $state<string | null>(null);
+  // Per-structure (index i = STRUCTURE_STATES[i]) errors from reading/parsing
+  // the selected file (schema covers the rest).
+  const emptySlots = () => STRUCTURE_STATES.map(() => null);
+  let fileErrors = $state<(string | null)[]>(emptySlots());
   // Non-blocking soft-cap notice: large structures are allowed but the
-  // client-side kernel will be slow (SOFT_ATOM_CAP). Distinct from fileError so
-  // it warns without blocking submit — the user continues by clicking upload.
-  let fileWarning = $state<string | null>(null);
-  let fileReadToken = 0;
-  let file = $state<File | null>(null);
+  // client-side kernel will be slow (SOFT_ATOM_CAP). Distinct from fileErrors
+  // so it warns without blocking submit — the user continues by clicking upload.
+  let fileWarnings = $state<(string | null)[]>(emptySlots());
+  const fileReadTokens = STRUCTURE_STATES.map(() => 0);
+  let files = $state<(File | null)[]>(STRUCTURE_STATES.map(() => null));
 
   // Delete flow (edit modes): a nested confirm dialog guards the command.
   let confirmDeleteOpen = $state(false);
@@ -253,16 +256,20 @@
     makeEnhance(
       uploadMolecule,
       async () => {
-        if (!file) return { error: 'Select a file to upload.' };
         const fields = uploadMolecule.fields;
         const reference = fields.reference.value();
+        const selected = files.filter((f) => f !== null);
+        if (selected.length !== STRUCTURE_STATES.length)
+          return { error: 'Select a file for every state.' };
         return clientWrites.upload({
-          file,
           moleculeName: fields.moleculeName.value() ?? '',
           description: fields.description.value() ?? '',
-          state: Number(fields.state.value()),
-          atomCount: Number(fields.atomCount.value()),
           reference: reference?.trim() ? reference.trim() : null,
+          structures: selected.map((file, i) => ({
+            file,
+            state: STRUCTURE_STATES[i].state,
+            atomCount: Number(fields.structures[i].atomCount.value()),
+          })),
         });
       },
       'Upload failed',
@@ -389,8 +396,8 @@
   $effect(() => {
     if (!open) return;
     submitError = null;
-    fileError = null;
-    fileWarning = null;
+    fileErrors = emptySlots();
+    fileWarnings = emptySlots();
     confirmDeleteOpen = false;
     ackOpen = false;
     editingContents = false;
@@ -419,8 +426,6 @@
         originalName: intent.moleculeName,
         moleculeName: intent.moleculeName,
       });
-    } else if (intent.moleculeName) {
-      uploadMolecule.fields.moleculeName.set(intent.moleculeName);
     }
   });
 
@@ -429,9 +434,7 @@
       return `${readOnly ? 'Structure File' : 'Edit Structure File'} — ${intent.molecule.filename}`;
     if (intent.mode === 'edit-molecule')
       return `${readOnly ? 'Molecule' : 'Edit Molecule'} — ${intent.moleculeName}`;
-    if (intent.moleculeName)
-      return `Add Structure File — ${intent.moleculeName}`;
-    return 'Upload Molecule File';
+    return 'Upload Molecule';
   });
 
   const description = $derived.by(() => {
@@ -443,18 +446,16 @@
       return readOnly
         ? 'This molecule is read-only.'
         : "Update the fields shared by all of this molecule's structure files.";
-    return 'Upload an XYZ file containing molecular structure data.';
+    return 'Upload one XYZ file per state; they are stored together as a single molecule.';
   });
 
-  let filenameStem = $derived.by<string>(() => {
-    if (!file) return '';
-    return file.name.replace(/\.[^/.]+$/, '');
-  });
+  // Suggested molecule name: the first structure's filename without extension.
+  let filenameStem = $derived(files[0]?.name.replace(/\.[^/.]+$/, '') ?? '');
 
   // Creating a brand-new molecule under an existing name (or renaming one
   // onto another) would silently merge the two groups — flag it instead.
   const nameConflict = $derived.by(() => {
-    if (intent.mode === 'create' && !intent.moleculeName) {
+    if (intent.mode === 'create') {
       const name = uploadMolecule.fields.moleculeName.value();
       return !!name && !!molecules?.some((m) => m.moleculeName === name);
     }
@@ -480,23 +481,24 @@
 
   function resetUpload() {
     uploadMolecule.element?.reset();
-    file = null;
-    fileError = null;
-    fileWarning = null;
+    files = STRUCTURE_STATES.map(() => null);
+    fileErrors = emptySlots();
+    fileWarnings = emptySlots();
     submitError = null;
   }
 
-  function handleFileChange(event: Event) {
+  function handleFileChange(index: number, event: Event) {
     const target = event.currentTarget as HTMLInputElement | null;
     const selected = target?.files?.[0] ?? null;
-    file = selected;
-    fileError = null;
-    fileWarning = null;
+    files[index] = selected;
+    fileErrors[index] = null;
+    fileWarnings[index] = null;
 
     if (!selected) return;
 
     if (selected.size > MAX_UPLOAD_FILE_BYTES) {
-      fileError = `File is too large; the maximum is ${Math.floor(MAX_UPLOAD_FILE_BYTES / 1024)} kB.`;
+      fileErrors[index] =
+        `File is too large; the maximum is ${Math.floor(MAX_UPLOAD_FILE_BYTES / 1024)} kB.`;
       return;
     }
 
@@ -504,28 +506,30 @@
       uploadMolecule.fields.moleculeName.set(filenameStem);
     }
 
-    const token = ++fileReadToken;
+    const token = ++fileReadTokens[index];
     selected
       .text()
       .then((contents) => {
-        if (token !== fileReadToken) return;
+        if (token !== fileReadTokens[index]) return;
         const count = parseAtomCount(contents);
         if (count === null) {
-          fileError = 'Unable to read the atom count from this file.';
+          fileErrors[index] = 'Unable to read the atom count from this file.';
           return;
         }
         if (count > MAX_UPLOAD_ATOM_COUNT) {
-          fileError = `Structure has too many atoms (${count}); the maximum is ${MAX_UPLOAD_ATOM_COUNT}.`;
+          fileErrors[index] =
+            `Structure has too many atoms (${count}); the maximum is ${MAX_UPLOAD_ATOM_COUNT}.`;
           return;
         }
         if (count > SOFT_ATOM_CAP) {
-          fileWarning = `Large structure (${count} atoms): scattering is computed in your browser and may be slow above ${SOFT_ATOM_CAP} atoms. You can still continue.`;
+          fileWarnings[index] =
+            `Large structure (${count} atoms): scattering is computed in your browser and may be slow above ${SOFT_ATOM_CAP} atoms. You can still continue.`;
         }
-        uploadMolecule.fields.atomCount.set(count);
+        uploadMolecule.fields.structures[index].atomCount.set(count);
       })
       .catch(() => {
-        if (token !== fileReadToken) return;
-        fileError = 'Unable to read the selected file.';
+        if (token !== fileReadTokens[index]) return;
+        fileErrors[index] = 'Unable to read the selected file.';
       });
   }
 </script>
@@ -557,7 +561,10 @@
     <Button.Root
       type="submit"
       form={formId}
-      disabled={submitting || nameConflict || readOnly}
+      disabled={submitting ||
+        nameConflict ||
+        readOnly ||
+        (intent.mode === 'create' && fileErrors.some(Boolean))}
       onclick={requiresUploadAck && !settings.get('uploadAcknowledged')
         ? (event) => {
             event.preventDefault();
@@ -575,7 +582,7 @@
 {/snippet}
 
 <Dialog.Root bind:open>
-  <Dialog.Content class="sm:max-w-130">
+  <Dialog.Content class="max-h-[90vh] overflow-y-auto sm:max-w-130">
     <Dialog.Header>
       <Dialog.Title>{title}</Dialog.Title>
       <Dialog.Description>{description}</Dialog.Description>
@@ -584,36 +591,62 @@
     {#if intent.mode === 'create'}
       {@const fields = uploadMolecule.fields}
       <form {...uploadProps} enctype="multipart/form-data" class="grid gap-6">
-        <Field.Set>
-          <Field.Legend>File</Field.Legend>
-          <Field.Field
-            data-invalid={fileError || fields.file.issues() ? true : undefined}
-          >
-            <Field.Label>Select File</Field.Label>
-            <Field.Content>
-              <!-- `files ?? undefined`: the remote-form field types `files` as
-                   `FileList | null`, the Input prop as `FileList | undefined`. -->
-              {@const fileProps = fields.file.as('file')}
-              <Input
-                {...fileProps}
-                files={fileProps.files ?? undefined}
-                accept=".xyz"
-                onchange={handleFileChange}
-              />
-            </Field.Content>
-            {#each fields.file.issues() ?? [] as issue (issue.message)}
-              <Field.Error>{issue.message}</Field.Error>
-            {/each}
-            {#if fileError}
-              <Field.Error>{fileError}</Field.Error>
-            {/if}
-            {#if fileWarning}
-              <Field.Description class="text-amber-600 dark:text-amber-500">
-                {fileWarning}
-              </Field.Description>
-            {/if}
-          </Field.Field>
-        </Field.Set>
+        {#each STRUCTURE_STATES as { label }, i (label)}
+          {@const structure = fields.structures[i]}
+          {@const fileProps = structure.file.as('file')}
+          <Field.Set>
+            <Field.Legend>{label} State Structure</Field.Legend>
+            <Field.Group class="grid gap-4">
+              <Field.Field
+                data-invalid={fileErrors[i] || structure.file.issues()
+                  ? true
+                  : undefined}
+              >
+                <Field.Label>Select File</Field.Label>
+                <Field.Content>
+                  <!-- `files ?? undefined`: the remote-form field types `files` as
+                       `FileList | null`, the Input prop as `FileList | undefined`. -->
+                  <Input
+                    {...fileProps}
+                    files={fileProps.files ?? undefined}
+                    accept=".xyz"
+                    onchange={(e) => handleFileChange(i, e)}
+                  />
+                </Field.Content>
+                {#each structure.file.issues() ?? [] as issue (issue.message)}
+                  <Field.Error>{issue.message}</Field.Error>
+                {/each}
+                {#if fileErrors[i]}
+                  <Field.Error>{fileErrors[i]}</Field.Error>
+                {/if}
+                {#if fileWarnings[i]}
+                  <Field.Description class="text-amber-600 dark:text-amber-500">
+                    {fileWarnings[i]}
+                  </Field.Description>
+                {/if}
+              </Field.Field>
+
+              <Field.Field
+                data-invalid={structure.atomCount.issues() ? true : undefined}
+              >
+                <Field.FieldLabel>Atom Count</Field.FieldLabel>
+                <Field.Content>
+                  <Input
+                    {...structure.atomCount.as('number')}
+                    min="1"
+                    step="1"
+                  />
+                </Field.Content>
+                <Field.Description
+                  >Prefilled from the .xyz file.</Field.Description
+                >
+                {#each structure.atomCount.issues() ?? [] as issue (issue.message)}
+                  <Field.Error>{issue.message}</Field.Error>
+                {/each}
+              </Field.Field>
+            </Field.Group>
+          </Field.Set>
+        {/each}
 
         <Field.Set>
           <Field.Legend>Metadata</Field.Legend>
@@ -652,36 +685,6 @@
                 />
               </Field.Content>
               {#each fields.description.issues() ?? [] as issue (issue.message)}
-                <Field.Error>{issue.message}</Field.Error>
-              {/each}
-            </Field.Field>
-
-            <Field.Field
-              data-invalid={fields.state.issues() ? true : undefined}
-            >
-              <Field.FieldLabel>State</Field.FieldLabel>
-              <Field.Content>
-                <Input {...fields.state.as('number', 0)} min="0" step="1" />
-              </Field.Content>
-              <Field.Description
-                >Use 0 for ground and 1 for excited.</Field.Description
-              >
-              {#each fields.state.issues() ?? [] as issue (issue.message)}
-                <Field.Error>{issue.message}</Field.Error>
-              {/each}
-            </Field.Field>
-
-            <Field.Field
-              data-invalid={fields.atomCount.issues() ? true : undefined}
-            >
-              <Field.FieldLabel>Atom Count</Field.FieldLabel>
-              <Field.Content>
-                <Input {...fields.atomCount.as('number')} min="1" step="1" />
-              </Field.Content>
-              <Field.Description
-                >Prefilled from the .xyz file.</Field.Description
-              >
-              {#each fields.atomCount.issues() ?? [] as issue (issue.message)}
                 <Field.Error>{issue.message}</Field.Error>
               {/each}
             </Field.Field>

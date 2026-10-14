@@ -44,14 +44,12 @@ const contentsKey = (id: string) => `molc:${id}`;
  */
 const SIM_CACHE_PREFIX = 'sim:';
 
-/** Structure file metadata plus the values needed to persist a new upload. */
+/** Structure files plus the shared metadata needed to persist a new upload. */
 export interface UploadStoredMoleculeInput {
-  file: File;
   moleculeName: string;
   description: string;
-  state: number;
   reference: string | null;
-  atomCount: number;
+  structures: { state: number; atomCount: number; file: File }[];
 }
 
 export interface EditStoredFileInput {
@@ -99,43 +97,49 @@ export async function getStoredMoleculeContent(
 export async function uploadStoredMolecule(
   input: UploadStoredMoleculeInput,
 ): Promise<UploadMoleculeResult> {
-  const contents = await input.file.text();
-  const derived = deriveAtomCount(contents, input.atomCount);
-  if (!derived.ok)
-    return { success: false, result: null, error: derived.error };
-
-  const sha = await sha256Hex(contents);
-
   const ids = await readIndex();
   const existing = await getMany<MoleculeInfo>(ids.map(infoKey));
-  if (existing.some((info) => info?.sha === sha)) {
-    return {
-      success: false,
-      result: null,
-      error: 'A structure file with identical contents already exists.',
+  const seen = new Set(existing.map((info) => info?.sha));
+
+  // Validate every structure before writing any, so a bad one stores nothing.
+  const prepared = [];
+  for (const { file, state, atomCount } of input.structures) {
+    const contents = await file.text();
+    const derived = deriveAtomCount(contents, atomCount);
+    if (!derived.ok)
+      return { success: false, results: null, error: derived.error };
+    const sha = await sha256Hex(contents);
+    if (seen.has(sha)) {
+      return {
+        success: false,
+        results: null,
+        error: 'A structure file with identical contents already exists.',
+      };
+    }
+    seen.add(sha);
+    const info: MoleculeInfo = {
+      id: crypto.randomUUID(),
+      filename: file.name,
+      sha,
+      moleculeName: input.moleculeName,
+      description: input.description,
+      state,
+      reference: input.reference,
+      atomCount: derived.atomCount,
+      readOnly: false,
+      createdAt: new Date(),
+      updatedAt: undefined,
     };
+    prepared.push({ info, contents });
   }
 
-  const id = crypto.randomUUID();
-  const info: MoleculeInfo = {
-    id,
-    filename: input.file.name,
-    sha,
-    moleculeName: input.moleculeName,
-    description: input.description,
-    state: input.state,
-    reference: input.reference,
-    atomCount: derived.atomCount,
-    readOnly: false,
-    createdAt: new Date(),
-    updatedAt: undefined,
-  };
+  for (const { info, contents } of prepared) {
+    await set(infoKey(info.id), info);
+    await set(contentsKey(info.id), contents);
+  }
+  await writeIndex([...ids, ...prepared.map((p) => p.info.id)]);
 
-  await set(infoKey(id), info);
-  await set(contentsKey(id), contents);
-  await writeIndex([...ids, id]);
-
-  return { success: true, result: info };
+  return { success: true, results: prepared.map((p) => p.info) };
 }
 
 /** Load an uploaded file's metadata, or a not-found MutationResult. */

@@ -117,8 +117,6 @@
             moleculeName: group.moleculeName,
             atomCount: group.atomCount,
           }),
-        onAddFile: (moleculeName) =>
-          openDialog({ mode: 'create', moleculeName }),
         onEditFile: (molecule) => openDialog({ mode: 'edit-file', molecule }),
       },
     }),

@@ -11,10 +11,10 @@ export type MoleculeSelection = {
 
 /**
  * What the shared molecule form dialog (MoleculeFormDialog) is being opened
- * for: creating a structure file (optionally preset to an existing molecule),
+ * for: uploading a molecule (all its structure files at once),
  * editing one structure file, or editing a molecule's shared header fields.
  */
 export type MoleculeDialogIntent =
-  | { mode: 'create'; moleculeName?: string }
+  | { mode: 'create' }
   | { mode: 'edit-file'; molecule: Molecule }
   | { mode: 'edit-molecule'; moleculeName: string; atomCount: number };

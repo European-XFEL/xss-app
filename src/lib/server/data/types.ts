@@ -22,10 +22,8 @@ import type {
 export interface UploadMoleculeInput {
   moleculeName: string;
   description: string;
-  state: number;
   reference: string | null;
-  atomCount: number;
-  file: File;
+  structures: { state: number; atomCount: number; file: File }[];
 }
 
 export interface EditMoleculeFileInput {

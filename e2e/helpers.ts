@@ -122,6 +122,18 @@ export function writeUniqueFixture(): { path: string; filename: string } {
   return { path, filename };
 }
 
+/**
+ * Attach one fixture file per structure state (ground, excited) in the upload
+ * dialog and wait for each atom count to be read from the file's first line
+ * (async — wait for the real value rather than an arbitrary sleep).
+ */
+export async function selectStructures(dialog: Locator, paths: string[]) {
+  for (const [i, path] of paths.entries()) {
+    await dialog.locator('input[type="file"]').nth(i).setInputFiles(path);
+    await expect(dialog.getByRole('spinbutton').nth(i)).toHaveValue('2');
+  }
+}
+
 /** Read uploaded molecules' filenames straight out of idb-keyval's default
  * IndexedDB (`keyval-store` / `keyval`, see `$lib/shared/molecule-store.ts`)
  * — the same store the app itself reads/writes in client-storage mode. */

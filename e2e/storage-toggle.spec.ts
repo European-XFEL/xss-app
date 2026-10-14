@@ -2,6 +2,7 @@ import { E2E_DB_NAME, connect } from './db';
 import { expect, test } from './fixtures';
 import {
   fieldControl,
+  selectStructures,
   storedMoleculeFilenames,
   waitUntilInteractive,
   writeUniqueFixture,
@@ -20,7 +21,9 @@ test('client-storage toggle routes uploads to IndexedDB, not Postgres', async ({
   await page.reload();
   await waitUntilInteractive(page);
 
-  const { path, filename } = writeUniqueFixture();
+  const ground = writeUniqueFixture();
+  const excited = writeUniqueFixture();
+  const { filename } = ground;
   const sql = connect(E2E_DB_NAME);
   try {
     const [{ count: before }] = await sql<{ count: number }[]>`
@@ -28,9 +31,8 @@ test('client-storage toggle routes uploads to IndexedDB, not Postgres', async ({
     `;
 
     await page.getByRole('button', { name: 'Add molecule' }).click();
-    const dialog = page.getByRole('dialog', { name: 'Upload Molecule File' });
-    await fieldControl(dialog, 'Select File').setInputFiles(path);
-    await expect(fieldControl(dialog, 'Atom Count')).toHaveValue('2');
+    const dialog = page.getByRole('dialog', { name: 'Upload Molecule' });
+    await selectStructures(dialog, [ground.path, excited.path]);
     await fieldControl(dialog, 'Description').fill(
       'E2E client-storage test fixture',
     );

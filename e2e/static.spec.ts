@@ -12,6 +12,7 @@ import {
   DSS_SERIES_TOKENS,
   fieldControl,
   metricValue,
+  selectStructures,
   selectTrigger,
   seriesPath,
   storedMoleculeFilenames,
@@ -71,15 +72,16 @@ test('boots under the base path and computes ΔS(Q) client-side', async ({
 });
 
 test('molecule upload lands in IndexedDB', async ({ page }) => {
-  const { path, filename } = writeUniqueFixture();
+  const ground = writeUniqueFixture();
+  const excited = writeUniqueFixture();
+  const { filename } = ground;
 
   await page.goto('experiment/samples');
   await waitUntilInteractive(page);
 
   await page.getByRole('button', { name: 'Add molecule' }).click();
-  const dialog = page.getByRole('dialog', { name: 'Upload Molecule File' });
-  await fieldControl(dialog, 'Select File').setInputFiles(path);
-  await expect(fieldControl(dialog, 'Atom Count')).toHaveValue('2');
+  const dialog = page.getByRole('dialog', { name: 'Upload Molecule' });
+  await selectStructures(dialog, [ground.path, excited.path]);
   await fieldControl(dialog, 'Description').fill('E2E static smoke fixture');
   // Static build is always client storage, so the no-auth ack modal never
   // appears (requireUploadAck in MoleculeFormDialog.svelte).

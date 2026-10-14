@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { cacheDebyeResultSchema } from './validation';
+import { cacheDebyeResultSchema, uploadMoleculeSchema } from './validation';
 
 // The Debye write-back caches a CLIENT-computed result into the shared Postgres
 // cache (no-auth app). The server can't recompute to verify intensities, so the
@@ -42,4 +42,29 @@ describe('cacheDebyeResultSchema', () => {
   for (const [name, input] of Object.entries(rejected)) {
     it(`rejects ${name}`, () => expect(ok(input)).toBe(false));
   }
+});
+
+// One upload carries every structure state (ground + excited) for a molecule;
+// each structure is validated on its own.
+describe('uploadMoleculeSchema', () => {
+  const structure = {
+    file: new File(['2\n\nH 0 0 0\nH 0 0 1\n'], 'a.xyz'),
+    atomCount: 2,
+  };
+  const base = { moleculeName: 'Water', description: 'd' };
+  const valid = (structures: unknown[]) =>
+    uploadMoleculeSchema.safeParse({ ...base, structures }).success;
+
+  it('accepts a ground + excited pair', () => {
+    expect(valid([structure, structure])).toBe(true);
+  });
+
+  it('rejects a single structure', () => {
+    expect(valid([structure])).toBe(false);
+  });
+
+  it('rejects when either structure is invalid', () => {
+    expect(valid([structure, { ...structure, atomCount: 0 }])).toBe(false);
+    expect(valid([{ atomCount: 2 }, structure])).toBe(false);
+  });
 });

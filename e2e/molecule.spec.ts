@@ -1,25 +1,25 @@
 import { expect, test } from './fixtures';
 import {
   fieldControl,
+  selectStructures,
   waitUntilInteractive,
   writeUniqueFixture,
 } from './helpers';
 
 test.describe('molecule upload / edit / delete', () => {
   test('upload, edit, then delete a structure file', async ({ page }) => {
-    const { path, filename } = writeUniqueFixture();
+    const ground = writeUniqueFixture();
+    const excited = writeUniqueFixture();
+    const { filename } = ground;
 
     await page.goto('/experiment/samples');
     await waitUntilInteractive(page);
     await page.getByRole('button', { name: 'Add molecule' }).click();
 
     const uploadDialog = page.getByRole('dialog', {
-      name: 'Upload Molecule File',
+      name: 'Upload Molecule',
     });
-    await fieldControl(uploadDialog, 'Select File').setInputFiles(path);
-    // Atom count is read asynchronously from the file's first line — wait
-    // for the real value rather than an arbitrary sleep.
-    await expect(fieldControl(uploadDialog, 'Atom Count')).toHaveValue('2');
+    await selectStructures(uploadDialog, [ground.path, excited.path]);
     await fieldControl(uploadDialog, 'Description').fill(
       'E2E upload test fixture',
     );

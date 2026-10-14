@@ -175,43 +175,48 @@ export const dbMoleculeSource: MoleculeDataSource = {
   async uploadMolecule(
     input: UploadMoleculeInput,
   ): Promise<UploadMoleculeResult> {
-    const contents = await input.file.text();
-    // Authoritative cap on the count derived from the file itself — the
-    // route-level check only sees the client-declared value.
-    const derived = deriveAtomCount(contents, input.atomCount);
-    if (!derived.ok) {
-      return { success: false, result: null, error: derived.error };
+    const rows = [];
+    for (const { file, state, atomCount } of input.structures) {
+      const contents = await file.text();
+      // Authoritative cap on the count derived from the file itself — the
+      // route-level check only sees the client-declared value.
+      const derived = deriveAtomCount(contents, atomCount);
+      if (!derived.ok) {
+        return { success: false, results: null, error: derived.error };
+      }
+      rows.push({
+        sha: await sha256Hex(contents),
+        moleculeName: input.moleculeName,
+        description: input.description,
+        state,
+        reference: input.reference ?? null,
+        atomCount: derived.atomCount,
+        filename: file.name,
+        contents,
+      });
     }
-    const resolvedAtomCount = derived.atomCount;
-
-    const sha = await sha256Hex(contents);
 
     try {
-      const result = await db
+      // One statement, so either every structure is stored or none is.
+      const results = await db
         .insert(schema.moleculeFiles)
-        .values({
-          sha,
-          moleculeName: input.moleculeName,
-          description: input.description,
-          state: input.state,
-          reference: input.reference ?? null,
-          atomCount: resolvedAtomCount,
-          filename: input.file.name,
-          contents,
-        })
+        .values(rows)
         .returning(schema.moleculesInfo);
-      const row = result[0];
       return {
         success: true,
-        result: { ...row, updatedAt: row.updatedAt ?? undefined },
+        results: results.map((r) => ({
+          ...r,
+          updatedAt: r.updatedAt ?? undefined,
+        })),
       };
     } catch (err) {
       console.error('Failed to insert molecule:', err);
       if (isUniqueViolation(err)) {
+        // Only `sha` is unique: some file's contents are already stored.
         return {
           success: false,
-          result: null,
-          error: 'A molecule with this name already exists.',
+          results: null,
+          error: 'A structure file with identical contents already exists.',
         };
       }
       throw err;

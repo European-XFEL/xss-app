@@ -175,7 +175,7 @@ export const staticMoleculeSource: MoleculeDataSource = {
   ): Promise<UploadMoleculeResult> {
     return {
       success: false,
-      result: null,
+      results: null,
       error: 'Uploading molecules is not supported in the static build.',
     };
   },
