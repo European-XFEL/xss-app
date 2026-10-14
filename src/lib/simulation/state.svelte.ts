@@ -10,7 +10,7 @@ import {
 } from './math';
 
 export type ScatteringMathSources = {
-  concentrationSoluteMolar: () => number | null | undefined;
+  concentrationSoluteMmol: () => number | null | undefined;
   excitedStateFraction: () => number | null | undefined;
   photonEnergyEv: () => number | null | undefined;
   excitedStateEnergyEv: () => number | null | undefined;
@@ -37,7 +37,7 @@ export class ScatteringMathState {
 
   readonly concentrationExcited = $derived.by(() =>
     computeConcentrationExcited(
-      this.sources.concentrationSoluteMolar(),
+      this.sources.concentrationSoluteMmol(),
       this.pumpEnergyPhysical ? this.sources.excitedStateFraction() : 0,
     ),
   );
@@ -45,7 +45,7 @@ export class ScatteringMathState {
   readonly ratioSolventSolute = $derived.by(() =>
     computeRatioSolventSolute(
       this.concentrationSolvent,
-      this.sources.concentrationSoluteMolar(),
+      this.sources.concentrationSoluteMmol(),
     ),
   );
 

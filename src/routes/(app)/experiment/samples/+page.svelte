@@ -22,7 +22,7 @@
     <SolventCard
       {solvents}
       bind:solvent={simulation.sample.solvent}
-      bind:concentrationSoluteMolar={simulation.sample.concentrationSoluteMolar}
+      bind:concentrationSoluteMmol={simulation.sample.concentrationSoluteMmol}
     />
     <SolventInfoCard solvent={simulation.sample.solvent} />
     <MoleculeCardSelection

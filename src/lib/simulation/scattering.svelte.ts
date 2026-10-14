@@ -15,7 +15,7 @@ export interface ScatteringInputs {
     excitedStateEnergyEv: number;
   };
   sample: {
-    concentrationSoluteMolar: number | null;
+    concentrationSoluteMmol: number | null;
     solvent: { rhom: number; cpm: number } | null;
   };
 }
@@ -36,12 +36,12 @@ export function createScatteringCalculations(
     THROTTLE_INTERVAL_MS,
   );
   const throttledConcentrationSolute = new Throttled(
-    () => simulation.sample.concentrationSoluteMolar,
+    () => simulation.sample.concentrationSoluteMmol,
     THROTTLE_INTERVAL_MS,
   );
 
   return new ScatteringMathState({
-    concentrationSoluteMolar: () => throttledConcentrationSolute.current,
+    concentrationSoluteMmol: () => throttledConcentrationSolute.current,
     excitedStateFraction: () => throttledExcitedStateFraction.current,
     photonEnergyEv: () => throttledPhotonEnergy.current,
     excitedStateEnergyEv: () => throttledExcitedStateEnergy.current,

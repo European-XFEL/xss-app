@@ -28,7 +28,7 @@
     {solvents}
     {molecules}
     {short}
-    bind:concentrationSoluteMolar={simulation.sample.concentrationSoluteMolar}
+    bind:concentrationSoluteMmol={simulation.sample.concentrationSoluteMmol}
     bind:solvent={simulation.sample.solvent}
     bind:ground={simulation.sample.ground}
     bind:excited={simulation.sample.excited}

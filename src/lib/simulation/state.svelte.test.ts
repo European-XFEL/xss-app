@@ -11,7 +11,7 @@ function makeSources(
   }> = {},
 ): ScatteringMathSources {
   const values = {
-    concentrationSoluteMolar: 0.1,
+    concentrationSoluteMmol: 100,
     excitedStateFraction: 0.5,
     photonEnergyEv: 3,
     excitedStateEnergyEv: 1,
@@ -20,7 +20,7 @@ function makeSources(
     ...overrides,
   };
   return {
-    concentrationSoluteMolar: () => values.concentrationSoluteMolar,
+    concentrationSoluteMmol: () => values.concentrationSoluteMmol,
     excitedStateFraction: () => values.excitedStateFraction,
     photonEnergyEv: () => values.photonEnergyEv,
     excitedStateEnergyEv: () => values.excitedStateEnergyEv,
@@ -33,8 +33,8 @@ describe('ScatteringMathState', () => {
   it('derives concentrations and energies from its sources', () => {
     const state = new ScatteringMathState(makeSources());
 
-    expect(state.concentrationSolvent).toBeCloseTo(55);
-    expect(state.concentrationExcited).toBeCloseTo(0.05);
+    expect(state.concentrationSolvent).toBeCloseTo(55000);
+    expect(state.concentrationExcited).toBeCloseTo(50);
     expect(state.ratioSolventSolute).toBeCloseTo(550);
     expect(state.deltaEeV).toBe(2);
     expect(state.deltaEJ).toBeCloseTo(2 * 1.602176634e-19);
@@ -43,15 +43,15 @@ describe('ScatteringMathState', () => {
   });
 
   it('re-derives values when the underlying sources change', () => {
-    let soluteMolar: number | null = 0.1;
+    let soluteMmol: number | null = 100;
     const sources = makeSources();
-    sources.concentrationSoluteMolar = () => soluteMolar;
+    sources.concentrationSoluteMmol = () => soluteMmol;
 
     const state = new ScatteringMathState(sources);
-    expect(state.concentrationExcited).toBeCloseTo(0.05);
+    expect(state.concentrationExcited).toBeCloseTo(50);
 
-    soluteMolar = 0.2;
-    expect(state.concentrationExcited).toBeCloseTo(0.1);
+    soluteMmol = 200;
+    expect(state.concentrationExcited).toBeCloseTo(100);
   });
 
   it('defaults excitedStateFraction to 0 when the source is missing', () => {

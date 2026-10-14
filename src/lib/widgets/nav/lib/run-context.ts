@@ -9,7 +9,7 @@ export interface NavSample {
   groundName: string | undefined | null;
   excitedName: string | undefined | null;
   solventName: string | undefined | null;
-  concentrationSoluteMolar: number | undefined | null;
+  concentrationSoluteMmol: number | undefined | null;
   /** True while the simulation is being recomputed. */
   computing?: boolean;
   /** True when the last scattering fetch/compute failed. */

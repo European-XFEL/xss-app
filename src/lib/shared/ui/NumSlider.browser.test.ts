@@ -14,7 +14,7 @@ import NumSlider from './NumSlider.svelte';
 // input reverts to a rounded value instead of keeping "42.195".
 test('log-mode slider does not clobber a precisely typed value', async () => {
   const screen = await render(NumSlider, {
-    label: 'Solute Concentration (mol/L)',
+    label: 'Solute Concentration (mMol/L)',
     min: '0.001',
     max: '100',
     step: '0.001',

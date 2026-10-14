@@ -38,7 +38,7 @@
     component: SolventCard,
     args: {
       solvent: solvents[0],
-      concentrationSoluteMolar: 0.5,
+      concentrationSoluteMmol: 500,
       solvents,
     },
   });

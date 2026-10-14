@@ -16,7 +16,7 @@
     groundName: simulation.sample.ground?.filename,
     excitedName: simulation.sample.excited?.filename,
     solventName: simulation.sample.solvent?.name,
-    concentrationSoluteMolar: simulation.sample.concentrationSoluteMolar,
+    concentrationSoluteMmol: simulation.sample.concentrationSoluteMmol,
     computing: simulation.computing,
     computeError: simulation.computeError,
   });
@@ -33,7 +33,7 @@
         solvent: simulation.sample.solvent,
         ground: simulation.sample.ground,
         excited: simulation.sample.excited,
-        concentrationSoluteMolar: simulation.sample.concentrationSoluteMolar,
+        concentrationSoluteMmol: simulation.sample.concentrationSoluteMmol,
       },
       pump: simulation.pump,
       probe: simulation.probe,

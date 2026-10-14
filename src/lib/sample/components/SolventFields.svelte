@@ -7,14 +7,14 @@
 
   interface Props {
     solvent: Sample['solvent'];
-    concentrationSoluteMolar: Sample['concentrationSoluteMolar'];
+    concentrationSoluteMmol: Sample['concentrationSoluteMmol'];
     solvents: Solvents;
     loading?: boolean;
   }
 
   let {
     solvent = $bindable(),
-    concentrationSoluteMolar = $bindable(),
+    concentrationSoluteMmol = $bindable(),
     solvents,
     loading = false,
   }: Props = $props();
@@ -25,11 +25,11 @@
 </div>
 <div class="py-3 first:pt-0 last:pb-0">
   <NumSlider
-    label="Solute Concentration (mol/L)"
-    min="0.001"
-    max="100"
-    step="0.001"
+    label="Solute Concentration (mMol/L)"
+    min="1"
+    max="100000"
+    step="1"
     logarithmic
-    bind:value={concentrationSoluteMolar}
+    bind:value={concentrationSoluteMmol}
   />
 </div>

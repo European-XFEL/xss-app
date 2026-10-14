@@ -12,10 +12,10 @@ export type InterpolationOptions = {
 };
 
 /**
- * Solvent molar concentration in mol/L.
+ * Solvent molar concentration in mMol/L.
  *
  * `rhom` is the solvent molar density in mol/m³ (as stored from the thermo
- * data); dividing by 1000 converts mol/m³ → mol/L.
+ * data), which is numerically identical to mMol/L.
  */
 export function computeConcentrationSolvent(
   solventRhom?: number | null,
@@ -23,28 +23,28 @@ export function computeConcentrationSolvent(
   if (typeof solventRhom !== 'number' || !Number.isFinite(solventRhom)) {
     return undefined;
   }
-  return solventRhom / 1000.0;
+  return solventRhom;
 }
 
 export function computeConcentrationExcited(
-  concentrationSoluteMolar?: number | null,
+  concentrationSoluteMmol?: number | null,
   excitedStateFraction?: number | null,
 ): number | undefined {
-  if (concentrationSoluteMolar == null || excitedStateFraction == null) {
+  if (concentrationSoluteMmol == null || excitedStateFraction == null) {
     return undefined;
   }
-  return concentrationSoluteMolar * excitedStateFraction;
+  return concentrationSoluteMmol * excitedStateFraction;
 }
 
 export function computeRatioSolventSolute(
   concentrationSolvent?: number | null,
-  concentrationSoluteMolar?: number | null,
+  concentrationSoluteMmol?: number | null,
 ): number | undefined {
-  if (concentrationSoluteMolar == null || concentrationSoluteMolar === 0) {
+  if (concentrationSoluteMmol == null || concentrationSoluteMmol === 0) {
     return undefined;
   }
   if (concentrationSolvent == null) return undefined;
-  return concentrationSolvent / concentrationSoluteMolar;
+  return concentrationSolvent / concentrationSoluteMmol;
 }
 
 /**
@@ -90,7 +90,7 @@ export function computeDeltaEJ(deltaEeV: number): number {
  *
  *   ΔT = (cExcited / cSolvent) * (deltaEJ / Cpm) * Nₐ
  *
- * `concentrationExcited` and `concentrationSolvent` must share units (mol/L);
+ * `concentrationExcited` and `concentrationSolvent` must share units (mMol/L);
  * the ratio is dimensionless so their unit cancels.
  */
 export function computeDeltaT(

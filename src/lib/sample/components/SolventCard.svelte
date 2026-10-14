@@ -11,7 +11,7 @@
 
   interface Props {
     solvent: Sample['solvent'];
-    concentrationSoluteMolar: Sample['concentrationSoluteMolar'];
+    concentrationSoluteMmol: Sample['concentrationSoluteMmol'];
     solvents: Solvents;
     short?: boolean;
     loading?: boolean;
@@ -19,7 +19,7 @@
 
   let {
     solvent = $bindable(),
-    concentrationSoluteMolar = $bindable(),
+    concentrationSoluteMmol = $bindable(),
     solvents,
     short = false,
     loading = false,
@@ -41,7 +41,7 @@
   {/snippet}
   <SolventFields
     bind:solvent
-    bind:concentrationSoluteMolar
+    bind:concentrationSoluteMmol
     {solvents}
     {loading}
   />

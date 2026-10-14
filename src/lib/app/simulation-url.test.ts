@@ -66,7 +66,7 @@ const fixture: SerializableSimulationState = {
     solvent: { id: solvent.id },
     ground: { id: ground.id },
     excited: { id: excited.id },
-    concentrationSoluteMolar: 0.0234,
+    concentrationSoluteMmol: 23.4,
   },
   pump: {
     photonEnergyEv: 4.75,
@@ -85,11 +85,11 @@ const resolved = { ground, excited, solvent };
  * destructures them — reused by both the "serializes" and
  * "unrecognized version" tests below. */
 const FIXTURE_SEGMENTS = [
-  '1',
+  '2',
   solvent.id,
   ground.id,
   excited.id,
-  '0.0234',
+  '23.4',
   '4.75',
   '2.25',
   '0.63',
@@ -107,7 +107,7 @@ const EXPECTED_PARSED: ParsedSimulationParams = {
   solventId: solvent.id,
   groundId: ground.id,
   excitedId: excited.id,
-  concentrationSoluteMolar: fixture.sample.concentrationSoluteMolar,
+  concentrationSoluteMmol: fixture.sample.concentrationSoluteMmol,
   pump: fixture.pump,
   probe: fixture.probe,
   detector: fixture.detector,
@@ -121,7 +121,7 @@ const EXPECTED_INIT: SimulationStateInit = {
     solvent,
     ground,
     excited,
-    concentrationSoluteMolar: fixture.sample.concentrationSoluteMolar,
+    concentrationSoluteMmol: fixture.sample.concentrationSoluteMmol,
   },
   pump: fixture.pump,
   probe: fixture.probe,
@@ -185,7 +185,7 @@ describe('optional fields omitted', () => {
         solvent: null,
         ground: null,
         excited: null,
-        concentrationSoluteMolar: null,
+        concentrationSoluteMmol: null,
       },
     };
 
@@ -195,7 +195,7 @@ describe('optional fields omitted', () => {
     expect(parsed.solventId).toBeNull();
     expect(parsed.groundId).toBeNull();
     expect(parsed.excitedId).toBeNull();
-    expect(parsed.concentrationSoluteMolar).toBeNull();
+    expect(parsed.concentrationSoluteMmol).toBeNull();
     // Non-sample fields are unaffected.
     expect(parsed.pump).toEqual(fixture.pump);
   });
@@ -238,7 +238,7 @@ describe('malformed share param', () => {
       solventId: null,
       groundId: null,
       excitedId: null,
-      concentrationSoluteMolar: null,
+      concentrationSoluteMmol: null,
       pump: {
         photonEnergyEv: null,
         excitedStateEnergyEv: null,

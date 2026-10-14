@@ -17,8 +17,8 @@ import {
 } from './math';
 
 describe('computeConcentrationSolvent', () => {
-  it('converts mol/m3 to mol/L', () => {
-    expect(computeConcentrationSolvent(55000)).toBe(55);
+  it('treats mol/m3 as mMol/L', () => {
+    expect(computeConcentrationSolvent(55000)).toBe(55000);
   });
 
   it('returns undefined for non-finite input', () => {
@@ -41,7 +41,7 @@ describe('computeConcentrationExcited', () => {
 
 describe('computeRatioSolventSolute', () => {
   it('divides solvent concentration by solute concentration', () => {
-    expect(computeRatioSolventSolute(55, 0.1)).toBeCloseTo(550);
+    expect(computeRatioSolventSolute(55000, 100)).toBeCloseTo(550);
   });
 
   it('returns undefined when solute concentration is zero or missing', () => {

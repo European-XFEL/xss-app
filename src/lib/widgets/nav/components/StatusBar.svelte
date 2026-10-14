@@ -43,7 +43,7 @@
   <span>
     <span class="text-status-label">c</span>
     <span class="text-status-value"
-      >{sample.concentrationSoluteMolar ?? '—'} mol/L</span
+      >{sample.concentrationSoluteMmol ?? '—'} mMol/L</span
     >
   </span>
 

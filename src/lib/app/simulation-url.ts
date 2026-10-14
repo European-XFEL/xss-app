@@ -25,7 +25,7 @@ import { isValidQRange } from '$lib/simulation';
 
 import type { SimulationStateInit } from './simulation-context.svelte';
 
-export const SIMULATION_PARAMS_VERSION = '1';
+export const SIMULATION_PARAMS_VERSION = '2';
 
 /** The single query param a shared link is encoded into. */
 export const SHARE_PARAM = 's';
@@ -38,7 +38,7 @@ export interface ParsedSimulationParams {
   solventId: string | null;
   groundId: string | null;
   excitedId: string | null;
-  concentrationSoluteMolar: number | null;
+  concentrationSoluteMmol: number | null;
   pump: {
     photonEnergyEv: number | null;
     excitedStateEnergyEv: number | null;
@@ -68,7 +68,7 @@ const EMPTY_PARSED_SIMULATION_PARAMS: ParsedSimulationParams = {
   solventId: null,
   groundId: null,
   excitedId: null,
-  concentrationSoluteMolar: null,
+  concentrationSoluteMmol: null,
   pump: {
     photonEnergyEv: null,
     excitedStateEnergyEv: null,
@@ -165,7 +165,7 @@ function parseSegments(segments: string[]): ParsedSimulationParams {
     solventId: solventId || null,
     groundId: groundId || null,
     excitedId: excitedId || null,
-    concentrationSoluteMolar: parseNum(concentration),
+    concentrationSoluteMmol: parseNum(concentration),
     pump: {
       photonEnergyEv: parseNum(pumpPhotonEv),
       excitedStateEnergyEv: parseNum(pumpExcitedEv),
@@ -243,7 +243,7 @@ function buildSampleInit(
     solvent: resolved.solvent,
     ground: resolved.ground,
     excited: resolved.excited,
-    concentrationSoluteMolar: parsed.concentrationSoluteMolar,
+    concentrationSoluteMmol: parsed.concentrationSoluteMmol,
   });
 }
 
@@ -276,7 +276,7 @@ export interface SerializableSimulationState {
     solvent: { id: string } | null;
     ground: { id: string } | null;
     excited: { id: string } | null;
-    concentrationSoluteMolar: number | null;
+    concentrationSoluteMmol: number | null;
   };
   pump: {
     photonEnergyEv: number;
@@ -301,8 +301,8 @@ export function serializeSimulationParams(
     state.sample.solvent?.id ?? '',
     state.sample.ground?.id ?? '',
     state.sample.excited?.id ?? '',
-    state.sample.concentrationSoluteMolar !== null
-      ? String(state.sample.concentrationSoluteMolar)
+    state.sample.concentrationSoluteMmol !== null
+      ? String(state.sample.concentrationSoluteMmol)
       : '',
     String(state.pump.photonEnergyEv),
     String(state.pump.excitedStateEnergyEv),
