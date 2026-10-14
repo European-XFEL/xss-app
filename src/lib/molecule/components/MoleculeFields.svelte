@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
+
+  import { buttonVariants } from '$shadcn/ui/button/index.js';
   import * as Field from '$shadcn/ui/field/index.js';
   import * as Select from '$shadcn/ui/select/index.js';
 
@@ -149,3 +152,14 @@
     </Field.Field>
   </Field.Set>
 </div>
+
+<p class="text-sm text-muted-foreground">
+  Don't see your structures? Upload a ground and excited state pair in the
+  Molecule Library.
+  <a
+    href={resolve('/experiment/samples')}
+    class={buttonVariants({ variant: 'link', class: 'h-auto p-0' })}
+  >
+    Go to upload
+  </a>
+</p>
